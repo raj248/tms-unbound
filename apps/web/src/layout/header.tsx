@@ -26,18 +26,19 @@ import { IconBell, IconMenu2 } from "@workspace/ui/lib/Icons"
 // Nav config — adjust labels/hrefs/icons to match your routes
 // ---------------------------------------------------------------------------
 
-const NAV_LINKS = [
+const getNavLinks = (role?: string) => [
   { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
+  { label: "Tasks", href: role === "ADMIN" ? "/admin/tasks" : "/department/tasks", icon: "ti-list-check" },
   { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
   { label: "Audit", href: "/audit", icon: "ti-clipboard-list" },
   { label: "Settings", href: "/settings", icon: "ti-settings" },
-] as const
+]
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInitials(name?: string) {
+function getInitials(name?: string | null) {
   if (!name) return "?"
   return name
     .split(" ")
@@ -92,12 +93,7 @@ function NavLink({
     <Link
       to={href}
       onClick={onClick}
-      className={[
-        "flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200",
-        active
-          ? "bg-indigo-50 font-bold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
-          : "font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
-      ].join(" ")}
+      className="flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200 text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
     >
       {label}
     </Link>
@@ -145,7 +141,7 @@ export function Header() {
           aria-label="Main navigation"
           className="hidden items-center gap-1 md:flex"
         >
-          {NAV_LINKS.map((link) => (
+          {getNavLinks(user?.role).map((link) => (
             <NavLink key={link.href} {...link} />
           ))}
         </nav>
@@ -222,23 +218,23 @@ export function Header() {
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel className="font-normal">
-              <p className="text-sm font-medium">{user?.name ?? "Account"}</p>
-              <p className="truncate text-xs text-muted-foreground">
+          <DropdownMenuContent align="end" className="w-56 bg-white border border-zinc-200 shadow-xl rounded-xl p-1.5 z-50">
+            <DropdownMenuLabel className="font-normal px-2.5 py-3">
+              <p className="text-sm font-bold text-zinc-900">{user?.name ?? "Account"}</p>
+              <p className="truncate text-xs font-medium text-zinc-500 mt-0.5">
                 {user?.username}
               </p>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/profile">Profile</Link>
+            <DropdownMenuSeparator className="bg-black my-1 mx-1" />
+            <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 hover:text-black transition-colors">
+              <Link to="/profile" className="text-sm font-medium w-full block">Profile</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings">Settings</Link>
+            <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 hover:text-black transition-colors">
+              <Link to="/settings" className="text-sm font-medium w-full block">Settings</Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-black my-1 mx-1" />
             <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
+              className="cursor-pointer rounded-lg px-3 py-2 text-sm font-bold text-red-600 transition-colors"
               onClick={logout}
             >
               Log out
@@ -279,7 +275,7 @@ export function Header() {
               aria-label="Mobile navigation"
               className="flex flex-col gap-1 p-3"
             >
-              {NAV_LINKS.map((link) => (
+              {getNavLinks(user?.role).map((link) => (
                 <NavLink
                   key={link.href}
                   {...link}
