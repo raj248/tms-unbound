@@ -26,7 +26,7 @@ const activities = [
 
 export default function Dashboard() {
   return (
-    <div className="p-8 pb-12 max-w-5xl mx-auto space-y-6">
+    <div className="p-8 pb-12 w-full space-y-8">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
