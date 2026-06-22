@@ -30,13 +30,13 @@ const getPriorityStyle = (priority: string) => {
 
 const getStatusStyle = (status: string) => {
   if (status === 'Overdue') return 'bg-red-50 text-red-600';
-  if (status === 'In progress') return 'bg-indigo-50 text-indigo-600';
+  if (status === 'In progress') return 'bg-blue-50 text-blue-600';
   return 'bg-emerald-50 text-emerald-600';
 };
 
 const getProgressColor = (status: string) => {
   if (status === 'Overdue') return 'bg-red-500';
-  if (status === 'In progress') return 'bg-indigo-600';
+  if (status === 'In progress') return 'bg-blue-600';
   return 'bg-emerald-500';
 };
 
@@ -46,14 +46,14 @@ export default function Tasks() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Tasks</h1>
-          <p className="text-sm text-slate-500 mt-1">Engineering · 24 tasks assigned</p>
+          <h1 className="text-2xl font-bold text-black">Tasks</h1>
+          <p className="text-sm text-black/50 mt-1">Engineering · 24 tasks assigned</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-full">
+          <span className="text-sm font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
             Engineering Dept
           </span>
-          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-700">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700">
             RS
           </div>
         </div>
@@ -63,38 +63,38 @@ export default function Tasks() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative">
-            <IconSearch className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <IconSearch className="w-4 h-4 text-black/40 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
               placeholder="Search tasks..." 
-              className="pl-9 pr-4 py-1.5 text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-48"
+              className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-48 text-black"
             />
           </div>
-          <button className="px-4 py-1.5 text-sm font-medium bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">
+          <button className="px-4 py-1.5 text-sm font-medium bg-blue-100 text-blue-700 rounded-full border border-blue-200">
             All
           </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-full">
+          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
             In progress
           </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-full">
+          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
             Completed
           </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-full">
+          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
             Overdue
           </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-full">
+          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
             High priority
           </button>
         </div>
-        <button className="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-full flex items-center gap-2">
+        <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full flex items-center gap-2">
           <IconArrowsSort className="w-4 h-4" /> Sort
         </button>
       </div>
 
       {/* Task Table Structure */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Table Header */}
-        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-slate-200 bg-slate-50/50 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50/50 text-[11px] font-bold text-black/40 uppercase tracking-wider">
           <div className="col-span-4">Task</div>
           <div className="col-span-1 text-center">Priority</div>
           <div className="col-span-2 text-center">Status</div>
@@ -104,30 +104,30 @@ export default function Tasks() {
         </div>
 
         {/* Overdue Section */}
-        <div className="bg-slate-50/30 px-6 py-2 border-b border-slate-200">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">OVERDUE · 4 TASKS</span>
+        <div className="bg-gray-50/30 px-6 py-2 border-b border-gray-200">
+          <span className="text-[11px] font-bold text-black/40 uppercase tracking-wider">OVERDUE · 4 TASKS</span>
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-gray-100">
           {overdueTasks.map(task => (
             <TaskRow key={task.id} task={task} />
           ))}
         </div>
 
         {/* In Progress Section */}
-        <div className="bg-slate-50/30 px-6 py-2 border-b border-slate-200 border-t">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">IN PROGRESS · 9 TASKS</span>
+        <div className="bg-gray-50/30 px-6 py-2 border-b border-gray-200 border-t">
+          <span className="text-[11px] font-bold text-black/40 uppercase tracking-wider">IN PROGRESS · 9 TASKS</span>
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-gray-100">
           {inProgressTasks.map(task => (
             <TaskRow key={task.id} task={task} />
           ))}
         </div>
 
         {/* Completed Section */}
-        <div className="bg-slate-50/30 px-6 py-2 border-b border-slate-200 border-t">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">COMPLETED · 11 TASKS</span>
+        <div className="bg-gray-50/30 px-6 py-2 border-b border-gray-200 border-t">
+          <span className="text-[11px] font-bold text-black/40 uppercase tracking-wider">COMPLETED · 11 TASKS</span>
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-gray-100">
           {completedTasks.map(task => (
             <TaskRow key={task.id} task={task} />
           ))}
@@ -136,21 +136,21 @@ export default function Tasks() {
 
       {/* Pagination Footer */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
-        <span className="text-xs font-medium text-slate-400 text-center sm:text-left">Showing 11 of 24 tasks</span>
+        <span className="text-xs font-medium text-black/40 text-center sm:text-left">Showing 11 of 24 tasks</span>
         <div className="flex flex-wrap justify-center gap-1">
-          <button className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50 whitespace-nowrap">
+          <button className="px-3 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50 whitespace-nowrap">
             &larr; Prev
           </button>
-          <button className="w-8 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded">
+          <button className="w-8 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded">
             1
           </button>
-          <button className="w-8 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50">
+          <button className="w-8 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50">
             2
           </button>
-          <button className="w-8 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50">
+          <button className="w-8 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50">
             3
           </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50 whitespace-nowrap">
+          <button className="px-3 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50 whitespace-nowrap">
             Next &rarr;
           </button>
         </div>
@@ -160,10 +160,10 @@ export default function Tasks() {
 
   function TaskRow({ task }: { task: any }) {
     return (
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-6 py-4 md:items-center hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-6 py-4 md:items-center hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
         <div className="md:col-span-4 pr-4">
-          <p className="text-sm font-medium text-slate-900 truncate">{task.title}</p>
-          <p className="text-xs text-slate-400 mt-0.5 truncate">{task.subtitle}</p>
+          <p className="text-sm font-medium text-black truncate">{task.title}</p>
+          <p className="text-xs text-black/40 mt-0.5 truncate">{task.subtitle}</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3 md:contents">
@@ -180,26 +180,26 @@ export default function Tasks() {
           </div>
 
           <div className="md:col-span-2 flex items-center gap-3 w-full md:w-auto order-4 md:order-none mt-2 md:mt-0">
-            <div className="flex-1 md:w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+            <div className="flex-1 md:w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
               <div className={`${getProgressColor(task.status)} h-1.5 rounded-full`} style={{ width: `${task.progress}%` }}></div>
             </div>
-            <span className="text-[11px] font-bold text-slate-700 w-8 text-right">{task.progress}%</span>
+            <span className="text-[11px] font-bold text-black/80 w-8 text-right">{task.progress}%</span>
           </div>
 
           <div className="md:col-span-2 flex md:justify-center ml-auto md:ml-0">
-            <span className={`text-xs font-semibold ${task.status === 'Overdue' ? 'text-red-600' : 'text-slate-600'}`}>
+            <span className={`text-xs font-semibold ${task.status === 'Overdue' ? 'text-red-600' : 'text-black/70'}`}>
               {task.due}
             </span>
           </div>
 
           <div className="md:col-span-1 flex justify-end md:justify-center w-full md:w-auto order-5 md:order-none mt-2 md:mt-0">
             {task.action === 'Update' ? (
-              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-slate-600 border border-slate-200 rounded bg-white hover:bg-slate-50">
-                <IconEdit className="w-3 h-3 text-slate-400" />
+              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-black/70 border border-gray-200 rounded bg-white hover:bg-gray-50">
+                <IconEdit className="w-3 h-3 text-black/40" />
                 Update
               </button>
             ) : (
-              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-slate-400 border border-slate-100 rounded bg-slate-50 cursor-default">
+              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-black/40 border border-gray-100 rounded bg-gray-50 cursor-default">
                 <IconCheck className="w-3 h-3" />
                 Done
               </button>
