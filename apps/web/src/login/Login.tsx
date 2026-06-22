@@ -153,7 +153,7 @@ export default function Login() {
         </div>
 
         {/* Form Container */}
-        <div className="w-full max-w-[420px] px-6 lg:px-0 space-y-10 pb-12">
+        <div className="w-full max-w-[480px] px-6 lg:px-0 space-y-12 pb-12">
           
           {/* Desktop Heading */}
           <div className="hidden lg:flex flex-col space-y-3">
@@ -163,8 +163,8 @@ export default function Login() {
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-8">
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="font-bold text-zinc-700 text-sm uppercase tracking-wider">
                   Email address
@@ -178,7 +178,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
                     required
-                    className="h-14 px-4 text-base rounded-xl border-zinc-200 bg-white/80 backdrop-blur-sm placeholder:text-zinc-400 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-500 transition-all shadow-sm"
+                    className="h-16 px-5 text-lg rounded-xl border-zinc-200 bg-white/80 backdrop-blur-sm placeholder:text-zinc-400 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-500 transition-all shadow-sm"
                   />
                 </div>
               </div>
@@ -194,20 +194,20 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                     required
-                    className="h-14 px-4 text-base rounded-xl border-zinc-200 bg-white/80 backdrop-blur-sm placeholder:text-zinc-400 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-500 transition-all shadow-sm pr-12"
+                    className="h-16 px-5 text-lg rounded-xl border-zinc-200 bg-white/80 backdrop-blur-sm placeholder:text-zinc-400 focus-visible:ring-2 focus-visible:ring-indigo-500/50 focus-visible:border-indigo-500 transition-all shadow-sm pr-14"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-indigo-600 transition-colors p-1"
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-indigo-600 transition-colors p-1"
                   >
-                    {showPassword ? <IconEyeOff size={22} /> : <IconEye size={22} />}
+                    {showPassword ? <IconEyeOff size={24} /> : <IconEye size={24} />}
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center justify-between pt-2">
               <div className="flex items-center space-x-3">
                 <input 
                   type="checkbox" 
@@ -216,44 +216,17 @@ export default function Login() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="rounded-md border-zinc-300 text-indigo-600 focus:ring-indigo-500 h-5 w-5 transition-all" 
                 />
-                <Label htmlFor="remember" className="font-medium text-zinc-700 cursor-pointer select-none">Remember me</Label>
+                <Label htmlFor="remember" className="font-medium text-zinc-700 text-base cursor-pointer select-none">Remember me</Label>
               </div>
-              <a href="#" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 hover:underline underline-offset-4 transition-all" tabIndex={-1}>
+              <a href="#" className="text-base font-bold text-indigo-600 hover:text-indigo-700 hover:underline underline-offset-4 transition-all" tabIndex={-1}>
                 Forgot password?
               </a>
             </div>
 
-            <Button type="submit" className="w-full h-14 text-lg font-bold bg-zinc-900 hover:bg-zinc-800 text-white shadow-md rounded-xl transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0" disabled={isLoading}>
+            <Button type="submit" className="w-full h-16 text-lg font-bold bg-zinc-900 hover:bg-zinc-800 text-white shadow-md rounded-xl transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-          
-          {/* Dividers & Social Login */}
-          <div className="space-y-6 pt-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-zinc-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase tracking-wider">
-                <span className="bg-transparent px-3 text-zinc-500 font-bold backdrop-blur-xl rounded-full">or continue with</span>
-              </div>
-            </div>
-
-            <div className="grid gap-4">
-              <Button variant="outline" className="w-full h-14 rounded-xl bg-white/80 backdrop-blur-sm border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-sm" type="button">
-                <IconBrandGoogle className="mr-3 h-6 w-6 text-red-500" />
-                Continue with Google
-              </Button>
-              <Button variant="outline" className="w-full h-14 rounded-xl bg-white/80 backdrop-blur-sm border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-sm" type="button">
-                <IconBrandGithub className="mr-3 h-6 w-6" />
-                Continue with GitHub
-              </Button>
-            </div>
-          </div>
-
-          <p className="text-center text-base font-medium text-zinc-600 pt-6">
-            Don't have an account? <a href="#" className="text-indigo-600 hover:text-indigo-700 font-bold hover:underline underline-offset-4 transition-all">Create one free</a>
-          </p>
         </div>
       </div>
     </div>
