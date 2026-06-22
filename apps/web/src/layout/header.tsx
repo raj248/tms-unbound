@@ -96,7 +96,7 @@ function NavLink({
         "flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200",
         active
           ? "bg-indigo-50 font-bold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
-          : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
+          : "font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
       ].join(" ")}
     >
       {label}
@@ -218,7 +218,7 @@ export function Header() {
               aria-label="User menu"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                {getInitials(user?.name)}
+                {getInitials(user?.name ?? "")}
               </div>
             </Button>
           </DropdownMenuTrigger>
@@ -292,7 +292,7 @@ export function Header() {
             <div className="absolute right-0 bottom-0 left-0 border-t p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                  {getInitials(user?.name)}
+                  {getInitials(user?.name ?? "")}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
