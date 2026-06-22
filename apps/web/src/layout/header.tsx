@@ -124,10 +124,22 @@ export function Header() {
           to="/dashboard"
           className="flex shrink-0 items-center gap-2 text-sm font-semibold tracking-tight"
         >
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
-            A
+          <div className="relative flex h-10 w-10 transform-gpu items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-white shadow-sm transition-all group-hover:scale-105 group-hover:rotate-3">
+            <img
+              src="/unbound_logo.webp"
+              alt="Unbound Script Logo"
+              className="h-7 w-7 object-contain antialiased"
+            />
           </div>
-          <span className="hidden sm:inline">Unbound</span>
+
+          <div className="flex flex-col leading-none">
+            <span className="text-xl font-black tracking-tighter uppercase">
+              Unbound
+            </span>
+            <span className="ml-0.5 text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase">
+              Script
+            </span>
+          </div>
         </Link>
 
         {/* Desktop nav — hidden on mobile */}
