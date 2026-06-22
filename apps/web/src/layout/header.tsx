@@ -37,7 +37,7 @@ const NAV_LINKS = [
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInitials(name?: string) {
+function getInitials(name?: string | null) {
   if (!name) return "?"
   return name
     .split(" ")
@@ -222,23 +222,23 @@ export function Header() {
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel className="font-normal">
-              <p className="text-sm font-medium">{user?.name ?? "Account"}</p>
-              <p className="truncate text-xs text-muted-foreground">
+          <DropdownMenuContent align="end" className="w-56 bg-white border border-zinc-200 shadow-xl rounded-xl p-1.5 z-50">
+            <DropdownMenuLabel className="font-normal px-2.5 py-3">
+              <p className="text-sm font-bold text-zinc-900">{user?.name ?? "Account"}</p>
+              <p className="truncate text-xs font-medium text-zinc-500 mt-0.5">
                 {user?.username}
               </p>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/profile">Profile</Link>
+            <DropdownMenuSeparator className="bg-black my-1 mx-1" />
+            <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 hover:text-black transition-colors">
+              <Link to="/profile" className="text-sm font-medium w-full block">Profile</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings">Settings</Link>
+            <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 hover:text-black transition-colors">
+              <Link to="/settings" className="text-sm font-medium w-full block">Settings</Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-black my-1 mx-1" />
             <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
+              className="cursor-pointer rounded-lg px-3 py-2 text-sm font-bold text-red-600 transition-colors"
               onClick={logout}
             >
               Log out
