@@ -8,7 +8,7 @@ const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!
 
 export interface TokenPayload {
-  userId: number
+  userId: string
   name: string
   username: string
   role: Role

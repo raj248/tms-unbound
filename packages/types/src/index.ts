@@ -66,7 +66,14 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  token: string
+  message: string
+  accessToken: string
+  refreshToken: string
+  user: User
+}
+
+export interface AuthVerifyResponse {
+  authenticated: boolean
   user: User
 }
 
