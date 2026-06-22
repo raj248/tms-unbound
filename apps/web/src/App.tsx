@@ -13,6 +13,7 @@ import AdminDashboard from "@/admin/dashboard/AdminDashboard"
 import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
 
 import AdminTasks from "@/admin/tasks/AdminTasks"
+import DepartmentTasks from "@/department/tasks/Tasks"
 
 export function App() {
   return (
@@ -35,6 +36,7 @@ export function App() {
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/tasks" element={<AdminTasks />} />
               <Route path="/department/dashboard" element={<DepartmentDashboard />} />
+              <Route path="/department/tasks" element={<DepartmentTasks />} />
               {/* <Route path="/profile" element={<ProfilePage />} /> */}
               {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
               {/* <Route path="/settings" element={<SettingsPage />} /> */}

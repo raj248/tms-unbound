@@ -49,14 +49,7 @@ export default function Tasks() {
           <h1 className="text-2xl font-bold text-foreground">Tasks</h1>
           <p className="text-sm text-muted-foreground mt-1">Engineering · 24 tasks assigned</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-50 px-3 py-1.5 rounded-full">
-            Engineering Dept
-          </Badge>
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700">
-            RS
-          </div>
-        </div>
+
       </div>
 
       {/* Filters and Search Row */}
@@ -64,9 +57,9 @@ export default function Tasks() {
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative w-48">
             <IconSearch className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-            <Input 
-              type="text" 
-              placeholder="Search tasks..." 
+            <Input
+              type="text"
+              placeholder="Search tasks..."
               className="pl-9 h-9 rounded-full"
             />
           </div>
@@ -96,18 +89,17 @@ export default function Tasks() {
         <Table>
           <TableHeader className="bg-muted/50 hidden md:table-header-group">
             <TableRow>
-              <TableHead className="w-[30%]">Task</TableHead>
-              <TableHead className="text-center w-[10%]">Priority</TableHead>
+              <TableHead className="w-[35%]">Task</TableHead>
+              <TableHead className="text-center w-[15%]">Priority</TableHead>
               <TableHead className="text-center w-[15%]">Status</TableHead>
-              <TableHead className="text-center w-[20%]">Progress</TableHead>
-              <TableHead className="text-center w-[15%]">Due Date</TableHead>
-              <TableHead className="text-right w-[10%] pr-6">Action</TableHead>
+              <TableHead className="text-center w-[20%]">Due Date</TableHead>
+              <TableHead className="text-right w-[15%] pr-6">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {/* Overdue Section */}
             <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
-              <TableCell colSpan={6} className="py-2">
+              <TableCell colSpan={5} className="py-2">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">OVERDUE · 4 TASKS</span>
               </TableCell>
             </TableRow>
@@ -117,7 +109,7 @@ export default function Tasks() {
 
             {/* In Progress Section */}
             <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
-              <TableCell colSpan={6} className="py-2">
+              <TableCell colSpan={5} className="py-2">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">IN PROGRESS · 9 TASKS</span>
               </TableCell>
             </TableRow>
@@ -127,7 +119,7 @@ export default function Tasks() {
 
             {/* Completed Section */}
             <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
-              <TableCell colSpan={6} className="py-2">
+              <TableCell colSpan={5} className="py-2">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">COMPLETED · 11 TASKS</span>
               </TableCell>
             </TableRow>
@@ -164,7 +156,7 @@ export default function Tasks() {
 
   function TaskRow({ task }: { task: any }) {
     const statusVariant = getStatusStyle(task.status) as any;
-    
+
     // We apply custom class logic specifically to get the exact "badge" colors from before
     let customStatusClass = "";
     if (task.status === "In progress") {
@@ -172,21 +164,21 @@ export default function Tasks() {
     } else if (task.status === "Completed") {
       customStatusClass = "bg-emerald-50 text-emerald-600 hover:bg-emerald-50";
     }
-    
+
     return (
       <TableRow className="flex flex-col md:table-row hover:bg-muted/50 border-border border-b">
         <TableCell className="font-medium px-6 py-4 md:py-3 block md:table-cell">
           <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
           <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.subtitle}</p>
         </TableCell>
-        
+
         <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between md:table-cell">
           <span className="md:hidden text-xs text-muted-foreground">Priority:</span>
           <Badge variant="outline" className={`text-[10px] font-bold px-2 py-0.5 border-transparent ${getPriorityStyle(task.priority)}`}>
             {task.priority}
           </Badge>
         </TableCell>
-        
+
         <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between items-center md:table-cell">
           <span className="md:hidden text-xs text-muted-foreground">Status:</span>
           <Badge variant={statusVariant === "default" || statusVariant === "secondary" ? "outline" : statusVariant} className={`text-[10px] font-bold px-2.5 py-0.5 border-transparent ${customStatusClass}`}>
@@ -194,20 +186,7 @@ export default function Tasks() {
           </Badge>
         </TableCell>
 
-        <TableCell className="px-6 py-2 md:py-3 flex flex-col md:table-cell">
-          <span className="md:hidden text-xs text-muted-foreground mb-1">Progress:</span>
-          <div className="flex items-center gap-3 justify-between md:justify-center w-full">
-            <Progress 
-              value={task.progress} 
-              className={`h-1.5 flex-1 md:w-24 bg-gray-100 ${
-                task.status === 'Overdue' ? '[&>div]:bg-red-500' : 
-                task.status === 'In progress' ? '[&>div]:bg-blue-600' : 
-                '[&>div]:bg-emerald-500'
-              }`} 
-            />
-            <span className="text-[11px] font-bold text-foreground/80 w-8 text-right">{task.progress}%</span>
-          </div>
-        </TableCell>
+
 
         <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between md:table-cell">
           <span className="md:hidden text-xs text-muted-foreground">Due:</span>

@@ -28,7 +28,7 @@ import { IconBell, IconMenu2 } from "@workspace/ui/lib/Icons"
 
 const getNavLinks = (role?: string) => [
   { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
-  ...(role === "ADMIN" ? [{ label: "Tasks", href: "/admin/tasks", icon: "ti-list-check" }] : []),
+  { label: "Tasks", href: role === "ADMIN" ? "/admin/tasks" : "/department/tasks", icon: "ti-list-check" },
   { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
   { label: "Audit", href: "/audit", icon: "ti-clipboard-list" },
   { label: "Settings", href: "/settings", icon: "ti-settings" },
