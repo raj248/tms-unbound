@@ -42,7 +42,7 @@ const getProgressColor = (status: string) => {
 
 export default function Tasks() {
   return (
-    <div className="p-8 pb-12 max-w-5xl mx-auto space-y-6">
+    <div className="p-8 pb-12 w-full space-y-6">
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
