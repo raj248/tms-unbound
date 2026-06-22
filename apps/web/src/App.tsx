@@ -6,8 +6,8 @@ import { MainLayout } from "@/layout/MainLayout"
 
 import LoginPage from "@/login/Login"
 import NotFoundPage from "@/pages/NotFound"
-import DashboardPage from "@/pages/Dashboard"
-// import { ProfilePage } from "@/pages/Profile"
+import SettingsPage from "@/pages/Settings"
+
 import DepartmentDashboard from "@/department/dashboard/Dashboard"
 import AdminDashboard from "@/admin/dashboard/AdminDashboard"
 import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
@@ -39,8 +39,7 @@ export function App() {
               <Route path="/department/tasks" element={<DepartmentTasks />} />
               {/* <Route path="/profile" element={<ProfilePage />} /> */}
               {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
-              {/* <Route path="/settings" element={<SettingsPage />} /> */}
-              {/* add more child routes here */}
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
 
             {/* Catch-all */}
