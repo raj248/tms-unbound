@@ -4,11 +4,13 @@ import { AuthProvider } from "@/context/auth-context"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { MainLayout } from "@/layout/MainLayout"
 
-import LoginPage from "@/pages/Login"
+import LoginPage from "@/login/Login"
 import NotFoundPage from "@/pages/NotFound"
 import DashboardPage from "@/pages/Dashboard"
 // import { ProfilePage } from "@/pages/Profile"
-// import { SettingsPage } from "@/pages/Settings"
+import DepartmentDashboard from "@/department/dashboard/Dashboard"
+import AdminDashboard from "@/admin/dashboard/AdminDashboard"
+import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
 
 export function App() {
   return (
@@ -27,7 +29,9 @@ export function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard" element={<RoleBasedRedirect />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/department/dashboard" element={<DepartmentDashboard />} />
               {/* <Route path="/profile" element={<ProfilePage />} /> */}
               {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
               {/* <Route path="/settings" element={<SettingsPage />} /> */}

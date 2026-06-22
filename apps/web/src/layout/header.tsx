@@ -78,7 +78,6 @@ const MOCK_NOTIFICATIONS = [
 function NavLink({
   href,
   label,
-  icon,
   onClick,
 }: {
   href: string
@@ -94,13 +93,12 @@ function NavLink({
       to={href}
       onClick={onClick}
       className={[
-        "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors",
+        "flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200",
         active
-          ? "bg-primary/10 font-medium text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          ? "bg-indigo-50 font-bold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
+          : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
       ].join(" ")}
     >
-      <i className={`ti ${icon} text-base`} aria-hidden="true" />
       {label}
     </Link>
   )
@@ -122,7 +120,7 @@ export function Header() {
         {/* Logo */}
         <Link
           to="/dashboard"
-          className="flex shrink-0 items-center gap-2 text-sm font-semibold tracking-tight"
+          className="group flex shrink-0 items-center gap-2 text-sm font-semibold tracking-tight"
         >
           <div className="relative flex h-10 w-10 transform-gpu items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-white shadow-sm transition-all group-hover:scale-105 group-hover:rotate-3">
             <img
