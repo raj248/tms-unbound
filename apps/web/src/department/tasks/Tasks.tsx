@@ -94,7 +94,7 @@ export default function Tasks() {
       {/* Task Table Structure */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-slate-200 bg-slate-50/50 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-slate-200 bg-slate-50/50 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
           <div className="col-span-4">Task</div>
           <div className="col-span-1 text-center">Priority</div>
           <div className="col-span-2 text-center">Status</div>
@@ -135,10 +135,10 @@ export default function Tasks() {
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex justify-between items-center mt-6">
-        <span className="text-xs font-medium text-slate-400">Showing 11 of 24 tasks</span>
-        <div className="flex gap-1">
-          <button className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+        <span className="text-xs font-medium text-slate-400 text-center sm:text-left">Showing 11 of 24 tasks</span>
+        <div className="flex flex-wrap justify-center gap-1">
+          <button className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50 whitespace-nowrap">
             &larr; Prev
           </button>
           <button className="w-8 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded">
@@ -150,7 +150,7 @@ export default function Tasks() {
           <button className="w-8 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50">
             3
           </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50">
+          <button className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 bg-white rounded hover:bg-slate-50 whitespace-nowrap">
             Next &rarr;
           </button>
         </div>
@@ -160,44 +160,51 @@ export default function Tasks() {
 
   function TaskRow({ task }: { task: any }) {
     return (
-      <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors">
-        <div className="col-span-4 pr-4">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-6 py-4 md:items-center hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
+        <div className="md:col-span-4 pr-4">
           <p className="text-sm font-medium text-slate-900 truncate">{task.title}</p>
           <p className="text-xs text-slate-400 mt-0.5 truncate">{task.subtitle}</p>
         </div>
-        <div className="col-span-1 flex justify-center">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${getPriorityStyle(task.priority)}`}>
-            {task.priority}
-          </span>
-        </div>
-        <div className="col-span-2 flex justify-center">
-          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusStyle(task.status)}`}>
-            {task.status}
-          </span>
-        </div>
-        <div className="col-span-2 flex items-center gap-3">
-          <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-            <div className={`${getProgressColor(task.status)} h-1.5 rounded-full`} style={{ width: `${task.progress}%` }}></div>
+        
+        <div className="flex flex-wrap items-center gap-3 md:contents">
+          <div className="md:col-span-1 flex md:justify-center">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${getPriorityStyle(task.priority)}`}>
+              {task.priority}
+            </span>
           </div>
-          <span className="text-[11px] font-bold text-slate-700 w-8 text-right">{task.progress}%</span>
-        </div>
-        <div className="col-span-2 flex justify-center">
-          <span className={`text-xs font-semibold ${task.status === 'Overdue' ? 'text-red-600' : 'text-slate-600'}`}>
-            {task.due}
-          </span>
-        </div>
-        <div className="col-span-1 flex justify-center">
-          {task.action === 'Update' ? (
-            <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-slate-600 border border-slate-200 rounded bg-white hover:bg-slate-50">
-              <IconEdit className="w-3 h-3 text-slate-400" />
-              Update
-            </button>
-          ) : (
-            <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-slate-400 border border-slate-100 rounded bg-slate-50 cursor-default">
-              <IconCheck className="w-3 h-3" />
-              Done
-            </button>
-          )}
+          
+          <div className="md:col-span-2 flex md:justify-center">
+            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusStyle(task.status)}`}>
+              {task.status}
+            </span>
+          </div>
+
+          <div className="md:col-span-2 flex items-center gap-3 w-full md:w-auto order-4 md:order-none mt-2 md:mt-0">
+            <div className="flex-1 md:w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div className={`${getProgressColor(task.status)} h-1.5 rounded-full`} style={{ width: `${task.progress}%` }}></div>
+            </div>
+            <span className="text-[11px] font-bold text-slate-700 w-8 text-right">{task.progress}%</span>
+          </div>
+
+          <div className="md:col-span-2 flex md:justify-center ml-auto md:ml-0">
+            <span className={`text-xs font-semibold ${task.status === 'Overdue' ? 'text-red-600' : 'text-slate-600'}`}>
+              {task.due}
+            </span>
+          </div>
+
+          <div className="md:col-span-1 flex justify-end md:justify-center w-full md:w-auto order-5 md:order-none mt-2 md:mt-0">
+            {task.action === 'Update' ? (
+              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-slate-600 border border-slate-200 rounded bg-white hover:bg-slate-50">
+                <IconEdit className="w-3 h-3 text-slate-400" />
+                Update
+              </button>
+            ) : (
+              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-slate-400 border border-slate-100 rounded bg-slate-50 cursor-default">
+                <IconCheck className="w-3 h-3" />
+                Done
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
