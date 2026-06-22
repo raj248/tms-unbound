@@ -12,6 +12,8 @@ import DepartmentDashboard from "@/department/dashboard/Dashboard"
 import AdminDashboard from "@/admin/dashboard/AdminDashboard"
 import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
 
+import AdminTasks from "@/admin/tasks/AdminTasks"
+
 export function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
@@ -31,6 +33,7 @@ export function App() {
             >
               <Route path="/dashboard" element={<RoleBasedRedirect />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/tasks" element={<AdminTasks />} />
               <Route path="/department/dashboard" element={<DepartmentDashboard />} />
               {/* <Route path="/profile" element={<ProfilePage />} /> */}
               {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}

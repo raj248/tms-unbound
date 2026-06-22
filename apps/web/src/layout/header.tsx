@@ -26,12 +26,13 @@ import { IconBell, IconMenu2 } from "@workspace/ui/lib/Icons"
 // Nav config — adjust labels/hrefs/icons to match your routes
 // ---------------------------------------------------------------------------
 
-const NAV_LINKS = [
+const getNavLinks = (role?: string) => [
   { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
+  ...(role === "ADMIN" ? [{ label: "Tasks", href: "/admin/tasks", icon: "ti-list-check" }] : []),
   { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
   { label: "Audit", href: "/audit", icon: "ti-clipboard-list" },
   { label: "Settings", href: "/settings", icon: "ti-settings" },
-] as const
+]
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -92,12 +93,7 @@ function NavLink({
     <Link
       to={href}
       onClick={onClick}
-      className={[
-        "flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200",
-        active
-          ? "bg-indigo-50 font-bold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
-          : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
-      ].join(" ")}
+      className="flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200 text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
     >
       {label}
     </Link>
@@ -145,7 +141,7 @@ export function Header() {
           aria-label="Main navigation"
           className="hidden items-center gap-1 md:flex"
         >
-          {NAV_LINKS.map((link) => (
+          {getNavLinks(user?.role).map((link) => (
             <NavLink key={link.href} {...link} />
           ))}
         </nav>
@@ -279,7 +275,7 @@ export function Header() {
               aria-label="Mobile navigation"
               className="flex flex-col gap-1 p-3"
             >
-              {NAV_LINKS.map((link) => (
+              {getNavLinks(user?.role).map((link) => (
                 <NavLink
                   key={link.href}
                   {...link}
