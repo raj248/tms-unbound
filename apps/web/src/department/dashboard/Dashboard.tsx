@@ -2,14 +2,19 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@workspace/ui/components/card';
 import { Badge } from '@workspace/ui/components/badge';
+import { mockTasksWithDetails } from '@workspace/types';
 
-const activeTasks = [
-  { id: 1, title: 'API Gateway Refactor', due: 'Due Jun 25', priority: 'High' },
-  { id: 2, title: 'Auth Service Migration', due: 'Due Jun 28', priority: 'Med' },
-  { id: 3, title: 'CI/CD Pipeline Setup', due: 'Due Jul 3', priority: 'Med' },
-  { id: 4, title: 'DB Index Optimization', due: 'Due Jun 23 · Overdue', priority: 'High', isOverdue: true },
-  { id: 5, title: 'Load Testing Report', due: 'Due Jul 10', priority: 'Low' },
-];
+const formatDeadline = (dateString: string | Date | null) => {
+  if (!dateString) return "No date";
+  const date = new Date(dateString);
+  return `Due ${date.toLocaleDateString("en-US", { month: "short", day: "2-digit" })}`;
+};
+
+const derivePriority = (status: string) => {
+  if (status === 'PENDING') return 'High';
+  if (status === 'IN_PROGRESS') return 'Med';
+  return 'Low';
+}
 
 const weeklyCompletions = [
   { label: 'May 5', count: 2, height: 'h-10', color: 'bg-indigo-200 dark:bg-indigo-500/20' },
@@ -20,13 +25,31 @@ const weeklyCompletions = [
   { label: 'Jun 16', count: 4, height: 'h-20', color: 'bg-indigo-600 dark:bg-indigo-400' },
 ];
 
-const activities = [
-  { id: 1, text: 'CI/CD Pipeline progress updated', time: 'Today, 10:42 AM', dotColor: 'bg-emerald-500' },
-  { id: 2, text: 'API Gateway Refactor marked in progress', time: 'Today, 9:15 AM', dotColor: 'bg-indigo-500' },
-  { id: 3, text: 'DB Index Optimization flagged overdue', time: 'Yesterday, 6:00 PM', dotColor: 'bg-red-500' },
-];
-
 export default function Dashboard() {
+  const safeTasks = mockTasksWithDetails || [];
+  
+  const totalTasks = safeTasks.length;
+  const inProgress = safeTasks.filter(t => t.status === 'IN_PROGRESS').length;
+  const completed = safeTasks.filter(t => t.status === 'COMPLETED').length;
+  const pending = safeTasks.filter(t => t.status === 'PENDING').length;
+
+  const activeTasks = safeTasks.filter(t => t.status !== 'COMPLETED').slice(0, 5).map(t => {
+    return {
+      id: t.id,
+      title: t.name,
+      due: formatDeadline(t.deadline),
+      priority: derivePriority(t.status),
+      isOverdue: t.status === 'PENDING'
+    };
+  });
+
+  const activities = safeTasks.slice(0, 3).map((t, idx) => ({
+    id: t.id,
+    text: `${t.name} marked as ${t.status === 'PENDING' ? 'Pending' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}`,
+    time: `Today, ${9 + idx}:00 AM`,
+    dotColor: t.status === 'COMPLETED' ? 'bg-emerald-500' : t.status === 'PENDING' ? 'bg-red-500' : 'bg-indigo-500'
+  }));
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] -m-6 bg-zinc-50/30 dark:bg-zinc-950/30">
       <main className="flex-1 overflow-y-auto p-8">
@@ -44,7 +67,7 @@ export default function Dashboard() {
             <Card className="shadow-sm border-zinc-200/60 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 transition-all hover:shadow-md">
               <CardHeader className="p-5 pb-0">
                 <CardDescription className="font-semibold mb-1 text-zinc-500 dark:text-zinc-400">Total Tasks</CardDescription>
-                <CardTitle className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">24</CardTitle>
+                <CardTitle className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">{totalTasks}</CardTitle>
               </CardHeader>
               <CardContent className="p-5 pt-1">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">Assigned this month</p>
@@ -53,7 +76,7 @@ export default function Dashboard() {
             <Card className="shadow-sm border-zinc-200/60 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 transition-all hover:shadow-md">
               <CardHeader className="p-5 pb-0">
                 <CardDescription className="font-semibold mb-1 text-zinc-500 dark:text-zinc-400">In Progress</CardDescription>
-                <CardTitle className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">9</CardTitle>
+                <CardTitle className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">{inProgress}</CardTitle>
               </CardHeader>
               <CardContent className="p-5 pt-1">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">Active right now</p>
@@ -62,7 +85,7 @@ export default function Dashboard() {
             <Card className="shadow-sm border-zinc-200/60 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 transition-all hover:shadow-md">
               <CardHeader className="p-5 pb-0">
                 <CardDescription className="font-semibold mb-1 text-zinc-500 dark:text-zinc-400">Completed</CardDescription>
-                <CardTitle className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">11</CardTitle>
+                <CardTitle className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">{completed}</CardTitle>
               </CardHeader>
               <CardContent className="p-5 pt-1">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">4 this week</p>
@@ -70,8 +93,8 @@ export default function Dashboard() {
             </Card>
             <Card className="shadow-sm border-zinc-200/60 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 transition-all hover:shadow-md">
               <CardHeader className="p-5 pb-0">
-                <CardDescription className="font-semibold mb-1 text-zinc-500 dark:text-zinc-400">Overdue</CardDescription>
-                <CardTitle className="text-3xl font-bold text-red-600 dark:text-red-500">4</CardTitle>
+                <CardDescription className="font-semibold mb-1 text-zinc-500 dark:text-zinc-400">Pending / Overdue</CardDescription>
+                <CardTitle className="text-3xl font-bold text-red-600 dark:text-red-500">{pending}</CardTitle>
               </CardHeader>
               <CardContent className="p-5 pt-1">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">Needs attention</p>
@@ -84,7 +107,7 @@ export default function Dashboard() {
             <Card className="col-span-4 shadow-sm border-zinc-200/60 dark:border-zinc-800/60 bg-white dark:bg-zinc-900 overflow-hidden">
               <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800/50 flex justify-between items-center bg-white/50 dark:bg-zinc-900/50">
                 <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Active Tasks</h3>
-                <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full dark:bg-indigo-500/10 dark:text-indigo-400">9 tasks remaining</span>
+                <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full dark:bg-indigo-500/10 dark:text-indigo-400">{activeTasks.length} tasks remaining</span>
               </div>
               <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                 {activeTasks.map((task) => (
@@ -138,7 +161,7 @@ export default function Dashboard() {
                     <div key={activity.id} className="flex gap-4 items-start">
                       <div className="mt-1.5 relative">
                         <div className={`w-2.5 h-2.5 rounded-full ${activity.dotColor} shadow-sm relative z-10`}></div>
-                        {activity.id !== activities.length && (
+                        {activity.id !== activities[activities.length - 1].id && (
                           <div className="absolute top-2.5 left-1/2 -ml-px w-0.5 h-10 bg-zinc-100 dark:bg-zinc-800/50"></div>
                         )}
                       </div>

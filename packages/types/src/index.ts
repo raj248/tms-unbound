@@ -101,3 +101,5 @@ export interface UpdateTaskRequest {
   assigneeId?: string | null
   deadline?: string | Date | null
 }
+
+export * from "./mockData"

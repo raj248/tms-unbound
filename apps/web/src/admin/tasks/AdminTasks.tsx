@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { IconSearch, IconArrowsSort, IconEdit, IconCheck } from '@tabler/icons-react';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
@@ -6,18 +6,7 @@ import { Badge } from '@workspace/ui/components/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@workspace/ui/components/table';
 import { Card } from '@workspace/ui/components/card';
 
-const MOCK_TASKS = [
-  { id: 'TSK-001', title: 'API Gateway Refactor', dept: 'Engineering', assignee: 'Alex Chen', status: 'In progress', priority: 'High', due: 'Jun 25', action: 'Update' },
-  { id: 'TSK-002', title: 'Q3 Marketing Assets', dept: 'Marketing', assignee: 'Sarah Jenkins', status: 'In progress', priority: 'Med', due: 'Jul 01', action: 'Update' },
-  { id: 'TSK-003', title: 'Employee Onboarding Flow', dept: 'HR', assignee: 'Michael Scott', status: 'Completed', priority: 'High', due: 'Jun 15', action: 'Done' },
-  { id: 'TSK-004', title: 'DB Index Optimization', dept: 'Engineering', assignee: 'Alex Chen', status: 'Overdue', priority: 'High', due: 'Jun 20', action: 'Update' },
-  { id: 'TSK-005', title: 'Sales Q2 Report', dept: 'Sales', assignee: 'Dwight Schrute', status: 'In progress', priority: 'Low', due: 'Jun 28', action: 'Update' },
-  { id: 'TSK-006', title: 'Update Privacy Policy', dept: 'Legal', assignee: 'Jan Levinson', status: 'In progress', priority: 'High', due: 'Jul 05', action: 'Update' },
-  { id: 'TSK-007', title: 'Security Audit', dept: 'Engineering', assignee: 'Marcus Webb', status: 'In progress', priority: 'High', due: 'Jul 12', action: 'Update' },
-  { id: 'TSK-008', title: 'Annual Benefits Review', dept: 'HR', assignee: 'Toby Flenderson', status: 'In progress', priority: 'Med', due: 'Jun 30', action: 'Update' },
-  { id: 'TSK-009', title: 'Social Media Campaign', dept: 'Marketing', assignee: 'Kelly Kapoor', status: 'Overdue', priority: 'Med', due: 'Jun 22', action: 'Update' },
-  { id: 'TSK-010', title: 'Vendor Contracts Renewal', dept: 'Legal', assignee: 'Jan Levinson', status: 'Completed', priority: 'Low', due: 'Jun 18', action: 'Done' },
-];
+import { mockTasksWithDetails, type TaskWithDetails } from '@workspace/types';
 
 const getPriorityStyle = (priority: string) => {
   if (priority === 'High') return 'bg-red-50 text-red-600 hover:bg-red-50';
@@ -26,15 +15,44 @@ const getPriorityStyle = (priority: string) => {
 };
 
 const getStatusStyle = (status: string) => {
-  if (status === 'Overdue') return 'destructive';
-  if (status === 'In progress') return 'default';
+  if (status === 'PENDING') return 'destructive';
+  if (status === 'IN_PROGRESS') return 'default';
   return 'secondary';
 };
 
+const formatStatusText = (status: string) => {
+  if (status === 'PENDING') return 'Pending';
+  if (status === 'IN_PROGRESS') return 'In Progress';
+  if (status === 'COMPLETED') return 'Completed';
+  return status;
+}
+
+const formatDeadline = (dateString: string | Date | null) => {
+  if (!dateString) return "No date";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+};
+
+const derivePriority = (status: string) => {
+  if (status === 'PENDING') return 'High';
+  if (status === 'IN_PROGRESS') return 'Med';
+  return 'Low';
+}
+
 export default function AdminTasks() {
-  const overdueTasks = MOCK_TASKS.filter(t => t.status === 'Overdue');
-  const inProgressTasks = MOCK_TASKS.filter(t => t.status === 'In progress');
-  const completedTasks = MOCK_TASKS.filter(t => t.status === 'Completed');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const handleSortToggle = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
+  const sortedTasks = [...(mockTasksWithDetails || [])].sort((a, b) => {
+    const dateA = a.deadline ? new Date(a.deadline).getTime() : 0;
+    const dateB = b.deadline ? new Date(b.deadline).getTime() : 0;
+    return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+  });
+
+  const safeTasks = sortedTasks;
 
   return (
     <div className="p-8 pb-12 w-full space-y-6">
@@ -42,7 +60,7 @@ export default function AdminTasks() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">System Tasks</h1>
-          <p className="text-sm text-muted-foreground mt-1">Admin · {MOCK_TASKS.length} tasks across departments</p>
+          <p className="text-sm text-muted-foreground mt-1">Admin · {safeTasks.length} tasks across departments</p>
         </div>
       </div>
 
@@ -67,14 +85,12 @@ export default function AdminTasks() {
             Completed
           </Button>
           <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
-            Overdue
-          </Button>
-          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
-            High priority
+            Pending
           </Button>
         </div>
-        <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground flex items-center gap-2">
-          <IconArrowsSort className="w-4 h-4" /> Sort
+        <Button onClick={handleSortToggle} variant="outline" className="h-9 rounded-full px-4 text-muted-foreground flex items-center gap-2 transition-all">
+          <IconArrowsSort className={`w-4 h-4 transition-transform duration-300 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} /> 
+          Sort: {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
         </Button>
       </div>
 
@@ -91,54 +107,16 @@ export default function AdminTasks() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {/* Overdue Section */}
-            {overdueTasks.length > 0 && (
-              <>
-                <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
-                  <TableCell colSpan={5} className="py-2">
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">OVERDUE · {overdueTasks.length} TASKS</span>
-                  </TableCell>
-                </TableRow>
-                {overdueTasks.map(task => (
-                  <TaskRow key={task.id} task={task} />
-                ))}
-              </>
-            )}
-
-            {/* In Progress Section */}
-            {inProgressTasks.length > 0 && (
-              <>
-                <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
-                  <TableCell colSpan={5} className="py-2">
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">IN PROGRESS · {inProgressTasks.length} TASKS</span>
-                  </TableCell>
-                </TableRow>
-                {inProgressTasks.map(task => (
-                  <TaskRow key={task.id} task={task} />
-                ))}
-              </>
-            )}
-
-            {/* Completed Section */}
-            {completedTasks.length > 0 && (
-              <>
-                <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
-                  <TableCell colSpan={5} className="py-2">
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">COMPLETED · {completedTasks.length} TASKS</span>
-                  </TableCell>
-                </TableRow>
-                {completedTasks.map(task => (
-                  <TaskRow key={task.id} task={task} />
-                ))}
-              </>
-            )}
+            {safeTasks.map(task => (
+              <TaskRow key={task.id} task={task} />
+            ))}
           </TableBody>
         </Table>
       </Card>
 
       {/* Pagination Footer */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
-        <span className="text-xs font-medium text-muted-foreground text-center sm:text-left">Showing {MOCK_TASKS.length} of 87 tasks</span>
+        <span className="text-xs font-medium text-muted-foreground text-center sm:text-left">Showing {safeTasks.length} of 87 tasks</span>
         <div className="flex flex-wrap justify-center gap-1">
           <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
             &larr; Prev
@@ -160,47 +138,47 @@ export default function AdminTasks() {
     </div>
   );
 
-  function TaskRow({ task }: { task: any }) {
+  function TaskRow({ task }: { task: TaskWithDetails }) {
     const statusVariant = getStatusStyle(task.status) as any;
+    const priority = derivePriority(task.status);
 
-    // We apply custom class logic specifically to get the exact "badge" colors
     let customStatusClass = "";
-    if (task.status === "In progress") {
+    if (task.status === "IN_PROGRESS") {
       customStatusClass = "bg-blue-50 text-blue-600 hover:bg-blue-50";
-    } else if (task.status === "Completed") {
+    } else if (task.status === "COMPLETED") {
       customStatusClass = "bg-emerald-50 text-emerald-600 hover:bg-emerald-50";
     }
 
     return (
       <TableRow className="flex flex-col md:table-row hover:bg-muted/50 border-border border-b">
         <TableCell className="font-medium px-6 py-4 md:py-3 block md:table-cell">
-          <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.dept} · {task.assignee}</p>
+          <p className="text-sm font-medium text-foreground truncate">{task.name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.department?.name || 'Unassigned Dept'} · {task.assigneeName || 'Unassigned'}</p>
         </TableCell>
 
         <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between md:table-cell">
           <span className="md:hidden text-xs text-muted-foreground">Priority:</span>
-          <Badge variant="outline" className={`text-[10px] font-bold px-2 py-0.5 border-transparent ${getPriorityStyle(task.priority)}`}>
-            {task.priority}
+          <Badge variant="outline" className={`text-[10px] font-bold px-2 py-0.5 border-transparent ${getPriorityStyle(priority)}`}>
+            {priority}
           </Badge>
         </TableCell>
 
         <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between items-center md:table-cell">
           <span className="md:hidden text-xs text-muted-foreground">Status:</span>
           <Badge variant={statusVariant === "default" || statusVariant === "secondary" ? "outline" : statusVariant} className={`text-[10px] font-bold px-2.5 py-0.5 border-transparent ${customStatusClass}`}>
-            {task.status}
+            {formatStatusText(task.status)}
           </Badge>
         </TableCell>
 
         <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between md:table-cell">
           <span className="md:hidden text-xs text-muted-foreground">Due:</span>
-          <span className={`text-xs font-semibold ${task.status === 'Overdue' ? 'text-destructive' : 'text-muted-foreground'}`}>
-            {task.due}
+          <span className={`text-xs font-semibold ${task.status === 'PENDING' ? 'text-destructive' : 'text-muted-foreground'}`}>
+            {formatDeadline(task.deadline)}
           </span>
         </TableCell>
 
         <TableCell className="px-6 py-3 pb-4 md:py-3 text-right flex justify-end md:table-cell">
-          {task.action === 'Update' ? (
+          {task.status !== 'COMPLETED' ? (
             <Button variant="outline" size="sm" className="h-7 text-[11px] px-3 gap-1.5">
               <IconEdit className="w-3 h-3 text-muted-foreground" />
               Update
