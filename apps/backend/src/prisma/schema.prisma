@@ -11,10 +11,76 @@ enum Role {
   ADMIN
 }
 
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
+// ==========================================
+// 1. USER MODEL
+// ==========================================
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
+  username  String   @unique
   name      String?
   password  String
-  username  String     @unique
-  role      Role       @default(USER)
+  role      Role     @default(USER)
+
+  departments Department[]
+  assignedTasks Task[]     @relation("TaskAssignee")
+
+  createdAt DateTime @default(now())
+}
+
+// ==========================================
+// 2. DEPARTMENT MODEL
+// ==========================================
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  
+  users     User[]
+  tasks     Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// 3. TASK MODEL
+// ==========================================
+model Task {
+  id          String     @id @default(cuid())
+  name        String     
+  description String?    @db.Text
+  status      TaskStatus @default(PENDING)
+  
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  assigneeId   String?
+  assignee     User?     @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeName String?   
+
+  remarks     Remark[]
+  deadline    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// ==========================================
+// 4. REMARK MODEL
+// ==========================================
+model Remark {
+  id        String   @id @default(cuid())
+  text      String   @db.Text
+  
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  authorName String   
+
+  createdAt DateTime @default(now())
 }
