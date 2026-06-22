@@ -1,4 +1,4 @@
-// import { Bell } from "lucide-react"
+import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@workspace/ui/components/button"
@@ -15,38 +15,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@workspace/ui/components/popover"
-import { IconBell } from "@workspace/ui/lib/Icons"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@workspace/ui/components/sheet"
+import { IconBell, IconMenu2 } from "@workspace/ui/lib/Icons"
 
 // ---------------------------------------------------------------------------
-// Breadcrumb helpers
+// Nav config — adjust labels/hrefs/icons to match your routes
 // ---------------------------------------------------------------------------
 
-const ROUTE_LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
-  admin: "Admin",
-  author: "Author",
-  books: "Books",
-  profile: "Profile",
-  settings: "Settings",
-  timeline: "Timeline",
-  authors: "Authors",
-  onboarding: "Onboarding",
-  export: "Export",
-}
-
-function useBreadcrumbs() {
-  const { pathname } = useLocation()
-  const segments = pathname.split("/").filter(Boolean)
-
-  return segments.map((seg, i) => ({
-    label: ROUTE_LABELS[seg] ?? seg,
-    href: "/" + segments.slice(0, i + 1).join("/"),
-    isLast: i === segments.length - 1,
-  }))
-}
+const NAV_LINKS = [
+  { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
+  { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
+  { label: "Audit", href: "/audit", icon: "ti-clipboard-list" },
+  { label: "Settings", href: "/settings", icon: "ti-settings" },
+] as const
 
 // ---------------------------------------------------------------------------
-// Avatar initials helper
+// Helpers
 // ---------------------------------------------------------------------------
 
 function getInitials(name?: string) {
@@ -58,10 +46,6 @@ function getInitials(name?: string) {
     .join("")
     .toUpperCase()
 }
-
-// ---------------------------------------------------------------------------
-// Mock notifications — replace with real data / hook
-// ---------------------------------------------------------------------------
 
 const MOCK_NOTIFICATIONS = [
   {
@@ -88,65 +72,77 @@ const MOCK_NOTIFICATIONS = [
 ]
 
 // ---------------------------------------------------------------------------
+// NavLink — shared between desktop header and mobile drawer
+// ---------------------------------------------------------------------------
+
+function NavLink({
+  href,
+  label,
+  icon,
+  onClick,
+}: {
+  href: string
+  label: string
+  icon: string
+  onClick?: () => void
+}) {
+  const { pathname } = useLocation()
+  const active = pathname === href || pathname.startsWith(href + "/")
+
+  return (
+    <Link
+      to={href}
+      onClick={onClick}
+      className={[
+        "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors",
+        active
+          ? "bg-primary/10 font-medium text-primary"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+      ].join(" ")}
+    >
+      <i className={`ti ${icon} text-base`} aria-hidden="true" />
+      {label}
+    </Link>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Header
 // ---------------------------------------------------------------------------
 
 export function Header() {
   const { user, logout } = useAuth()
-  const breadcrumbs = useBreadcrumbs()
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-background px-6">
-      {/* Left — logo + breadcrumbs */}
-      <div className="flex items-center gap-4">
+    <header className="flex h-14 items-center justify-between border-b bg-background px-4 sm:px-6">
+      {/* ── Left: logo + desktop nav ──────────────────────────────────────── */}
+      <div className="flex items-center gap-6">
         {/* Logo */}
         <Link
           to="/dashboard"
-          className="flex items-center gap-2 text-sm font-semibold tracking-tight"
+          className="flex shrink-0 items-center gap-2 text-sm font-semibold tracking-tight"
         >
-          {/* Replace with your actual logo/icon */}
           <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
             A
           </div>
-          <span className="hidden sm:inline">Acme</span>
+          <span className="hidden sm:inline">Unbound</span>
         </Link>
 
-        {/* Divider */}
-        {breadcrumbs.length > 0 && (
-          <span className="text-muted-foreground/40 select-none">/</span>
-        )}
-
-        {/* Breadcrumbs */}
-        <nav aria-label="Breadcrumb">
-          <ol className="flex items-center gap-1 text-sm">
-            {breadcrumbs.map((crumb, i) => (
-              <li key={crumb.href} className="flex items-center gap-1">
-                {i > 0 && (
-                  <span className="text-muted-foreground/40 select-none">
-                    /
-                  </span>
-                )}
-                {crumb.isLast ? (
-                  <span className="font-medium text-foreground">
-                    {crumb.label}
-                  </span>
-                ) : (
-                  <Link
-                    to={crumb.href}
-                    className="text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {crumb.label}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ol>
+        {/* Desktop nav — hidden on mobile */}
+        <nav
+          aria-label="Main navigation"
+          className="hidden items-center gap-1 md:flex"
+        >
+          {NAV_LINKS.map((link) => (
+            <NavLink key={link.href} {...link} />
+          ))}
         </nav>
       </div>
 
-      {/* Right — notifications + avatar */}
-      <div className="flex items-center gap-2">
+      {/* ── Right: notifications + avatar + hamburger ─────────────────────── */}
+      <div className="flex items-center gap-1">
         {/* Notifications */}
         <Popover>
           <PopoverTrigger asChild>
@@ -158,7 +154,7 @@ export function Header() {
             >
               <IconBell className="h-4 w-4" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 flex h-2 w-2 items-center justify-center rounded-full bg-destructive text-[9px] text-white" />
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
               )}
             </Button>
           </PopoverTrigger>
@@ -239,6 +235,76 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Hamburger — mobile only */}
+        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 md:hidden"
+              aria-label="Open menu"
+            >
+              <IconMenu2 className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+
+          <SheetContent side="left" className="w-64 p-0">
+            {/* Drawer header */}
+            <div className="flex h-14 items-center justify-between border-b px-4">
+              <Link
+                to="/dashboard"
+                onClick={() => setDrawerOpen(false)}
+                className="flex items-center gap-2 text-sm font-semibold"
+              >
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
+                  A
+                </div>
+                Unbound
+              </Link>
+            </div>
+
+            {/* Drawer nav */}
+            <nav
+              aria-label="Mobile navigation"
+              className="flex flex-col gap-1 p-3"
+            >
+              {NAV_LINKS.map((link) => (
+                <NavLink
+                  key={link.href}
+                  {...link}
+                  onClick={() => setDrawerOpen(false)}
+                />
+              ))}
+            </nav>
+
+            {/* Drawer footer — user info */}
+            <div className="absolute right-0 bottom-0 left-0 border-t p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                  {getInitials(user?.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {user?.name ?? "Account"}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {user?.username}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                  aria-label="Log out"
+                  onClick={logout}
+                >
+                  <i className="ti ti-logout text-base" aria-hidden="true" />
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   )
