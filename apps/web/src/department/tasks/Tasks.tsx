@@ -1,6 +1,12 @@
 // made by harsh
 import React from 'react';
 import { IconSearch, IconArrowsSort, IconEdit, IconCheck } from '@tabler/icons-react';
+import { Button } from '@workspace/ui/components/button';
+import { Input } from '@workspace/ui/components/input';
+import { Badge } from '@workspace/ui/components/badge';
+import { Progress } from '@workspace/ui/components/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@workspace/ui/components/table';
+import { Card } from '@workspace/ui/components/card';
 
 const overdueTasks = [
   { id: 1, title: 'DB Index Optimization', subtitle: 'Improve query performance', priority: 'High', status: 'Overdue', progress: 20, due: 'Jun 23', action: 'Update' },
@@ -23,21 +29,15 @@ const completedTasks = [
 ];
 
 const getPriorityStyle = (priority: string) => {
-  if (priority === 'High') return 'bg-red-50 text-red-600';
-  if (priority === 'Med') return 'bg-amber-50 text-amber-600';
-  return 'bg-emerald-50 text-emerald-600';
+  if (priority === 'High') return 'bg-red-50 text-red-600 hover:bg-red-50';
+  if (priority === 'Med') return 'bg-amber-50 text-amber-600 hover:bg-amber-50';
+  return 'bg-emerald-50 text-emerald-600 hover:bg-emerald-50';
 };
 
 const getStatusStyle = (status: string) => {
-  if (status === 'Overdue') return 'bg-red-50 text-red-600';
-  if (status === 'In progress') return 'bg-blue-50 text-blue-600';
-  return 'bg-emerald-50 text-emerald-600';
-};
-
-const getProgressColor = (status: string) => {
-  if (status === 'Overdue') return 'bg-red-500';
-  if (status === 'In progress') return 'bg-blue-600';
-  return 'bg-emerald-500';
+  if (status === 'Overdue') return 'destructive';
+  if (status === 'In progress') return 'default'; // blue by default in our theme
+  return 'secondary'; // emerald looks better, but secondary is a safe fallback
 };
 
 export default function Tasks() {
@@ -46,13 +46,13 @@ export default function Tasks() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-black">Tasks</h1>
-          <p className="text-sm text-black/50 mt-1">Engineering · 24 tasks assigned</p>
+          <h1 className="text-2xl font-bold text-foreground">Tasks</h1>
+          <p className="text-sm text-muted-foreground mt-1">Engineering · 24 tasks assigned</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
+          <Badge variant="secondary" className="text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-50 px-3 py-1.5 rounded-full">
             Engineering Dept
-          </span>
+          </Badge>
           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700">
             RS
           </div>
@@ -62,151 +62,174 @@ export default function Tasks() {
       {/* Filters and Search Row */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <IconSearch className="w-4 h-4 text-black/40 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
+          <div className="relative w-48">
+            <IconSearch className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input 
               type="text" 
               placeholder="Search tasks..." 
-              className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-48 text-black"
+              className="pl-9 h-9 rounded-full"
             />
           </div>
-          <button className="px-4 py-1.5 text-sm font-medium bg-blue-100 text-blue-700 rounded-full border border-blue-200">
+          <Button variant="default" className="h-9 rounded-full px-4 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 border border-blue-200 shadow-none">
             All
-          </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
+          </Button>
+          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
             In progress
-          </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
+          </Button>
+          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
             Completed
-          </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
+          </Button>
+          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
             Overdue
-          </button>
-          <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full">
+          </Button>
+          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
             High priority
-          </button>
+          </Button>
         </div>
-        <button className="px-4 py-1.5 text-sm font-medium text-black/70 hover:bg-gray-50 border border-gray-200 rounded-full flex items-center gap-2">
+        <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground flex items-center gap-2">
           <IconArrowsSort className="w-4 h-4" /> Sort
-        </button>
+        </Button>
       </div>
 
       {/* Task Table Structure */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Table Header */}
-        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50/50 text-[11px] font-bold text-black/40 uppercase tracking-wider">
-          <div className="col-span-4">Task</div>
-          <div className="col-span-1 text-center">Priority</div>
-          <div className="col-span-2 text-center">Status</div>
-          <div className="col-span-2 text-center">Progress</div>
-          <div className="col-span-2 text-center">Due Date</div>
-          <div className="col-span-1 text-center">Action</div>
-        </div>
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50 hidden md:table-header-group">
+            <TableRow>
+              <TableHead className="w-[30%]">Task</TableHead>
+              <TableHead className="text-center w-[10%]">Priority</TableHead>
+              <TableHead className="text-center w-[15%]">Status</TableHead>
+              <TableHead className="text-center w-[20%]">Progress</TableHead>
+              <TableHead className="text-center w-[15%]">Due Date</TableHead>
+              <TableHead className="text-right w-[10%] pr-6">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {/* Overdue Section */}
+            <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
+              <TableCell colSpan={6} className="py-2">
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">OVERDUE · 4 TASKS</span>
+              </TableCell>
+            </TableRow>
+            {overdueTasks.map(task => (
+              <TaskRow key={task.id} task={task} />
+            ))}
 
-        {/* Overdue Section */}
-        <div className="bg-gray-50/30 px-6 py-2 border-b border-gray-200">
-          <span className="text-[11px] font-bold text-black/40 uppercase tracking-wider">OVERDUE · 4 TASKS</span>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {overdueTasks.map(task => (
-            <TaskRow key={task.id} task={task} />
-          ))}
-        </div>
+            {/* In Progress Section */}
+            <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
+              <TableCell colSpan={6} className="py-2">
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">IN PROGRESS · 9 TASKS</span>
+              </TableCell>
+            </TableRow>
+            {inProgressTasks.map(task => (
+              <TaskRow key={task.id} task={task} />
+            ))}
 
-        {/* In Progress Section */}
-        <div className="bg-gray-50/30 px-6 py-2 border-b border-gray-200 border-t">
-          <span className="text-[11px] font-bold text-black/40 uppercase tracking-wider">IN PROGRESS · 9 TASKS</span>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {inProgressTasks.map(task => (
-            <TaskRow key={task.id} task={task} />
-          ))}
-        </div>
-
-        {/* Completed Section */}
-        <div className="bg-gray-50/30 px-6 py-2 border-b border-gray-200 border-t">
-          <span className="text-[11px] font-bold text-black/40 uppercase tracking-wider">COMPLETED · 11 TASKS</span>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {completedTasks.map(task => (
-            <TaskRow key={task.id} task={task} />
-          ))}
-        </div>
-      </div>
+            {/* Completed Section */}
+            <TableRow className="bg-muted/30 hover:bg-muted/30 border-t">
+              <TableCell colSpan={6} className="py-2">
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">COMPLETED · 11 TASKS</span>
+              </TableCell>
+            </TableRow>
+            {completedTasks.map(task => (
+              <TaskRow key={task.id} task={task} />
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
 
       {/* Pagination Footer */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
-        <span className="text-xs font-medium text-black/40 text-center sm:text-left">Showing 11 of 24 tasks</span>
+        <span className="text-xs font-medium text-muted-foreground text-center sm:text-left">Showing 11 of 24 tasks</span>
         <div className="flex flex-wrap justify-center gap-1">
-          <button className="px-3 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50 whitespace-nowrap">
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
             &larr; Prev
-          </button>
-          <button className="w-8 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded">
+          </Button>
+          <Button variant="secondary" size="sm" className="h-8 w-8 p-0 text-xs bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100">
             1
-          </button>
-          <button className="w-8 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50">
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
             2
-          </button>
-          <button className="w-8 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50">
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
             3
-          </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-black/70 border border-gray-200 bg-white rounded hover:bg-gray-50 whitespace-nowrap">
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
             Next &rarr;
-          </button>
+          </Button>
         </div>
       </div>
     </div>
   );
 
   function TaskRow({ task }: { task: any }) {
+    const statusVariant = getStatusStyle(task.status) as any;
+    
+    // We apply custom class logic specifically to get the exact "badge" colors from before
+    let customStatusClass = "";
+    if (task.status === "In progress") {
+      customStatusClass = "bg-blue-50 text-blue-600 hover:bg-blue-50";
+    } else if (task.status === "Completed") {
+      customStatusClass = "bg-emerald-50 text-emerald-600 hover:bg-emerald-50";
+    }
+    
     return (
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-6 py-4 md:items-center hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
-        <div className="md:col-span-4 pr-4">
-          <p className="text-sm font-medium text-black truncate">{task.title}</p>
-          <p className="text-xs text-black/40 mt-0.5 truncate">{task.subtitle}</p>
-        </div>
+      <TableRow className="flex flex-col md:table-row hover:bg-muted/50 border-border border-b">
+        <TableCell className="font-medium px-6 py-4 md:py-3 block md:table-cell">
+          <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.subtitle}</p>
+        </TableCell>
         
-        <div className="flex flex-wrap items-center gap-3 md:contents">
-          <div className="md:col-span-1 flex md:justify-center">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${getPriorityStyle(task.priority)}`}>
-              {task.priority}
-            </span>
-          </div>
-          
-          <div className="md:col-span-2 flex md:justify-center">
-            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusStyle(task.status)}`}>
-              {task.status}
-            </span>
-          </div>
+        <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between md:table-cell">
+          <span className="md:hidden text-xs text-muted-foreground">Priority:</span>
+          <Badge variant="outline" className={`text-[10px] font-bold px-2 py-0.5 border-transparent ${getPriorityStyle(task.priority)}`}>
+            {task.priority}
+          </Badge>
+        </TableCell>
+        
+        <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between items-center md:table-cell">
+          <span className="md:hidden text-xs text-muted-foreground">Status:</span>
+          <Badge variant={statusVariant === "default" || statusVariant === "secondary" ? "outline" : statusVariant} className={`text-[10px] font-bold px-2.5 py-0.5 border-transparent ${customStatusClass}`}>
+            {task.status}
+          </Badge>
+        </TableCell>
 
-          <div className="md:col-span-2 flex items-center gap-3 w-full md:w-auto order-4 md:order-none mt-2 md:mt-0">
-            <div className="flex-1 md:w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-              <div className={`${getProgressColor(task.status)} h-1.5 rounded-full`} style={{ width: `${task.progress}%` }}></div>
-            </div>
-            <span className="text-[11px] font-bold text-black/80 w-8 text-right">{task.progress}%</span>
+        <TableCell className="px-6 py-2 md:py-3 flex flex-col md:table-cell">
+          <span className="md:hidden text-xs text-muted-foreground mb-1">Progress:</span>
+          <div className="flex items-center gap-3 justify-between md:justify-center w-full">
+            <Progress 
+              value={task.progress} 
+              className={`h-1.5 flex-1 md:w-24 bg-gray-100 ${
+                task.status === 'Overdue' ? '[&>div]:bg-red-500' : 
+                task.status === 'In progress' ? '[&>div]:bg-blue-600' : 
+                '[&>div]:bg-emerald-500'
+              }`} 
+            />
+            <span className="text-[11px] font-bold text-foreground/80 w-8 text-right">{task.progress}%</span>
           </div>
+        </TableCell>
 
-          <div className="md:col-span-2 flex md:justify-center ml-auto md:ml-0">
-            <span className={`text-xs font-semibold ${task.status === 'Overdue' ? 'text-red-600' : 'text-black/70'}`}>
-              {task.due}
-            </span>
-          </div>
+        <TableCell className="px-6 py-1 md:py-3 md:text-center flex justify-between md:table-cell">
+          <span className="md:hidden text-xs text-muted-foreground">Due:</span>
+          <span className={`text-xs font-semibold ${task.status === 'Overdue' ? 'text-destructive' : 'text-muted-foreground'}`}>
+            {task.due}
+          </span>
+        </TableCell>
 
-          <div className="md:col-span-1 flex justify-end md:justify-center w-full md:w-auto order-5 md:order-none mt-2 md:mt-0">
-            {task.action === 'Update' ? (
-              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-black/70 border border-gray-200 rounded bg-white hover:bg-gray-50">
-                <IconEdit className="w-3 h-3 text-black/40" />
-                Update
-              </button>
-            ) : (
-              <button className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-black/40 border border-gray-100 rounded bg-gray-50 cursor-default">
-                <IconCheck className="w-3 h-3" />
-                Done
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+        <TableCell className="px-6 py-3 pb-4 md:py-3 text-right flex justify-end md:table-cell">
+          {task.action === 'Update' ? (
+            <Button variant="outline" size="sm" className="h-7 text-[11px] px-3 gap-1.5">
+              <IconEdit className="w-3 h-3 text-muted-foreground" />
+              Update
+            </Button>
+          ) : (
+            <Button variant="secondary" size="sm" className="h-7 text-[11px] px-3 gap-1.5 cursor-default hover:bg-secondary">
+              <IconCheck className="w-3 h-3 text-muted-foreground" />
+              Done
+            </Button>
+          )}
+        </TableCell>
+      </TableRow>
     );
   }
 }
