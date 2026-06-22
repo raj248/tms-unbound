@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { checkUserSession, logoutUser } from "@/service/authApi"
-
-interface User {
-  id: string
-  name: string
-  username: string
-  role: string
-}
+import type { Role, User } from "@workspace/types"
 
 interface AuthContextType {
   isUser: boolean
@@ -39,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: res.data.user.userId ?? "",
         name: res.data.user.name ?? "",
         username: res.data.user.username ?? "",
-        role: res.data.user.role ?? "",
+        role: (res.data.user.role as Role) ?? "",
       })
     } else {
       setIsUser(false)
