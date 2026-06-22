@@ -9,6 +9,8 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!
 
 export interface TokenPayload {
   userId: number
+  name: string
+  username: string
   role: Role
 }
 
@@ -29,9 +31,14 @@ export const comparePassword = async (
 /**
  * Access Tokens
  */
-export const generateAccessToken = ({ userId, role }: TokenPayload): string => {
+export const generateAccessToken = ({
+  userId,
+  name,
+  username,
+  role,
+}: TokenPayload): string => {
   // Destructuring prevents old 'iat' and 'exp' fields from hijacking options.expiresIn
-  const cleanPayload = { userId, role }
+  const cleanPayload = { userId, name, username, role }
   return jwt.sign(cleanPayload, JWT_ACCESS_SECRET, { expiresIn: "15m" })
 }
 
@@ -49,11 +56,13 @@ export const verifyAccessToken = (token: string): TokenPayload => {
  */
 export const generateRefreshToken = ({
   userId,
+  name,
+  username,
   role,
 }: TokenPayload): string => {
   try {
     // Destructuring here too in case you rotate refresh tokens somewhere down the line
-    const cleanPayload = { userId, role }
+    const cleanPayload = { userId, name, username, role }
     return jwt.sign(cleanPayload, JWT_REFRESH_SECRET)
   } catch (error: any) {
     throw new AppError(

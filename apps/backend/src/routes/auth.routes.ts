@@ -1,9 +1,25 @@
-import { Router } from "express";
-import { handleRefreshToken } from "../controllers/auth.controller";
+import { Router } from "express"
+import {
+  handleLogin,
+  handleRefreshToken,
+  handleRegister,
+} from "../controllers/auth.controller"
+import { requireAuth } from "../middlewares/auth.middleware"
 
-const router: Router = Router();
+const router: Router = Router()
 
-// POST /api/auth/refresh
-router.post("/refresh", handleRefreshToken);
+// Public onboarding gateways
+router.post("/register", handleRegister)
+router.post("/login", handleLogin)
+router.post("/refresh", handleRefreshToken)
 
-export default router;
+// Simple diagnostic route to test your requireAuth layer
+router.get("/me", requireAuth, (req, res) => {
+  // Safe from typescript compilation warnings due to our global namespace definition
+  res.status(200).json({
+    authenticated: true,
+    user: (req as any).user,
+  })
+})
+
+export default router

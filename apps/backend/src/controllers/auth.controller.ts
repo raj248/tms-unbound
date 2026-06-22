@@ -3,6 +3,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
   generateAccessToken,
+  TokenPayload,
 } from "../utils/crypto.utils"
 import { AppError } from "../utils/app-error.utils"
 
@@ -68,7 +69,12 @@ export const handleLogin = async (
   }
 
   // Generate tokens including user meta definitions
-  const tokenPayload = { userId: user.id, role: user.role }
+  const tokenPayload: TokenPayload = {
+    userId: user.id,
+    name: user.name ?? "",
+    username: user.username,
+    role: user.role,
+  }
   const accessToken = generateAccessToken(tokenPayload)
   const refreshToken = generateRefreshToken(tokenPayload)
 

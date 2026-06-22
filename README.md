@@ -19,3 +19,21 @@ To use the components in your app, import them from the `ui` package.
 ```tsx
 import { Button } from "@workspace/ui/components/button";
 ```
+
+## Running the backend
+
+To to prisma related stuff
+
+```bash
+# Push your schema changes directly to your database
+pnpm --filter backend exec prisma db push
+
+# Generate the local Prisma Client types
+pnpm --filter backend exec prisma generate
+
+# Seed the database with initial data
+pnpm --filter backend exec prisma db seed
+
+# Prisma Studio
+pnpm --filter backend exec prisma studio
+```

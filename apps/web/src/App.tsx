@@ -1,19 +1,44 @@
-import { Button } from "@workspace/ui/components/button"
+import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/context/auth-context"
+import ProtectedRoute from "@/components/auth/ProtectedRoute"
+import { MainLayout } from "@/layout/MainLayout"
+
+import LoginPage from "@/pages/Login"
+import NotFoundPage from "@/pages/NotFound"
+import DashboardPage from "@/pages/Dashboard"
+// import { ProfilePage } from "@/pages/Profile"
+// import { SettingsPage } from "@/pages/Settings"
 
 export function App() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="text-muted-foreground font-mono text-xs">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public */}
+            <Route path="/" element={<LoginPage />} />
+
+            {/* Protected — all children rendered inside MainLayout via <Outlet> */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboard" element={<DashboardPage />} />
+              {/* <Route path="/profile" element={<ProfilePage />} /> */}
+              {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
+              {/* <Route path="/settings" element={<SettingsPage />} /> */}
+              {/* add more child routes here */}
+            </Route>
+
+            {/* Catch-all */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
