@@ -41,12 +41,15 @@ const derivePriority = (status: string) => {
 
 export default function AdminTasks() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filter, setFilter] = useState<'ALL' | 'IN_PROGRESS' | 'COMPLETED' | 'PENDING'>('ALL');
 
   const handleSortToggle = () => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
-  const sortedTasks = [...(mockTasksWithDetails || [])].sort((a, b) => {
+  const filteredTasks = (mockTasksWithDetails || []).filter(t => filter === 'ALL' || t.status === filter);
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
     const dateA = a.deadline ? new Date(a.deadline).getTime() : 0;
     const dateB = b.deadline ? new Date(b.deadline).getTime() : 0;
     return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
@@ -75,16 +78,28 @@ export default function AdminTasks() {
               className="pl-9 h-9 rounded-full"
             />
           </div>
-          <Button variant="default" className="h-9 rounded-full px-4 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 border border-blue-200 shadow-none">
+          <Button 
+            onClick={() => setFilter('ALL')} 
+            variant={filter === 'ALL' ? 'default' : 'outline'} 
+            className={`h-9 rounded-full px-4 ${filter === 'ALL' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 border border-blue-200 shadow-none' : 'text-muted-foreground'}`}>
             All
           </Button>
-          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
+          <Button 
+            onClick={() => setFilter('IN_PROGRESS')} 
+            variant={filter === 'IN_PROGRESS' ? 'default' : 'outline'} 
+            className={`h-9 rounded-full px-4 ${filter === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 border border-blue-200 shadow-none' : 'text-muted-foreground'}`}>
             In progress
           </Button>
-          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
+          <Button 
+            onClick={() => setFilter('COMPLETED')} 
+            variant={filter === 'COMPLETED' ? 'default' : 'outline'} 
+            className={`h-9 rounded-full px-4 ${filter === 'COMPLETED' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 border border-blue-200 shadow-none' : 'text-muted-foreground'}`}>
             Completed
           </Button>
-          <Button variant="outline" className="h-9 rounded-full px-4 text-muted-foreground">
+          <Button 
+            onClick={() => setFilter('PENDING')} 
+            variant={filter === 'PENDING' ? 'default' : 'outline'} 
+            className={`h-9 rounded-full px-4 ${filter === 'PENDING' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 border border-blue-200 shadow-none' : 'text-muted-foreground'}`}>
             Pending
           </Button>
         </div>
@@ -115,26 +130,28 @@ export default function AdminTasks() {
       </Card>
 
       {/* Pagination Footer */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
-        <span className="text-xs font-medium text-muted-foreground text-center sm:text-left">Showing {safeTasks.length} of 87 tasks</span>
-        <div className="flex flex-wrap justify-center gap-1">
-          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
-            &larr; Prev
-          </Button>
-          <Button variant="secondary" size="sm" className="h-8 w-8 p-0 text-xs bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100">
-            1
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
-            2
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
-            3
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
-            Next &rarr;
-          </Button>
+      {safeTasks.length > 10 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+          <span className="text-xs font-medium text-muted-foreground text-center sm:text-left">Showing {safeTasks.length} of {mockTasksWithDetails.length} tasks</span>
+          <div className="flex flex-wrap justify-center gap-1">
+            <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+              &larr; Prev
+            </Button>
+            <Button variant="secondary" size="sm" className="h-8 w-8 p-0 text-xs bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100">
+              1
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+              2
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
+              3
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+              Next &rarr;
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 
