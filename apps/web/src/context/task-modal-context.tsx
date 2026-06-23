@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react"
 import type { TaskWithDetails } from "@workspace/types"
-import { TaskDetailDialog } from "@/admin/tasks/TaskDetailDialog"
+import { TaskDetailDialog } from "@/components/tasks/TaskDetailDialog"
 
 interface TaskModalContextType {
   openTask: (task: TaskWithDetails) => void

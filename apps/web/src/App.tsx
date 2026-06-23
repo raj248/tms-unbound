@@ -5,18 +5,18 @@ import { TaskModalProvider } from "@/context/task-modal-context"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { MainLayout } from "@/layout/MainLayout"
 
-import LoginPage from "@/login/Login"
+import { LoginPage } from "@/pages/auth/LoginPage"
+import { AdminLayout } from "@/pages/admin/layout/AdminLayout"
+import AdminDashboard from "@/pages/admin/dashboard/AdminDashboard"
+import AdminTasks from "@/pages/admin/tasks/AdminTasks"
+import { DepartmentLayout } from "@/pages/department/layout/DepartmentLayout"
+import Dashboard from "@/pages/department/dashboard/Dashboard"
+import Tasks from "@/pages/department/tasks/Tasks"
+import Metrics from "@/pages/department/metrics/Metrics"
+import AdminMetrics from "@/pages/admin/metrics/Metrics"
 import NotFoundPage from "@/pages/NotFound"
 import SettingsPage from "@/pages/Settings"
-
-import DepartmentDashboard from "@/department/dashboard/Dashboard"
-import AdminDashboard from "@/admin/dashboard/AdminDashboard"
 import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
-
-import AdminTasks from "@/admin/tasks/AdminTasks"
-import DepartmentTasks from "@/department/tasks/Tasks"
-
-import MetricsPage from "@/pages/Metrics"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
@@ -47,13 +47,13 @@ export function App() {
                   <Route path="/admin/tasks" element={<AdminTasks />} />
                   <Route
                     path="/department/dashboard"
-                    element={<DepartmentDashboard />}
+                    element={<Dashboard />}
                   />
                   <Route
                     path="/department/tasks"
-                    element={<DepartmentTasks />}
+                    element={<Tasks />}
                   />
-                  <Route path="/metrics" element={<MetricsPage />} />
+                  <Route path="/metrics" element={<Metrics />} />
                   {/* <Route path="/profile" element={<ProfilePage />} /> */}
                   {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
                   <Route path="/settings" element={<SettingsPage />} />
