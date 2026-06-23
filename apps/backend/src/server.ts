@@ -46,7 +46,15 @@ app.use("/api/auth", authLimiter, authRoutes)
 // Serve static files
 // ---------------------------------------------------------------------------
 
-const BUILD_PATH = path.join(process.cwd(), "public", "build")
+const BUILD_PATH = path.join(
+  process.cwd(),
+  "apps",
+  "tms.zephy.co.in",
+  "apps",
+  "backend",
+  "public",
+  "build"
+)
 const PUBLIC_PATH = path.join(process.cwd(), "public")
 
 // 1. Specific handler for index.html to block caching
