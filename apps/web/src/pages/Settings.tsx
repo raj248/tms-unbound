@@ -428,16 +428,16 @@ export default function Settings() {
       <Tabs
         defaultValue="general"
         orientation="vertical"
-        className="flex flex-row items-start gap-6"
+        className="flex flex-col gap-6 md:flex-row md:items-start"
       >
         {/* Sidebar */}
-        <TabsList className="flex h-auto w-12 shrink-0 flex-col gap-1 rounded-xl border bg-zinc-100/80 p-1 sm:w-48 dark:bg-zinc-900/50">
+        <TabsList className="flex h-auto w-full shrink-0 flex-row overflow-x-auto rounded-xl border bg-zinc-100/80 p-1 md:w-48 md:flex-col md:gap-1 dark:bg-zinc-900/50">
           {tabs.map(({ value, label, icon, destructive }) => (
             <TabsTrigger
               key={value}
               value={value}
               className={[
-                "w-full justify-center gap-2.5 rounded-lg px-2 py-2.5 text-sm transition-all sm:justify-start sm:px-3",
+                "flex-1 justify-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-all md:justify-start",
                 "data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-950",
                 destructive
                   ? "text-destructive data-[state=active]:text-destructive"
@@ -445,7 +445,7 @@ export default function Settings() {
               ].join(" ")}
             >
               {icon}
-              <span className="hidden sm:inline">{label}</span>
+              <span className="inline">{label}</span>
             </TabsTrigger>
           ))}
         </TabsList>

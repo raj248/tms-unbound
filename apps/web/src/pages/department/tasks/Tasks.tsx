@@ -89,7 +89,7 @@ export default function Tasks() {
   return (
     <div className="w-full space-y-6 p-8 pb-12">
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Department Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -99,9 +99,9 @@ export default function Tasks() {
       </div>
 
       {/* Filters and Search Row */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-48">
+          <div className="relative w-full sm:w-48">
             <IconSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
@@ -111,7 +111,7 @@ export default function Tasks() {
                 setSearch(e.target.value)
                 setCurrentPage(1)
               }}
-              className="h-9 rounded-full pl-9"
+              className="h-9 w-full rounded-full pl-9"
             />
           </div>
           <Button

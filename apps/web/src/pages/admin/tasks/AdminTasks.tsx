@@ -321,9 +321,9 @@ export default function AdminTasks() {
   return (
     <div className="w-full space-y-6 p-6 pb-12 md:p-8">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold">System Tasks</h1>
+          <h1 className="text-2xl font-bold text-foreground">System Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {totalTasks} task{totalTasks !== 1 ? "s" : ""} across
             departments
@@ -333,9 +333,9 @@ export default function AdminTasks() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <IconSearch className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search tasks…"
@@ -344,7 +344,7 @@ export default function AdminTasks() {
                 setSearch(e.target.value)
                 setCurrentPage(1)
               }}
-              className="h-9 w-48 rounded-full pl-8 text-sm"
+              className="h-9 w-full rounded-full pl-8 text-sm sm:w-48"
             />
           </div>
           <div className="flex flex-wrap gap-1">
@@ -424,9 +424,10 @@ export default function AdminTasks() {
       {/* Table */}
       {!isLoading && !error && viewMode === "table" && (
         <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[800px]">
+              <TableHeader className="bg-muted/40">
+                <TableRow>
                 <TableHead className="w-[26%] pl-6">Task</TableHead>
                 <TableHead className="w-[14%]">Department</TableHead>
                 <TableHead className="w-[14%]">Assignee</TableHead>
@@ -457,7 +458,8 @@ export default function AdminTasks() {
               )}
             </TableBody>
           </Table>
-        </Card>
+        </div>
+      </Card>
       )}
 
       {/* Kanban */}

@@ -5,15 +5,12 @@ import { TaskModalProvider } from "@/context/task-modal-context"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { MainLayout } from "@/layout/MainLayout"
 
-import { LoginPage } from "@/pages/auth/LoginPage"
-import { AdminLayout } from "@/pages/admin/layout/AdminLayout"
+import LoginPage from "@/pages/auth/Login"
 import AdminDashboard from "@/pages/admin/dashboard/AdminDashboard"
 import AdminTasks from "@/pages/admin/tasks/AdminTasks"
-import { DepartmentLayout } from "@/pages/department/layout/DepartmentLayout"
 import Dashboard from "@/pages/department/dashboard/Dashboard"
 import Tasks from "@/pages/department/tasks/Tasks"
-import Metrics from "@/pages/department/metrics/Metrics"
-import AdminMetrics from "@/pages/admin/metrics/Metrics"
+import MetricsPage from "@/pages/Metrics"
 import NotFoundPage from "@/pages/NotFound"
 import SettingsPage from "@/pages/Settings"
 import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
@@ -53,7 +50,7 @@ export function App() {
                     path="/department/tasks"
                     element={<Tasks />}
                   />
-                  <Route path="/metrics" element={<Metrics />} />
+                  <Route path="/metrics" element={<MetricsPage />} />
                   {/* <Route path="/profile" element={<ProfilePage />} /> */}
                   {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
                   <Route path="/settings" element={<SettingsPage />} />
