@@ -50,7 +50,7 @@ import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 
 import { type TaskWithDetails, type TaskStatus } from "@workspace/types"
 import { CreateTaskDialog } from "./CreateTaskDialog"
-import { useTasks, useUpdateTask, useDeleteTask } from "@/hooks/task"
+import { useUpdateTask, useDeleteTask, usePaginatedTasks } from "@/hooks/task"
 import { TaskDetailDialog } from "./TaskDetailDialog"
 
 // ---------------------------------------------------------------------------
@@ -452,28 +452,20 @@ export default function AdminTasks() {
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
   const [search, setSearch] = useState("")
   const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
-  const { data: tasks, isLoading, error } = useTasks()
-
-  const searched = (tasks ?? []).filter((t) => {
-    if (!search.trim()) return true
-    const q = search.toLowerCase()
-    return (
-      t.name.toLowerCase().includes(q) ||
-      t.department?.name?.toLowerCase().includes(q) ||
-      (t.assignee?.name ?? t.assigneeName ?? "").toLowerCase().includes(q)
-    )
+  const { data: result, isLoading, error } = usePaginatedTasks({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: search.trim() || undefined,
+    status: filter === "ALL" ? undefined : filter,
+    sortOrder,
   })
 
-  const filtered = searched.filter(
-    (t) => filter === "ALL" || t.status === filter
-  )
-
-  const sorted = [...filtered].sort((a, b) => {
-    const da = a.deadline ? new Date(a.deadline).getTime() : 0
-    const db = b.deadline ? new Date(b.deadline).getTime() : 0
-    return sortOrder === "asc" ? da - db : db - da
-  })
+  const paginatedTasks = result?.data ?? []
+  const totalTasks = result?.total ?? 0
+  const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
 
   return (
     <div className="w-full space-y-6 p-6 pb-12 md:p-8">
@@ -482,7 +474,7 @@ export default function AdminTasks() {
         <div>
           <h1 className="text-2xl font-bold">System Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {sorted.length} task{sorted.length !== 1 ? "s" : ""} across
+            {totalTasks} task{totalTasks !== 1 ? "s" : ""} across
             departments
           </p>
         </div>
@@ -497,7 +489,10 @@ export default function AdminTasks() {
             <Input
               placeholder="Search tasks…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setCurrentPage(1)
+              }}
               className="h-9 w-48 rounded-full pl-8 text-sm"
             />
           </div>
@@ -505,7 +500,10 @@ export default function AdminTasks() {
             {FILTER_TABS.map(({ value, label }) => (
               <button
                 key={value}
-                onClick={() => setFilter(value)}
+                onClick={() => {
+                  setFilter(value)
+                  setCurrentPage(1)
+                }}
                 className={[
                   "h-8 rounded-full border px-3 text-xs font-medium transition-colors",
                   filter === value
@@ -524,7 +522,10 @@ export default function AdminTasks() {
             variant="outline"
             size="sm"
             className="h-8 gap-1.5 rounded-full px-3 text-xs text-muted-foreground"
-            onClick={() => setSortOrder((p) => (p === "asc" ? "desc" : "asc"))}
+            onClick={() => {
+              setSortOrder((p) => (p === "asc" ? "desc" : "asc"))
+              setCurrentPage(1)
+            }}
           >
             <IconArrowsSort
               className={`h-3.5 w-3.5 transition-transform ${sortOrder === "desc" ? "rotate-180" : ""}`}
@@ -585,7 +586,7 @@ export default function AdminTasks() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.length === 0 ? (
+              {paginatedTasks.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={7}
@@ -595,7 +596,7 @@ export default function AdminTasks() {
                   </TableCell>
                 </TableRow>
               ) : (
-                sorted.map((task) => (
+                paginatedTasks.map((task) => (
                   <TaskTableRow
                     key={task.id}
                     task={task}
@@ -615,10 +616,52 @@ export default function AdminTasks() {
             <KanbanColumn
               key={s}
               status={s}
-              tasks={sorted.filter((t) => t.status === s)}
+              tasks={paginatedTasks.filter((t) => t.status === s)}
               onSelectTask={setSelectedTask}
             />
           ))}
+        </div>
+      )}
+
+      {/* Pagination Footer */}
+      {!isLoading && !error && totalTasks > 0 && (
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <span className="text-center text-xs font-medium text-muted-foreground sm:text-left">
+            Showing {paginatedTasks.length} of {totalTasks} tasks
+          </span>
+          <div className="flex flex-wrap justify-center gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 px-3 text-xs"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              &larr; Prev
+            </Button>
+            
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <Button
+                key={i}
+                variant={currentPage === i + 1 ? "secondary" : "outline"}
+                size="sm"
+                className={`h-8 w-8 p-0 text-xs ${currentPage === i + 1 ? "border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100" : ""}`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 px-3 text-xs"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next &rarr;
+            </Button>
+          </div>
         </div>
       )}
 

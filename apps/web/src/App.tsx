@@ -15,6 +15,8 @@ import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
 import AdminTasks from "@/admin/tasks/AdminTasks"
 import DepartmentTasks from "@/department/tasks/Tasks"
 
+import MetricsPage from "@/pages/Metrics"
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 const queryClient = new QueryClient()
@@ -49,6 +51,7 @@ export function App() {
                     path="/department/tasks"
                     element={<DepartmentTasks />}
                   />
+                  <Route path="/metrics" element={<MetricsPage />} />
                   {/* <Route path="/profile" element={<ProfilePage />} /> */}
                   {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
                   <Route path="/settings" element={<SettingsPage />} />

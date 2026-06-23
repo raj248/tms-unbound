@@ -8,12 +8,41 @@ export const useTasks = (
   departmentId?: string | null
 ) => {
   return useQuery<TaskWithDetails[], Error>({
-    queryKey: ["tasks"],
+    queryKey: ["tasks", { status, departmentId }],
     queryFn: async () => {
       const { data } = await api.get(
         `/tasks?status=${status || ""}&departmentId=${departmentId || ""}`
       )
       return data.data
+    },
+  })
+}
+
+// --- 1.b. READ (Paginated Tasks) ---
+export const usePaginatedTasks = (params: {
+  page: number
+  limit: number
+  search?: string
+  status?: string
+  sortOrder?: "asc" | "desc"
+  departmentId?: string
+  enabled?: boolean
+}) => {
+  return useQuery<{ data: TaskWithDetails[]; total: number }, Error>({
+    queryKey: ["tasks-paginated", params],
+    enabled: params.enabled !== false,
+    queryFn: async () => {
+      const query = new URLSearchParams({
+        page: params.page.toString(),
+        limit: params.limit.toString(),
+        ...(params.search && { search: params.search }),
+        ...(params.status && { status: params.status }),
+        ...(params.sortOrder && { sortOrder: params.sortOrder }),
+        ...(params.departmentId && { departmentId: params.departmentId }),
+      }).toString()
+
+      const { data } = await api.get(`/tasks?${query}`)
+      return { data: data.data, total: data.total }
     },
   })
 }

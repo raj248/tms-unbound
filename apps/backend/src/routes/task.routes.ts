@@ -21,6 +21,10 @@ router.use(requireAuth)
 // ==========================================
 router.post("/", async (req: AuthenticatedRequest, res) => {
   try {
+    if (req.user?.role !== "ADMIN") {
+      throw new AppError("Only admins can create tasks", 403)
+    }
+
     const { name, description, departmentId, deadline } =
       req.body as CreateTaskRequest
 
@@ -46,25 +50,60 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
 })
 
 // ==========================================
-// 2. READ ALL (With Optional Queries)
+// 2. READ ALL (With Optional Queries & Pagination)
 // ==========================================
 router.get("/", async (req, res) => {
   try {
-    const { status, departmentId } = req.query
+    const { status, departmentId, search, sortOrder, page, limit } = req.query
 
-    const tasks = await prisma.task.findMany({
-      where: {
-        ...(status && { status: status as any }),
-        ...(departmentId && { departmentId: departmentId as string }),
-      },
+    const whereClause: any = {
+      ...(status && status !== "ALL" && { status: status as any }),
+      ...(departmentId && departmentId !== "ALL" && { departmentId: departmentId as string }),
+    }
+
+    if (search) {
+      const q = String(search)
+      whereClause.OR = [
+        { name: { contains: q } },
+        { department: { name: { contains: q } } },
+        { assigneeName: { contains: q } },
+        { assignee: { name: { contains: q } } },
+      ]
+    }
+
+    const orderByClause: any = []
+    if (sortOrder === "asc" || sortOrder === "desc") {
+      orderByClause.push({ deadline: sortOrder })
+    }
+    orderByClause.push({ createdAt: "desc" })
+
+    const queryOptions: any = {
+      where: whereClause,
       include: {
         department: true,
         assignee: { select: { id: true, username: true, name: true } },
         remarks: { orderBy: { createdAt: "asc" } },
       },
-      orderBy: { createdAt: "desc" },
-    })
+      orderBy: orderByClause,
+    }
 
+    // Apply pagination if provided
+    if (page && limit) {
+      const pageNum = Number(page)
+      const limitNum = Number(limit)
+      queryOptions.skip = (pageNum - 1) * limitNum
+      queryOptions.take = limitNum
+
+      const [tasks, total] = await Promise.all([
+        prisma.task.findMany(queryOptions),
+        prisma.task.count({ where: whereClause }),
+      ])
+
+      return res.json({ success: true, data: tasks, total })
+    }
+
+    // Non-paginated path (for Metrics page, etc)
+    const tasks = await prisma.task.findMany(queryOptions)
     return res.json({ success: true, data: tasks })
   } catch (error: any) {
     throw new AppError(error.message, 500)
