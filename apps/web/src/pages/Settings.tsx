@@ -79,28 +79,33 @@ function AddUserDialog() {
   const [name, setName] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState<Role>("USER")
+  const [departmentId, setDepartmentId] = useState("")
   const [error, setError] = useState("")
 
   const { mutate: createUser, isPending } = useCreateUser()
+  const { data: departments = [], isLoading: loadingDepts } = useDepartments()
 
   function reset() {
     setUsername("")
     setName("")
     setPassword("")
     setRole("USER")
+    setDepartmentId("")
     setError("")
   }
 
   function handleSubmit() {
     if (!username.trim()) return setError("Username is required.")
+    if (!name.trim()) return setError("Full name is required.")
     if (!password.trim()) return setError("Password is required.")
+    if (!departmentId) return setError("Department is required.")
 
     const payload: CreateUserRequest = {
       username: username.trim(),
-      name: name.trim() || "Unknown",
+      name: name.trim(),
       password: password.trim(),
       role,
-      departmentId: "cuj1234567890dept1",
+      departmentId,
     }
 
     createUser(payload, {
@@ -108,7 +113,9 @@ function AddUserDialog() {
         reset()
         setOpen(false)
       },
-      onError: () => setError("Failed to create user. Please try again."),
+      onError: (err: any) => {
+        setError(err.response.data.message)
+      },
     })
   }
 
@@ -138,7 +145,7 @@ function AddUserDialog() {
                 Username <span className="text-destructive">*</span>
               </Label>
               <Input
-                placeholder="@handle"
+                placeholder="User handle"
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value)
@@ -148,12 +155,15 @@ function AddUserDialog() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Full Name
+                Full Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 placeholder="Display name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setError("")
+                }}
               />
             </div>
           </div>
@@ -171,19 +181,50 @@ function AddUserDialog() {
               }}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Role
-            </Label>
-            <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USER">User</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                Department <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={departmentId}
+                onValueChange={(v) => {
+                  setDepartmentId(v)
+                  setError("")
+                }}
+                disabled={loadingDepts}
+              >
+                <SelectTrigger
+                  className={`w-full ${!departmentId && error ? "border-destructive" : ""}`}
+                >
+                  <SelectValue
+                    placeholder={loadingDepts ? "Loading…" : "Select…"}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                Role
+              </Label>
+              <Select value={role} onValueChange={(v) => setRole(v as Role)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
@@ -434,7 +475,7 @@ export default function Settings() {
                       {user?.name ?? "Unnamed User"}
                     </h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      @{user?.username}
+                      {user?.username}
                     </p>
                   </div>
                 </div>
@@ -453,7 +494,7 @@ export default function Settings() {
                       Username Handle
                     </span>
                     <p className="rounded-md border bg-zinc-50/50 p-2 text-sm font-medium dark:bg-zinc-900/50">
-                      @{user?.username}
+                      {user?.username}
                     </p>
                   </div>
                 </div>
@@ -486,45 +527,62 @@ export default function Settings() {
                   </p>
                 ) : (
                   <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {users.map((u) => (
-                      <div
-                        key={u.id}
-                        className="flex items-center justify-between gap-3 py-3.5 first:pt-0 last:pb-0"
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <Avatar className="h-8 w-8 shrink-0">
-                            <AvatarFallback className="text-xs">
-                              {u.name?.charAt(0) ??
-                                u.username.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm leading-none font-medium">
-                              {u.name || "Unnamed"}
-                            </p>
-                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                              @{u.username}
-                            </p>
+                    {users.map((u) => {
+                      // Helper resolver: Safely pulls the department from the user payload or falls back to lookups
+                      const departmentName =
+                        u.departments?.[0]?.name ??
+                        departments.find(
+                          (d) => d.id === (u as any).departmentId
+                        )?.name ??
+                        "No Department"
+
+                      return (
+                        <div
+                          key={u.id}
+                          className="flex items-center justify-between gap-3 py-3.5 first:pt-0 last:pb-0"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <Avatar className="h-8 w-8 shrink-0">
+                              <AvatarFallback className="text-xs">
+                                {u.name?.charAt(0) ??
+                                  u.username.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm leading-none font-medium">
+                                {u.name || "Unnamed"}
+                              </p>
+                              {/* Added a metadata line displaying Username & Resolved Department Name */}
+                              <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                                <span>@{u.username}</span>
+                                <span className="text-zinc-300 dark:text-zinc-700">
+                                  •
+                                </span>
+                                <span className="rounded bg-zinc-100/70 px-1.5 py-0.5 font-medium text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400">
+                                  {departmentName}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
+                                u.role === "ADMIN"
+                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-600"
+                                  : "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"
+                              }`}
+                            >
+                              {u.role}
+                            </span>
+                            <DeleteConfirm
+                              label={u.name ?? u.username}
+                              isPending={deletingUser}
+                              onConfirm={() => deleteUser(u.id)}
+                            />
                           </div>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
-                              u.role === "ADMIN"
-                                ? "border-amber-500/20 bg-amber-500/10 text-amber-600"
-                                : "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"
-                            }`}
-                          >
-                            {u.role}
-                          </span>
-                          <DeleteConfirm
-                            label={u.name ?? u.username}
-                            isPending={deletingUser}
-                            onConfirm={() => deleteUser(u.id)}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </CardContent>
