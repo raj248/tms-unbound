@@ -38,11 +38,13 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"))
 
 import authRoutes from "./routes/auth.routes"
 import taskRoutes from "./routes/task.routes"
+import departmentRoutes from "./routes/department.routes"
 import { globalErrorHandler } from "./middlewares/error.middleware"
 
 app.use(generalLimiter)
 app.use("/api/auth", authLimiter, authRoutes)
 app.use("/api/tasks", taskRoutes)
+app.use("/api/departments", departmentRoutes)
 // ---------------------------------------------------------------------------
 // Serve static files
 // ---------------------------------------------------------------------------

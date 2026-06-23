@@ -194,13 +194,13 @@ export default function Login() {
                   htmlFor="email"
                   className="text-sm font-bold tracking-wider text-zinc-700 uppercase"
                 >
-                  Email address
+                  Username
                 </Label>
                 <div className="relative">
                   <Input
                     id="email"
-                    type="email"
-                    placeholder="you@company.com"
+                    type="text"
+                    placeholder="username@company"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}

@@ -19,9 +19,9 @@ import {
 } from "@workspace/ui/components/select"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { IconPlus, IconCheck, IconAlertCircle } from "@tabler/icons-react"
-import { mockDepartments } from "@workspace/types"
 import type { CreateTaskRequest } from "@workspace/types"
 import { useCreateTask } from "@/hooks/task"
+import { useDepartments } from "@/hooks/department"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,7 +51,7 @@ export function CreateTaskDialog() {
   const [successMsg, setSuccessMsg] = useState("")
 
   const createTaskMutation = useCreateTask()
-
+  const { data: departments } = useDepartments()
   function resetForm() {
     setName("")
     setDescription("")
@@ -101,6 +101,7 @@ export function CreateTaskDialog() {
         setDescription("")
         setDepartmentId("")
         setDeadline("")
+        setOpen(false)
       },
       onError: (error: any) => {
         setSuccessMsg("")
@@ -178,7 +179,7 @@ export function CreateTaskDialog() {
                   <SelectValue placeholder="Select…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockDepartments.map((d) => (
+                  {departments?.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {d.name}
                     </SelectItem>

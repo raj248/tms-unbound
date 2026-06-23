@@ -89,6 +89,10 @@ export interface CreateTaskRequest {
   deadline?: string | Date
 }
 
+export interface CreateDepartmentRequest {
+  name: string
+}
+
 export interface CreateRemarkRequest {
   taskId: string
   text: string
