@@ -33,6 +33,18 @@ export const mockUsers: User[] = [
     name: "Jane Smith",
     role: "USER",
   },
+  {
+    id: "cuj1234567890user4",
+    username: "alice_w",
+    name: "Alice Wonderland",
+    role: "USER",
+  },
+  {
+    id: "cuj1234567890user5",
+    username: "bob_m",
+    name: "Bob Marley",
+    role: "ADMIN",
+  },
 ]
 
 export const mockDepartments: Department[] = [
@@ -53,6 +65,12 @@ export const mockDepartments: Department[] = [
     name: "Operations",
     createdAt: "2026-03-10T09:15:00.000Z",
     updatedAt: "2026-03-10T09:15:00.000Z",
+  },
+  {
+    id: "cuj1234567890dept4",
+    name: "Marketing",
+    createdAt: "2026-04-12T10:00:00.000Z",
+    updatedAt: "2026-04-12T10:00:00.000Z",
   },
 ]
 
@@ -96,6 +114,31 @@ export const mockTasks: Task[] = [
     createdAt: "2026-06-22T15:20:00.000Z",
     updatedAt: "2026-06-22T15:20:00.000Z",
   },
+  {
+    id: "cuj1234567890task4",
+    name: "Create Marketing Campaign Assets",
+    description:
+      "Design banners, social media posts, and email templates for the upcoming Q3 product launch.",
+    status: "BLOCKED",
+    departmentId: "cuj1234567890dept4",
+    assigneeId: "cuj1234567890user4",
+    assigneeName: "Alice Wonderland",
+    deadline: "2026-07-15T12:00:00.000Z",
+    createdAt: "2026-06-23T09:00:00.000Z",
+    updatedAt: "2026-06-23T09:30:00.000Z",
+  },
+  {
+    id: "cuj1234567890task5",
+    name: "Review Security Audit",
+    description: "Analyze the latest penetration testing report and patch the listed high-priority vulnerabilities.",
+    status: "IN_PROGRESS",
+    departmentId: "cuj1234567890dept1",
+    assigneeId: "cuj1234567890user5",
+    assigneeName: "Bob Marley",
+    deadline: "2026-06-28T17:00:00.000Z",
+    createdAt: "2026-06-21T08:00:00.000Z",
+    updatedAt: "2026-06-23T10:00:00.000Z",
+  },
 ]
 
 export const mockRemarks: Remark[] = [
@@ -119,6 +162,20 @@ export const mockRemarks: Remark[] = [
     taskId: "cuj1234567890task2",
     authorName: "John Doe",
     createdAt: "2026-06-22T13:10:00.000Z",
+  },
+  {
+    id: "cuj1234567890rem4",
+    text: "Blocked by missing brand assets from the agency. Will follow up tomorrow.",
+    taskId: "cuj1234567890task4",
+    authorName: "Alice Wonderland",
+    createdAt: "2026-06-23T09:30:00.000Z",
+  },
+  {
+    id: "cuj1234567890rem5",
+    text: "Started patching the XSS vulnerability on the dashboard.",
+    taskId: "cuj1234567890task5",
+    authorName: "Bob Marley",
+    createdAt: "2026-06-22T08:30:00.000Z",
   },
 ]
 
@@ -153,6 +210,26 @@ export const mockTasksWithDetails: TaskWithDetails[] = [
     assignee: null,
     remarks: [],
   },
+  {
+    ...mockTasks[3],
+    department: mockDepartments[3],
+    assignee: {
+      id: "cuj1234567890user4",
+      username: "alice_w",
+      name: "Alice Wonderland",
+    },
+    remarks: [mockRemarks[3]],
+  },
+  {
+    ...mockTasks[4],
+    department: mockDepartments[0],
+    assignee: {
+      id: "cuj1234567890user5",
+      username: "bob_m",
+      name: "Bob Marley",
+    },
+    remarks: [mockRemarks[4]],
+  },
 ]
 
 export const mockDepartmentsWithUsers: DepartmentWithUsers[] = [
@@ -184,6 +261,21 @@ export const mockDepartmentsWithUsers: DepartmentWithUsers[] = [
         id: "cuj1234567890user3",
         username: "jane_smith",
         name: "Jane Smith",
+        role: "USER",
+      },
+    ],
+    _count: {
+      tasks: 1,
+      users: 1,
+    },
+  },
+  {
+    ...mockDepartments[3],
+    users: [
+      {
+        id: "cuj1234567890user4",
+        username: "alice_w",
+        name: "Alice Wonderland",
         role: "USER",
       },
     ],

@@ -17,9 +17,11 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import { Card } from "@workspace/ui/components/card"
-
-import { mockTasksWithDetails, type TaskWithDetails } from "@workspace/types"
-import { CreateTaskDialog } from "@/admin/tasks/CreateTaskDialog"
+import { type TaskWithDetails } from "@workspace/types"
+import { usePaginatedTasks } from "@/hooks/task"
+import { TaskDetailDialog } from "@/admin/tasks/TaskDetailDialog"
+import { useAuth } from "@/context/auth-context"
+import { useUsers } from "@/hooks/user"
 
 const getStatusStyle = (status: string) => {
   if (status === "PENDING") return "destructive"
@@ -41,38 +43,59 @@ const formatDeadline = (dateString: string | Date | null) => {
 }
 
 export default function Tasks() {
+  const { user } = useAuth()
+  const { data: users, isLoading: usersLoading } = useUsers()
+  
+  const currentUserObj = users?.find((u) => u.id === user?.id)
+  const myDepartmentId = currentUserObj?.departments?.[0]?.id
+
+  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null)
+
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<
     "ALL" | "IN_PROGRESS" | "COMPLETED" | "PENDING"
   >("ALL")
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
   const handleSortToggle = () => {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    setCurrentPage(1)
   }
 
-  const filteredTasks = (mockTasksWithDetails || []).filter(
-    (t) => filter === "ALL" || t.status === filter
-  )
+  const handleFilterChange = (newFilter: "ALL" | "IN_PROGRESS" | "COMPLETED" | "PENDING") => {
+    setFilter(newFilter)
+    setCurrentPage(1)
+  }
 
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const dateA = a.deadline ? new Date(a.deadline).getTime() : 0
-    const dateB = b.deadline ? new Date(b.deadline).getTime() : 0
-    return sortOrder === "asc" ? dateA - dateB : dateB - dateA
+  const [search, setSearch] = useState("")
+
+  const { data: result, isLoading: tasksLoading, error } = usePaginatedTasks({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: search.trim() || undefined,
+    status: filter === "ALL" ? undefined : filter,
+    sortOrder,
+    departmentId: myDepartmentId,
+    enabled: !!myDepartmentId,
   })
 
-  const safeTasks = sortedTasks
+  const isLoading = tasksLoading || usersLoading
+
+  const totalTasks = result?.total ?? 0
+  const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
+  const safeTasks = result?.data ?? []
 
   return (
     <div className="w-full space-y-6 p-8 pb-12">
       {/* Header */}
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">System Tasks</h1>
+          <h1 className="text-2xl font-bold text-foreground">Department Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Admin · {safeTasks.length} tasks across departments
+            {totalTasks} tasks available
           </p>
         </div>
-        <CreateTaskDialog />
       </div>
 
       {/* Filters and Search Row */}
@@ -83,32 +106,37 @@ export default function Tasks() {
             <Input
               type="text"
               placeholder="Search all tasks..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setCurrentPage(1)
+              }}
               className="h-9 rounded-full pl-9"
             />
           </div>
           <Button
-            onClick={() => setFilter("ALL")}
+            onClick={() => handleFilterChange("ALL")}
             variant={filter === "ALL" ? "default" : "outline"}
             className={`h-9 rounded-full px-4 ${filter === "ALL" ? "border border-blue-200 bg-blue-100 text-blue-700 shadow-none hover:bg-blue-200 hover:text-blue-800" : "text-muted-foreground"}`}
           >
             All
           </Button>
           <Button
-            onClick={() => setFilter("IN_PROGRESS")}
+            onClick={() => handleFilterChange("IN_PROGRESS")}
             variant={filter === "IN_PROGRESS" ? "default" : "outline"}
             className={`h-9 rounded-full px-4 ${filter === "IN_PROGRESS" ? "border border-blue-200 bg-blue-100 text-blue-700 shadow-none hover:bg-blue-200 hover:text-blue-800" : "text-muted-foreground"}`}
           >
             In progress
           </Button>
           <Button
-            onClick={() => setFilter("COMPLETED")}
+            onClick={() => handleFilterChange("COMPLETED")}
             variant={filter === "COMPLETED" ? "default" : "outline"}
             className={`h-9 rounded-full px-4 ${filter === "COMPLETED" ? "border border-blue-200 bg-blue-100 text-blue-700 shadow-none hover:bg-blue-200 hover:text-blue-800" : "text-muted-foreground"}`}
           >
             Completed
           </Button>
           <Button
-            onClick={() => setFilter("PENDING")}
+            onClick={() => handleFilterChange("PENDING")}
             variant={filter === "PENDING" ? "default" : "outline"}
             className={`h-9 rounded-full px-4 ${filter === "PENDING" ? "border border-blue-200 bg-blue-100 text-blue-700 shadow-none hover:bg-blue-200 hover:text-blue-800" : "text-muted-foreground"}`}
           >
@@ -128,53 +156,94 @@ export default function Tasks() {
       </div>
 
       {/* Task Table Structure */}
-      <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
-        <Table>
-          <TableHeader className="hidden bg-muted/50 md:table-header-group">
-            <TableRow>
-              <TableHead className="w-[35%]">Task</TableHead>
-              <TableHead className="w-[15%] text-center">Status</TableHead>
-              <TableHead className="w-[20%] text-center">Due Date</TableHead>
-              <TableHead className="w-[15%] pr-6 text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {safeTasks.map((task) => (
-              <TaskRow key={task.id} task={task} />
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24 text-muted-foreground">
+          <span className="text-sm">Loading tasks…</span>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-24 text-sm text-destructive">
+          Failed to load tasks.
+        </div>
+      ) : (
+        <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
+          <Table>
+            <TableHeader className="hidden bg-muted/50 md:table-header-group">
+              <TableRow>
+                <TableHead className="w-[35%]">Task</TableHead>
+                <TableHead className="w-[15%] text-center">Status</TableHead>
+                <TableHead className="w-[20%] text-center">Due Date</TableHead>
+                <TableHead className="w-[15%] pr-6 text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {safeTasks.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="py-20 text-center text-sm text-muted-foreground"
+                  >
+                    No tasks match your filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                safeTasks.map((task) => (
+                  <TaskRow key={task.id} task={task} />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
 
       {/* Pagination Footer */}
-      {safeTasks.length > 10 && (
+      {!isLoading && !error && totalTasks > 0 && (
         <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <span className="text-center text-xs font-medium text-muted-foreground sm:text-left">
-            Showing {safeTasks.length} of {mockTasksWithDetails.length} tasks
+            Showing {safeTasks.length} of {totalTasks} tasks
           </span>
           <div className="flex flex-wrap justify-center gap-1">
-            <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 text-xs"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
               &larr; Prev
             </Button>
+
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <Button
+                key={i}
+                variant={currentPage === i + 1 ? "secondary" : "outline"}
+                size="sm"
+                className={`h-8 w-8 p-0 text-xs ${currentPage === i + 1 ? "border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100" : ""}`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+
             <Button
-              variant="secondary"
+              variant="outline"
               size="sm"
-              className="h-8 w-8 border border-blue-200 bg-blue-50 p-0 text-xs text-blue-600 hover:bg-blue-100"
+              className="h-8 px-3 text-xs"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
             >
-              1
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
-              2
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-xs">
-              3
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
               Next &rarr;
             </Button>
           </div>
         </div>
       )}
+
+      <TaskDetailDialog
+        task={selectedTask}
+        open={!!selectedTask}
+        onOpenChange={(v) => {
+          if (!v) setSelectedTask(null)
+        }}
+      />
     </div>
   )
 
@@ -191,7 +260,10 @@ export default function Tasks() {
     return (
       <TableRow className="flex flex-col border-b border-border hover:bg-muted/50 md:table-row">
         <TableCell className="block px-6 py-4 font-medium md:table-cell md:py-3">
-          <p className="truncate text-sm font-medium text-foreground">
+          <p 
+            className="cursor-pointer truncate text-sm font-medium text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline"
+            onClick={() => setSelectedTask(task)}
+          >
             {task.name}
           </p>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
