@@ -430,7 +430,7 @@ export default function Settings() {
       >
         {/* Sidebar */}
         <TabsList className="flex h-auto w-full shrink-0 flex-row overflow-x-auto rounded-xl border bg-zinc-100/80 p-1 md:w-48 md:flex-col md:gap-1 dark:bg-zinc-900/50">
-          {tabs.map(({ value, label, icon, destructive }) => (
+          {tabs.map(({ value, label, icon }) => (
             <TabsTrigger
               key={value}
               value={value}
