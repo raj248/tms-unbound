@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo build",
     "deploy:bundle": "turbo build && rm -rf apps/backend/public/build && cp -r apps/web/dist apps/backend/public/build",
+    "deploy:phone": "ssh -t apps@192.168.1.80 \"cd ~/apps/tms.zephy.co.in && git pull && pnpm deploy:bundle && pm2 start ~/ecosystem.config.js\"",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "turbo format",

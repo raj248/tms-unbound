@@ -1,14 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { CreateTaskRequest, Task } from "@workspace/types"
+import type { CreateTaskRequest, Task, TaskWithDetails } from "@workspace/types"
 import api from "@/lib/api"
 
 // --- 1. READ (Get All Tasks) ---
-export const useTasks = () => {
-  return useQuery<Task[], Error>({
+export const useTasks = (
+  status?: string | null,
+  departmentId?: string | null
+) => {
+  return useQuery<TaskWithDetails[], Error>({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data } = await api.get(`/tasks`)
-      return data
+      const { data } = await api.get(
+        `/tasks?status=${status || ""}&departmentId=${departmentId || ""}`
+      )
+      return data.data
     },
   })
 }

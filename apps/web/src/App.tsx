@@ -16,7 +16,7 @@ import AdminTasks from "@/admin/tasks/AdminTasks"
 import DepartmentTasks from "@/department/tasks/Tasks"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-
+import { TooltipProvider } from "@workspace/ui/components/tooltip"
 const queryClient = new QueryClient()
 
 export function App() {
@@ -24,36 +24,41 @@ export function App() {
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <Routes>
-              {/* Public */}
-              <Route path="/" element={<LoginPage />} />
+          <TooltipProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Public */}
+                <Route path="/" element={<LoginPage />} />
 
-              {/* Protected — all children rendered inside MainLayout via <Outlet> */}
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <MainLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/dashboard" element={<RoleBasedRedirect />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/tasks" element={<AdminTasks />} />
+                {/* Protected — all children rendered inside MainLayout via <Outlet> */}
                 <Route
-                  path="/department/dashboard"
-                  element={<DepartmentDashboard />}
-                />
-                <Route path="/department/tasks" element={<DepartmentTasks />} />
-                {/* <Route path="/profile" element={<ProfilePage />} /> */}
-                {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
-                <Route path="/settings" element={<SettingsPage />} />
-              </Route>
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/dashboard" element={<RoleBasedRedirect />} />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/tasks" element={<AdminTasks />} />
+                  <Route
+                    path="/department/dashboard"
+                    element={<DepartmentDashboard />}
+                  />
+                  <Route
+                    path="/department/tasks"
+                    element={<DepartmentTasks />}
+                  />
+                  {/* <Route path="/profile" element={<ProfilePage />} /> */}
+                  {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Route>
 
-              {/* Catch-all */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </BrowserRouter>
+                {/* Catch-all */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
         </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>
