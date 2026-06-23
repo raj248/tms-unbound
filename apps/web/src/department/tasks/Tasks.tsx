@@ -1,4 +1,3 @@
-// made by harsh
 import { useState } from "react"
 import {
   IconSearch,
@@ -18,13 +17,9 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import { Card } from "@workspace/ui/components/card"
-import { mockTasksWithDetails, type TaskWithDetails } from "@workspace/types"
 
-const getPriorityStyle = (priority: string) => {
-  if (priority === "High") return "bg-red-50 text-red-600 hover:bg-red-50"
-  if (priority === "Med") return "bg-amber-50 text-amber-600 hover:bg-amber-50"
-  return "bg-emerald-50 text-emerald-600 hover:bg-emerald-50"
-}
+import { mockTasksWithDetails, type TaskWithDetails } from "@workspace/types"
+import { CreateTaskDialog } from "@/admin/tasks/CreateTaskDialog"
 
 const getStatusStyle = (status: string) => {
   if (status === "PENDING") return "destructive"
@@ -43,12 +38,6 @@ const formatDeadline = (dateString: string | Date | null) => {
   if (!dateString) return "No date"
   const date = new Date(dateString)
   return date.toLocaleDateString("en-US", { month: "short", day: "2-digit" })
-}
-
-const derivePriority = (status: string) => {
-  if (status === "PENDING") return "High"
-  if (status === "IN_PROGRESS") return "Med"
-  return "Low"
 }
 
 export default function Tasks() {
@@ -78,11 +67,12 @@ export default function Tasks() {
       {/* Header */}
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Tasks</h1>
+          <h1 className="text-2xl font-bold text-foreground">System Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Engineering · {mockTasksWithDetails.length} tasks assigned
+            Admin · {safeTasks.length} tasks across departments
           </p>
         </div>
+        <CreateTaskDialog />
       </div>
 
       {/* Filters and Search Row */}
@@ -92,7 +82,7 @@ export default function Tasks() {
             <IconSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search tasks..."
+              placeholder="Search all tasks..."
               className="h-9 rounded-full pl-9"
             />
           </div>
@@ -138,12 +128,11 @@ export default function Tasks() {
       </div>
 
       {/* Task Table Structure */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
         <Table>
           <TableHeader className="hidden bg-muted/50 md:table-header-group">
             <TableRow>
               <TableHead className="w-[35%]">Task</TableHead>
-              <TableHead className="w-[15%] text-center">Priority</TableHead>
               <TableHead className="w-[15%] text-center">Status</TableHead>
               <TableHead className="w-[20%] text-center">Due Date</TableHead>
               <TableHead className="w-[15%] pr-6 text-right">Action</TableHead>
@@ -191,7 +180,6 @@ export default function Tasks() {
 
   function TaskRow({ task }: { task: TaskWithDetails }) {
     const statusVariant = getStatusStyle(task.status) as any
-    const priority = derivePriority(task.status)
 
     let customStatusClass = ""
     if (task.status === "IN_PROGRESS") {
@@ -210,18 +198,6 @@ export default function Tasks() {
             {task.department?.name || "Unassigned Dept"} ·{" "}
             {task.assigneeName || "Unassigned"}
           </p>
-        </TableCell>
-
-        <TableCell className="flex justify-between px-6 py-1 md:table-cell md:py-3 md:text-center">
-          <span className="text-xs text-muted-foreground md:hidden">
-            Priority:
-          </span>
-          <Badge
-            variant="outline"
-            className={`border-transparent px-2 py-0.5 text-[10px] font-bold ${getPriorityStyle(priority)}`}
-          >
-            {priority}
-          </Badge>
         </TableCell>
 
         <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:py-3 md:text-center">

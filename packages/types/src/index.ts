@@ -13,6 +13,10 @@ export interface User {
   username: string
   name: string | null
   role: Role
+
+  // Relations (Optional, to handle include blocks cleanly)
+  departments?: Department[]
+  assignedTasks?: Task[]
 }
 
 export interface Department {
@@ -82,7 +86,6 @@ export interface CreateTaskRequest {
   name: string
   description?: string
   departmentId: string
-  assigneeId?: string
   deadline?: string | Date
 }
 

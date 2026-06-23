@@ -9,6 +9,7 @@ import {
   UpdateTaskRequest,
   CreateRemarkRequest,
 } from "@workspace/types"
+import { AppError } from "../utils/app-error.utils"
 
 const router: Router = Router()
 
@@ -18,11 +19,12 @@ router.use(requireAuth)
 // ==========================================
 // 1. CREATE TASK
 // ==========================================
-router.post("/", async (req, res) => {
+router.post("/", async (req: AuthenticatedRequest, res) => {
   try {
-    const { name, description, departmentId, assigneeId, deadline } =
+    const { name, description, departmentId, deadline } =
       req.body as CreateTaskRequest
 
+    const assigneeId = req.user?.userId
     const newTask = await prisma.task.create({
       data: {
         name,
@@ -30,13 +32,16 @@ router.post("/", async (req, res) => {
         departmentId,
         assigneeId: assigneeId || null,
         deadline: deadline ? new Date(deadline) : null,
+        assigneeName:
+          req.user?.name || req.user?.username || "Anonymous System User",
+        status: "PENDING",
       },
       include: { department: true },
     })
 
     return res.status(201).json({ success: true, data: newTask })
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message })
+    throw new AppError(error.message, 500)
   }
 })
 
@@ -61,7 +66,7 @@ router.get("/", async (req, res) => {
 
     return res.json({ success: true, data: tasks })
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message })
+    throw new AppError(error.message, 500)
   }
 })
 
@@ -81,12 +86,11 @@ router.get("/:id", async (req, res) => {
       },
     })
 
-    if (!task)
-      return res.status(404).json({ success: false, error: "Task not found" })
+    if (!task) throw new AppError("Task not found", 404)
 
     return res.json({ success: true, data: task })
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message })
+    throw new AppError(error.message, 500)
   }
 })
 
@@ -130,7 +134,7 @@ router.put("/:id", async (req, res) => {
 
     return res.json({ success: true, data: updatedTask })
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message })
+    throw new AppError(error.message, 500)
   }
 })
 
@@ -143,9 +147,7 @@ router.delete("/:id", async (req: AuthenticatedRequest, res) => {
 
     // Check if user is ADMIN if you want to gate this
     if (req.user?.role !== "ADMIN") {
-      return res
-        .status(403)
-        .json({ success: false, error: "Only admins can drop tasks" })
+      throw new AppError("Only admins can drop tasks", 403)
     }
 
     await prisma.task.delete({ where: { id: id as string } })
@@ -154,7 +156,7 @@ router.delete("/:id", async (req: AuthenticatedRequest, res) => {
       data: { message: "Task successfully deleted" },
     })
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message })
+    throw new AppError(error.message, 500)
   }
 })
 
@@ -183,7 +185,7 @@ router.post("/:id/remarks", async (req: AuthenticatedRequest, res) => {
 
     return res.status(201).json({ success: true, data: newRemark })
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message })
+    throw new AppError(error.message, 500)
   }
 })
 

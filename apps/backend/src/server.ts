@@ -37,11 +37,12 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }))
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"))
 
 import authRoutes from "./routes/auth.routes"
+import taskRoutes from "./routes/task.routes"
 import { globalErrorHandler } from "./middlewares/error.middleware"
 
 app.use(generalLimiter)
 app.use("/api/auth", authLimiter, authRoutes)
-
+app.use("/api/tasks", taskRoutes)
 // ---------------------------------------------------------------------------
 // Serve static files
 // ---------------------------------------------------------------------------
