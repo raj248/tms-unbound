@@ -9,6 +9,7 @@ import {
   IconCheck,
   IconLoader2,
   IconAlertTriangle,
+  IconTrash,
 } from "@tabler/icons-react"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -34,14 +35,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 
 import { type TaskWithDetails, type TaskStatus } from "@workspace/types"
 import { CreateTaskDialog } from "./CreateTaskDialog"
-import { useTasks } from "@/hooks/task"
+import { useTasks, useUpdateTask, useDeleteTask } from "@/hooks/task"
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Config
 // ---------------------------------------------------------------------------
 
 const STATUS_CONFIG: Record<
@@ -78,6 +90,10 @@ const FILTER_TABS: { value: "ALL" | TaskStatus; label: string }[] = [
   { value: "COMPLETED", label: "Completed" },
 ]
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function StatusBadge({ status }: { status: TaskStatus }) {
   const cfg = STATUS_CONFIG[status]
   return (
@@ -93,8 +109,7 @@ function StatusBadge({ status }: { status: TaskStatus }) {
 function formatDeadline(dateString: string | Date | null) {
   if (!dateString) return null
   const date = new Date(dateString)
-  const now = new Date()
-  const isOverdue = date < now
+  const isOverdue = date < new Date()
   const formatted = date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -104,18 +119,24 @@ function formatDeadline(dateString: string | Date | null) {
 }
 
 // ---------------------------------------------------------------------------
-// Inline status editor
+// Inline status select
 // ---------------------------------------------------------------------------
 
 function StatusSelect({
   value,
+  disabled,
   onCommit,
 }: {
   value: TaskStatus
+  disabled?: boolean
   onCommit: (next: TaskStatus) => void
 }) {
   return (
-    <Select value={value} onValueChange={(v) => onCommit(v as TaskStatus)}>
+    <Select
+      value={value}
+      onValueChange={(v) => onCommit(v as TaskStatus)}
+      disabled={disabled}
+    >
       <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
         <SelectValue>
           <StatusBadge status={value} />
@@ -133,64 +154,53 @@ function StatusSelect({
 }
 
 // ---------------------------------------------------------------------------
-// Kanban card
+// Delete confirm button
 // ---------------------------------------------------------------------------
 
-function KanbanCard({
-  task,
-  onStatusChange,
+function DeleteButton({
+  taskName,
+  onConfirm,
+  isPending,
 }: {
-  task: TaskWithDetails
-  onStatusChange: (id: string, s: TaskStatus) => void
+  taskName: string
+  onConfirm: () => void
+  isPending: boolean
 }) {
-  const dl = formatDeadline(task.deadline)
-
   return (
-    <Card className="group border-zinc-200/70 shadow-none transition-shadow hover:shadow-sm dark:border-zinc-800/70">
-      <CardContent className="space-y-3 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-sm leading-snug font-medium text-foreground">
-            {task.name}
-          </p>
-          <StatusSelect
-            value={task.status}
-            onCommit={(s) => onStatusChange(task.id, s)}
-          />
-        </div>
-
-        {task.description && (
-          <p className="line-clamp-2 text-xs text-muted-foreground">
-            {task.description}
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <IconBuilding className="h-3 w-3" />
-            {task.department?.name ?? "—"}
-          </span>
-          <span className="flex items-center gap-1">
-            <IconUser className="h-3 w-3" />
-            {task.assignee?.name ?? task.assigneeName ?? "Unassigned"}
-          </span>
-          {dl && (
-            <span
-              className={`flex items-center gap-1 ${dl.isOverdue && task.status !== "COMPLETED" ? "font-semibold text-red-500" : ""}`}
-            >
-              <IconCalendar className="h-3 w-3" />
-              {dl.formatted}
-              {dl.isOverdue && task.status !== "COMPLETED" && " · Overdue"}
-            </span>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          disabled={isPending}
+        >
+          {isPending ? (
+            <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <IconTrash className="h-3.5 w-3.5" />
           )}
-          {task.remarks?.length > 0 && (
-            <span className="flex items-center gap-1">
-              <IconMessageCircle className="h-3 w-3" />
-              {task.remarks.length}
-            </span>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete task?</AlertDialogTitle>
+          <AlertDialogDescription>
+            <span className="font-medium text-foreground">"{taskName}"</span>{" "}
+            will be permanently removed. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+            onClick={onConfirm}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 
@@ -198,18 +208,13 @@ function KanbanCard({
 // Table row
 // ---------------------------------------------------------------------------
 
-function TaskTableRow({
-  task,
-  onStatusChange,
-}: {
-  task: TaskWithDetails
-  onStatusChange: (id: string, s: TaskStatus) => void
-}) {
+function TaskTableRow({ task }: { task: TaskWithDetails }) {
+  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
   const dl = formatDeadline(task.deadline)
 
   return (
     <TableRow className="hover:bg-muted/40">
-      {/* Task name + description */}
       <TableCell className="py-3 pl-6">
         <p className="truncate text-sm font-medium">{task.name}</p>
         {task.description && (
@@ -219,7 +224,6 @@ function TaskTableRow({
         )}
       </TableCell>
 
-      {/* Department */}
       <TableCell className="py-3">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <IconBuilding className="h-3.5 w-3.5 shrink-0" />
@@ -227,7 +231,6 @@ function TaskTableRow({
         </span>
       </TableCell>
 
-      {/* Assignee */}
       <TableCell className="py-3">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <IconUser className="h-3.5 w-3.5 shrink-0" />
@@ -235,15 +238,14 @@ function TaskTableRow({
         </span>
       </TableCell>
 
-      {/* Status — inline editable */}
       <TableCell className="py-3">
         <StatusSelect
           value={task.status}
-          onCommit={(s) => onStatusChange(task.id, s)}
+          disabled={isUpdating}
+          onCommit={(status) => updateTask({ id: task.id, status })}
         />
       </TableCell>
 
-      {/* Deadline */}
       <TableCell className="py-3">
         {dl ? (
           <span
@@ -251,13 +253,17 @@ function TaskTableRow({
           >
             <IconCalendar className="h-3.5 w-3.5 shrink-0" />
             {dl.formatted}
+            {dl.isOverdue && task.status !== "COMPLETED" && (
+              <span className="ml-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] text-red-500">
+                Overdue
+              </span>
+            )}
           </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
 
-      {/* Remarks */}
       <TableCell className="py-3">
         {task.remarks?.length > 0 ? (
           <TooltipProvider>
@@ -270,7 +276,7 @@ function TaskTableRow({
               </TooltipTrigger>
               <TooltipContent
                 side="left"
-                className="max-w-xs space-y-1 p-3 text-xs"
+                className="max-w-xs space-y-1.5 p-3 text-xs"
               >
                 {task.remarks.slice(0, 3).map((r) => (
                   <p key={r.id}>
@@ -291,15 +297,83 @@ function TaskTableRow({
         )}
       </TableCell>
 
-      {/* Done indicator */}
       <TableCell className="py-3 pr-6 text-right">
-        {task.status === "COMPLETED" && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
-            <IconCheck className="h-3.5 w-3.5" /> Done
-          </span>
-        )}
+        <div className="flex items-center justify-end gap-1">
+          {task.status === "COMPLETED" && (
+            <span className="mr-1 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+              <IconCheck className="h-3.5 w-3.5" /> Done
+            </span>
+          )}
+          <DeleteButton
+            taskName={task.name}
+            isPending={isDeleting}
+            onConfirm={() => deleteTask(task.id)}
+          />
+        </div>
       </TableCell>
     </TableRow>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Kanban card
+// ---------------------------------------------------------------------------
+
+function KanbanCard({ task }: { task: TaskWithDetails }) {
+  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
+  const dl = formatDeadline(task.deadline)
+
+  return (
+    <Card className="border-zinc-200/70 shadow-none transition-shadow hover:shadow-sm dark:border-zinc-800/70">
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm leading-snug font-medium">{task.name}</p>
+          <DeleteButton
+            taskName={task.name}
+            isPending={isDeleting}
+            onConfirm={() => deleteTask(task.id)}
+          />
+        </div>
+
+        {task.description && (
+          <p className="line-clamp-2 text-xs text-muted-foreground">
+            {task.description}
+          </p>
+        )}
+
+        <StatusSelect
+          value={task.status}
+          disabled={isUpdating}
+          onCommit={(status) => updateTask({ id: task.id, status })}
+        />
+
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <IconBuilding className="h-3 w-3" />
+            {task.department?.name ?? "—"}
+          </span>
+          <span className="flex items-center gap-1">
+            <IconUser className="h-3 w-3" />
+            {task.assignee?.name ?? task.assigneeName ?? "Unassigned"}
+          </span>
+          {dl && (
+            <span
+              className={`flex items-center gap-1 ${dl.isOverdue && task.status !== "COMPLETED" ? "font-semibold text-red-500" : ""}`}
+            >
+              <IconCalendar className="h-3 w-3" />
+              {dl.formatted}
+            </span>
+          )}
+          {task.remarks?.length > 0 && (
+            <span className="flex items-center gap-1">
+              <IconMessageCircle className="h-3 w-3" />
+              {task.remarks.length}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -310,11 +384,9 @@ function TaskTableRow({
 function KanbanColumn({
   status,
   tasks,
-  onStatusChange,
 }: {
   status: TaskStatus
   tasks: TaskWithDetails[]
-  onStatusChange: (id: string, s: TaskStatus) => void
 }) {
   const cfg = STATUS_CONFIG[status]
   return (
@@ -334,9 +406,7 @@ function KanbanColumn({
             No tasks
           </div>
         ) : (
-          tasks.map((t) => (
-            <KanbanCard key={t.id} task={t} onStatusChange={onStatusChange} />
-          ))
+          tasks.map((t) => <KanbanCard key={t.id} task={t} />)
         )}
       </div>
     </div>
@@ -344,7 +414,7 @@ function KanbanColumn({
 }
 
 // ---------------------------------------------------------------------------
-// Main page
+// Page
 // ---------------------------------------------------------------------------
 
 type ViewMode = "table" | "kanban"
@@ -357,23 +427,7 @@ export default function AdminTasks() {
 
   const { data: tasks, isLoading, error } = useTasks()
 
-  // Optimistic local status overrides
-  const [localOverrides, setLocalOverrides] = useState<
-    Record<string, TaskStatus>
-  >({})
-
-  function handleStatusChange(id: string, next: TaskStatus) {
-    setLocalOverrides((p) => ({ ...p, [id]: next }))
-    // TODO: fire API mutation here, roll back on error
-    console.log("update task status →", id, next)
-  }
-
-  const mergedTasks: TaskWithDetails[] = (tasks ?? []).map((t) => ({
-    ...t,
-    status: localOverrides[t.id] ?? t.status,
-  }))
-
-  const searched = mergedTasks.filter((t) => {
+  const searched = (tasks ?? []).filter((t) => {
     if (!search.trim()) return true
     const q = search.toLowerCase()
     return (
@@ -393,12 +447,9 @@ export default function AdminTasks() {
     return sortOrder === "asc" ? da - db : db - da
   })
 
-  // Kanban grouped
-  const byStatus = (s: TaskStatus) => sorted.filter((t) => t.status === s)
-
   return (
     <div className="w-full space-y-6 p-6 pb-12 md:p-8">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">System Tasks</h1>
@@ -410,9 +461,8 @@ export default function AdminTasks() {
         <CreateTaskDialog />
       </div>
 
-      {/* ── Toolbar ── */}
+      {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Left: search + filter tabs */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <IconSearch className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -423,7 +473,6 @@ export default function AdminTasks() {
               className="h-9 w-48 rounded-full pl-8 text-sm"
             />
           </div>
-
           <div className="flex flex-wrap gap-1">
             {FILTER_TABS.map(({ value, label }) => (
               <button
@@ -442,7 +491,6 @@ export default function AdminTasks() {
           </div>
         </div>
 
-        {/* Right: sort + view toggle */}
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -455,7 +503,6 @@ export default function AdminTasks() {
             />
             {sortOrder === "asc" ? "Oldest first" : "Newest first"}
           </Button>
-
           <Tabs
             value={viewMode}
             onValueChange={(v) => setViewMode(v as ViewMode)}
@@ -478,13 +525,15 @@ export default function AdminTasks() {
         </div>
       </div>
 
-      {/* ── Loading / Error ── */}
+      {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-24 text-muted-foreground">
           <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
           <span className="text-sm">Loading tasks…</span>
         </div>
       )}
+
+      {/* Error */}
       {error && (
         <div className="flex items-center justify-center gap-2 py-24 text-sm text-destructive">
           <IconAlertTriangle className="h-4 w-4" />
@@ -492,17 +541,17 @@ export default function AdminTasks() {
         </div>
       )}
 
-      {/* ── Table view ── */}
+      {/* Table */}
       {!isLoading && !error && viewMode === "table" && (
         <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="w-[28%] pl-6">Task</TableHead>
+                <TableHead className="w-[26%] pl-6">Task</TableHead>
                 <TableHead className="w-[14%]">Department</TableHead>
                 <TableHead className="w-[14%]">Assignee</TableHead>
                 <TableHead className="w-[14%]">Status</TableHead>
-                <TableHead className="w-[13%]">Deadline</TableHead>
+                <TableHead className="w-[15%]">Deadline</TableHead>
                 <TableHead className="w-[8%]">Remarks</TableHead>
                 <TableHead className="w-[9%] pr-6 text-right" />
               </TableRow>
@@ -518,28 +567,21 @@ export default function AdminTasks() {
                   </TableCell>
                 </TableRow>
               ) : (
-                sorted.map((task) => (
-                  <TaskTableRow
-                    key={task.id}
-                    task={task}
-                    onStatusChange={handleStatusChange}
-                  />
-                ))
+                sorted.map((task) => <TaskTableRow key={task.id} task={task} />)
               )}
             </TableBody>
           </Table>
         </Card>
       )}
 
-      {/* ── Kanban view ── */}
+      {/* Kanban */}
       {!isLoading && !error && viewMode === "kanban" && (
         <div className="flex gap-4 overflow-x-auto pb-4">
           {(Object.keys(STATUS_CONFIG) as TaskStatus[]).map((s) => (
             <KanbanColumn
               key={s}
               status={s}
-              tasks={byStatus(s)}
-              onStatusChange={handleStatusChange}
+              tasks={sorted.filter((t) => t.status === s)}
             />
           ))}
         </div>
