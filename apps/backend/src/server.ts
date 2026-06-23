@@ -41,6 +41,7 @@ import taskRoutes from "./routes/task.routes"
 import departmentRoutes from "./routes/department.routes"
 import remarkRouter from "./routes/remark.routes" // Import the fresh module
 import userRoutes from "./routes/user.routes"
+import notificationRoutes from "./routes/notification.routes"
 import { globalErrorHandler } from "./middlewares/error.middleware"
 
 app.use(generalLimiter)
@@ -49,6 +50,8 @@ app.use("/api/tasks", taskRoutes)
 app.use("/api/departments", departmentRoutes)
 app.use("/api/remarks", remarkRouter)
 app.use("/api/users", userRoutes)
+app.use("/api/notifications", notificationRoutes)
+
 // ---------------------------------------------------------------------------
 // Serve static files
 // ---------------------------------------------------------------------------

@@ -13,23 +13,50 @@ router.use(requireAuth)
 // ==========================================
 // 1. GET MY NOTIFICATION HISTORY
 // ==========================================
+// src/routes/notification.routes.ts
+
 router.get("/", async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user?.userId
 
-    // Fetch delivery status lines matching the user, hydrated with core message text
-    const history = await prisma.notificationStatus.findMany({
-      where: { userId },
-      include: {
-        notification: true,
-      },
-      orderBy: {
-        notification: { createdAt: "desc" },
+    // 1. Parse pagination parameters with safe fallbacks
+    const page = parseInt(req.query.page as string, 10) || 1
+    const limit = parseInt(req.query.limit as string, 10) || 20
+    const skip = (page - 1) * limit
+
+    // 2. Run database queries in parallel for optimal throughput
+    const [history, totalCount] = await Promise.all([
+      prisma.notificationStatus.findMany({
+        where: { userId },
+        include: {
+          notification: true,
+        },
+        orderBy: {
+          notification: { createdAt: "desc" },
+        },
+        take: limit,
+        skip: skip,
+      }),
+      prisma.notificationStatus.count({
+        where: { userId },
+      }),
+    ])
+
+    // 3. Construct clean pagination metadata
+    const hasMore = skip + history.length < totalCount
+
+    return res.json({
+      success: true,
+      data: history,
+      meta: {
+        page,
+        limit,
+        totalCount,
+        hasMore,
       },
     })
-
-    return res.json({ success: true, data: history })
   } catch (error: any) {
+    if (error instanceof AppError) throw error
     throw new AppError(error.message, 500)
   }
 })

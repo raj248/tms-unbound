@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Link } from "react-router-dom"
+import { useState, useRef, useCallback } from "react"
+import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -21,13 +21,20 @@ import {
   SheetTrigger,
 } from "@workspace/ui/components/sheet"
 import { IconBell, IconMenu2 } from "@workspace/ui/lib/Icons"
+import { IconLoader2, IconBellOff, IconCircleDot } from "@tabler/icons-react"
+import { useNotifications, useMarkAsRead } from "@/hooks/notification"
+import type { NotificationHistoryItem } from "@workspace/types"
 
 // ---------------------------------------------------------------------------
-// Nav config — adjust labels/hrefs/icons to match your routes
+// Nav config
 // ---------------------------------------------------------------------------
 
 const getNavLinks = (role?: string) => [
-  { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
+  {
+    label: "Dashboard",
+    href: role === "ADMIN" ? "/admin/dashboard" : "/department/dashboard",
+    icon: "ti-layout-dashboard",
+  },
   {
     label: "Tasks",
     href: role === "ADMIN" ? "/admin/tasks" : "/department/tasks",
@@ -52,32 +59,168 @@ function getInitials(name?: string | null) {
     .toUpperCase()
 }
 
-const MOCK_NOTIFICATIONS = [
-  {
-    id: "1",
-    title: "New book submitted",
-    body: "Jane Doe submitted Rust & Rain",
-    time: "2m ago",
-    read: false,
-  },
-  {
-    id: "2",
-    title: "Review approved",
-    body: "Your review was published",
-    time: "1h ago",
-    read: false,
-  },
-  {
-    id: "3",
-    title: "Profile updated",
-    body: "Changes saved successfully",
-    time: "3h ago",
-    read: true,
-  },
-]
+function formatNotifTime(date: string | Date) {
+  const d = new Date(date)
+  const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
+  if (diffMin < 1) return "just now"
+  if (diffMin < 60) return `${diffMin}m ago`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}h ago`
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
 
 // ---------------------------------------------------------------------------
-// NavLink — shared between desktop header and mobile drawer
+// Single notification row
+// ---------------------------------------------------------------------------
+
+function NotifItem({ item }: { item: NotificationHistoryItem }) {
+  const { mutate: markAsRead, isPending } = useMarkAsRead()
+
+  return (
+    <li
+      className={`group flex gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/50 ${!item.isRead ? "bg-muted/30" : ""}`}
+    >
+      {/* Unread dot */}
+      <div className="mt-1.5 flex w-3 shrink-0 justify-center">
+        {!item.isRead && <span className="h-2 w-2 rounded-full bg-primary" />}
+      </div>
+
+      {/* Content */}
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <p
+          className={`leading-snug ${!item.isRead ? "font-semibold text-foreground" : "font-medium text-foreground/80"}`}
+        >
+          {item.notification.title}
+        </p>
+        <p className="line-clamp-2 text-xs text-muted-foreground">
+          {item.notification.body}
+        </p>
+        <p className="text-[10px] text-muted-foreground/70">
+          {item.notification.senderName} ·{" "}
+          {formatNotifTime(item.notification.createdAt)}
+        </p>
+      </div>
+
+      {/* Per-item mark-as-read — hover reveal */}
+      {!item.isRead && (
+        <button
+          onClick={() => markAsRead(item.id)}
+          disabled={isPending}
+          className="mt-0.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary disabled:cursor-not-allowed"
+          aria-label="Mark as read"
+        >
+          {isPending ? (
+            <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <IconCircleDot className="h-3.5 w-3.5" />
+          )}
+        </button>
+      )}
+    </li>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Notification panel — infinite scroll
+// ---------------------------------------------------------------------------
+
+function NotificationPanel() {
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useNotifications(20)
+
+  const { mutate: markAsRead } = useMarkAsRead()
+
+  // Flatten pages → flat item list
+  const allItems: NotificationHistoryItem[] =
+    data?.pages.flatMap((p) => p.data) ?? []
+  const unread = allItems.filter((n) => !n.isRead)
+  const unreadCount = unread.length
+
+  function handleMarkAllRead() {
+    unread.forEach((n) => markAsRead(n.id))
+  }
+
+  // IntersectionObserver sentinel for infinite scroll
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) observerRef.current.disconnect()
+      if (!node) return
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      })
+      observerRef.current.observe(node)
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  )
+
+  return (
+    <>
+      {/* Panel header */}
+      <div className="flex items-center justify-between border-b px-4 py-3">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold">Notifications</p>
+          {unreadCount > 0 && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+              {unreadCount} new
+            </span>
+          )}
+        </div>
+        {unreadCount > 0 && (
+          <button
+            onClick={handleMarkAllRead}
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Mark all read
+          </button>
+        )}
+      </div>
+
+      {/* Scrollable feed */}
+      <div className="max-h-[380px] overflow-y-auto">
+        {isLoading ? (
+          <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
+            <IconLoader2 className="h-4 w-4 animate-spin" />
+            <span className="text-xs">Loading…</span>
+          </div>
+        ) : allItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-10 text-muted-foreground">
+            <IconBellOff className="h-6 w-6 opacity-40" />
+            <p className="text-xs">You're all caught up</p>
+          </div>
+        ) : (
+          <>
+            <ul className="divide-y">
+              {allItems.map((n) => (
+                <NotifItem key={n.id} item={n} />
+              ))}
+            </ul>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="py-2 text-center">
+              {isFetchingNextPage ? (
+                <IconLoader2 className="mx-auto h-4 w-4 animate-spin text-muted-foreground" />
+              ) : hasNextPage ? (
+                <span className="text-[10px] text-muted-foreground">
+                  Scroll for more
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground">
+                  All caught up
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// NavLink
 // ---------------------------------------------------------------------------
 
 function NavLink({
@@ -90,14 +233,19 @@ function NavLink({
   icon: string
   onClick?: () => void
 }) {
-  // const { pathname } = useLocation()
-  // const active = pathname === href || pathname.startsWith(href + "/")
+  const { pathname } = useLocation()
+  const active = pathname === href || pathname.startsWith(href + "/")
 
   return (
     <Link
       to={href}
       onClick={onClick}
-      className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-zinc-500 transition-all duration-200 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+      className={[
+        "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
+        active
+          ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
+          : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
+      ].join(" ")}
     >
       {label}
     </Link>
@@ -111,13 +259,16 @@ function NavLink({
 export function Header() {
   const { user, logout } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length
+
+  // Unread count from first page only — enough for the badge
+  const { data: firstPageData } = useNotifications(20)
+  const firstPageItems = firstPageData?.pages[0]?.data ?? []
+  const unreadCount = firstPageItems.filter((n) => !n.isRead).length
 
   return (
     <header className="flex h-14 items-center justify-between border-b bg-background px-4 sm:px-6">
-      {/* ── Left: logo + desktop nav ──────────────────────────────────────── */}
+      {/* ── Left: logo + desktop nav ── */}
       <div className="flex items-center gap-6">
-        {/* Logo */}
         <Link
           to="/dashboard"
           className="group flex shrink-0 items-center gap-2 text-sm font-semibold tracking-tight"
@@ -129,7 +280,6 @@ export function Header() {
               className="h-7 w-7 object-contain antialiased"
             />
           </div>
-
           <div className="flex flex-col leading-none">
             <span className="text-xl font-black tracking-tighter uppercase">
               Unbound
@@ -140,7 +290,6 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Desktop nav — hidden on mobile */}
         <nav
           aria-label="Main navigation"
           className="hidden items-center gap-1 md:flex"
@@ -151,9 +300,9 @@ export function Header() {
         </nav>
       </div>
 
-      {/* ── Right: notifications + avatar + hamburger ─────────────────────── */}
+      {/* ── Right: notifications + avatar + hamburger ── */}
       <div className="flex items-center gap-1">
-        {/* Notifications */}
+        {/* ── Bell ── */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -164,51 +313,18 @@ export function Header() {
             >
               <IconBell className="h-4 w-4" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 p-0">
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <p className="text-sm font-medium">Notifications</p>
-              {unreadCount > 0 && (
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                  {unreadCount} new
-                </span>
-              )}
-            </div>
-            <ul className="divide-y">
-              {MOCK_NOTIFICATIONS.map((n) => (
-                <li
-                  key={n.id}
-                  className={`flex gap-3 px-4 py-3 text-sm ${!n.read ? "bg-muted/40" : ""}`}
-                >
-                  {!n.read && (
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  )}
-                  <div className={!n.read ? "" : "pl-[18px]"}>
-                    <p className="leading-snug font-medium">{n.title}</p>
-                    <p className="text-muted-foreground">{n.body}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {n.time}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="border-t px-4 py-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs text-muted-foreground"
-              >
-                Mark all as read
-              </Button>
-            </div>
+          <PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
+            <NotificationPanel />
           </PopoverContent>
         </Popover>
 
-        {/* User avatar dropdown */}
+        {/* ── Avatar dropdown ── */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -239,14 +355,6 @@ export function Header() {
               asChild
               className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 transition-colors hover:text-black"
             >
-              <Link to="/profile" className="block w-full text-sm font-medium">
-                Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              asChild
-              className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 transition-colors hover:text-black"
-            >
               <Link to="/settings" className="block w-full text-sm font-medium">
                 Settings
               </Link>
@@ -261,7 +369,7 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Hamburger — mobile only */}
+        {/* ── Hamburger — mobile only ── */}
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
           <SheetTrigger asChild>
             <Button
@@ -273,23 +381,30 @@ export function Header() {
               <IconMenu2 className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-
           <SheetContent side="left" className="w-64 p-0">
-            {/* Drawer header */}
-            <div className="flex h-14 items-center justify-between border-b px-4">
+            <div className="flex h-14 items-center border-b px-4">
               <Link
                 to="/dashboard"
                 onClick={() => setDrawerOpen(false)}
                 className="flex items-center gap-2 text-sm font-semibold"
               >
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[11px] font-bold text-primary-foreground">
-                  A
+                <div className="relative flex h-10 w-10 transform-gpu items-center justify-center overflow-hidden rounded-xl border border-border/50 bg-white shadow-sm transition-all group-hover:scale-105 group-hover:rotate-3">
+                  <img
+                    src="/unbound_logo.webp"
+                    alt="Unbound Script Logo"
+                    className="h-7 w-7 object-contain antialiased"
+                  />
                 </div>
-                Unbound
+                <div className="flex flex-col leading-none">
+                  <span className="text-xl font-black tracking-tighter uppercase">
+                    Unbound
+                  </span>
+                  <span className="ml-0.5 text-[10px] font-bold tracking-[0.3em] text-muted-foreground uppercase">
+                    Script
+                  </span>
+                </div>
               </Link>
             </div>
-
-            {/* Drawer nav */}
             <nav
               aria-label="Mobile navigation"
               className="flex flex-col gap-1 p-3"
@@ -302,8 +417,6 @@ export function Header() {
                 />
               ))}
             </nav>
-
-            {/* Drawer footer — user info */}
             <div className="absolute right-0 bottom-0 left-0 border-t p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">

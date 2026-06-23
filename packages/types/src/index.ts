@@ -4,6 +4,18 @@ export interface ApiResponse<T> {
   error?: string
 }
 
+// Add this to your types definition file
+export interface PaginatedResponse<T> {
+  success: boolean
+  data: T[]
+  meta: {
+    page: number
+    limit: number
+    totalCount: number
+    hasMore: boolean
+  }
+}
+
 export type Role = "USER" | "ADMIN"
 
 export type TaskStatus = "PENDING" | "IN_PROGRESS" | "BLOCKED" | "COMPLETED"
@@ -52,9 +64,9 @@ export interface Notification {
   id: string
   title: string
   body: string
-  senderId: string
+  senderId: string | null
   senderName: string
-  targetDeptId: string
+  targetDeptId: string | null // Null if broadcasted to all admins
   isAdminOnly: boolean
   createdAt: string | Date
 }
@@ -65,20 +77,41 @@ export interface NotificationStatus {
   userId: string
   isRead: boolean
   readAt: string | Date | null
+
+  notification?: Notification
 }
 
-export interface NotificationWithStatus extends Notification {
-  statuses: NotificationStatus[]
+/**
+ * Represents an item in a user's notification feed center.
+ * It contains the individual read status line along with the embedded message body.
+ */
+export interface NotificationHistoryItem extends NotificationStatus {
+  notification: Notification
 }
 
-// A Task along with its attached relational context
+/**
+ * Input format for explicitly dispatching a custom notification via the API.
+ * e.g., POST /api/notifications/send
+ */
+export interface SendNotificationRequest {
+  title: string
+  body: string
+  targetDeptId?: string // Target a specific department (loops in admins too)
+  isAdminOnly?: boolean // Target admins exclusively
+}
+
+/**
+ * A Task along with its attached relational context
+ */
 export interface TaskWithDetails extends Task {
   department: Department
   assignee: Omit<User, "role" | "createdAt"> | null
   remarks: Remark[]
 }
 
-// A Department showing its full group assignment
+/**
+ * A Department showing its full group assignment
+ */
 export interface DepartmentWithUsers extends Department {
   users: Omit<User, "createdAt">[]
   _count?: {
@@ -87,7 +120,6 @@ export interface DepartmentWithUsers extends Department {
   }
 }
 
-// Auth Payloads
 export interface LoginRequest {
   username: string
   password: string
@@ -105,7 +137,6 @@ export interface AuthVerifyResponse {
   user: User
 }
 
-// Creation Payloads
 export interface CreateTaskRequest {
   name: string
   description?: string
@@ -120,7 +151,7 @@ export interface CreateDepartmentRequest {
 export interface CreateRemarkRequest {
   taskId: string
   text: string
-  authorName: string // Captured from session on backend
+  authorName: string
 }
 
 export interface CreateUserRequest {
@@ -131,7 +162,6 @@ export interface CreateUserRequest {
   departmentId: string
 }
 
-// Update Payloads
 export interface UpdateTaskRequest {
   name?: string
   description?: string
