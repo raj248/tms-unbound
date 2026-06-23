@@ -99,6 +99,14 @@ export interface CreateRemarkRequest {
   authorName: string // Captured from session on backend
 }
 
+export interface CreateUserRequest {
+  username: string
+  name: string
+  password: string
+  role: Role
+  departmentId: string
+}
+
 // Update Payloads
 export interface UpdateTaskRequest {
   name?: string
