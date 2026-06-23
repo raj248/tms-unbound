@@ -46,7 +46,7 @@ const formatDeadline = (dateString: string | Date | null) => {
 export default function Tasks() {
   const { user } = useAuth()
   const { data: users, isLoading: usersLoading } = useUsers()
-  
+
   const currentUserObj = users?.find((u) => u.id === user?.id)
   const myDepartmentId = currentUserObj?.departments?.[0]?.id
   const { openTask } = useTaskModal()
@@ -63,14 +63,20 @@ export default function Tasks() {
     setCurrentPage(1)
   }
 
-  const handleFilterChange = (newFilter: "ALL" | "IN_PROGRESS" | "COMPLETED" | "PENDING") => {
+  const handleFilterChange = (
+    newFilter: "ALL" | "IN_PROGRESS" | "COMPLETED" | "PENDING"
+  ) => {
     setFilter(newFilter)
     setCurrentPage(1)
   }
 
   const [search, setSearch] = useState("")
 
-  const { data: result, isLoading: tasksLoading, error } = usePaginatedTasks({
+  const {
+    data: result,
+    isLoading: tasksLoading,
+    error,
+  } = usePaginatedTasks({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     search: search.trim() || undefined,
@@ -83,7 +89,7 @@ export default function Tasks() {
   const isLoading = tasksLoading || usersLoading
 
   const totalTasks = result?.total ?? 0
-  const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
+  // const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
   const safeTasks = result?.data ?? []
 
   return (
@@ -91,7 +97,9 @@ export default function Tasks() {
       {/* Header */}
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Department Tasks</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Department Tasks
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {totalTasks} tasks available
           </p>
@@ -172,7 +180,9 @@ export default function Tasks() {
                 <TableHead className="w-[35%]">Task</TableHead>
                 <TableHead className="w-[15%] text-center">Status</TableHead>
                 <TableHead className="w-[20%] text-center">Due Date</TableHead>
-                <TableHead className="w-[15%] pr-6 text-right">Action</TableHead>
+                <TableHead className="w-[15%] pr-6 text-right">
+                  Action
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -186,9 +196,7 @@ export default function Tasks() {
                   </TableCell>
                 </TableRow>
               ) : (
-                safeTasks.map((task) => (
-                  <TaskRow key={task.id} task={task} />
-                ))
+                safeTasks.map((task) => <TaskRow key={task.id} task={task} />)
               )}
             </TableBody>
           </Table>
@@ -197,7 +205,7 @@ export default function Tasks() {
 
       {/* Pagination Footer */}
       {!isLoading && !error && totalTasks > 0 && (
-        <PaginationFooter 
+        <PaginationFooter
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           totalItems={totalTasks}
@@ -221,7 +229,7 @@ export default function Tasks() {
     return (
       <TableRow className="flex flex-col border-b border-border hover:bg-muted/50 md:table-row">
         <TableCell className="block px-6 py-4 font-medium md:table-cell md:py-3">
-          <p 
+          <p
             className="cursor-pointer truncate text-sm font-medium text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline"
             onClick={() => openTask(task)}
           >
