@@ -17,6 +17,7 @@ export interface User {
   // Relations (Optional, to handle include blocks cleanly)
   departments?: Department[]
   assignedTasks?: Task[]
+  receivedNotifications?: NotificationStatus[]
 }
 
 export interface Department {
@@ -45,6 +46,29 @@ export interface Remark {
   taskId: string
   authorName: string
   createdAt: string | Date
+}
+
+export interface Notification {
+  id: string
+  title: string
+  body: string
+  senderId: string
+  senderName: string
+  targetDeptId: string
+  isAdminOnly: boolean
+  createdAt: string | Date
+}
+
+export interface NotificationStatus {
+  id: string
+  notificationId: string
+  userId: string
+  isRead: boolean
+  readAt: string | Date | null
+}
+
+export interface NotificationWithStatus extends Notification {
+  statuses: NotificationStatus[]
 }
 
 // A Task along with its attached relational context
