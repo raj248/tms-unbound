@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
+    "deploy:bundle": "turbo build && rm -rf apps/backend/public/build && cp -r apps/web/dist apps/backend/public/build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "turbo format",

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -28,7 +28,11 @@ import { IconBell, IconMenu2 } from "@workspace/ui/lib/Icons"
 
 const getNavLinks = (role?: string) => [
   { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
-  { label: "Tasks", href: role === "ADMIN" ? "/admin/tasks" : "/department/tasks", icon: "ti-list-check" },
+  {
+    label: "Tasks",
+    href: role === "ADMIN" ? "/admin/tasks" : "/department/tasks",
+    icon: "ti-list-check",
+  },
   { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
   { label: "Audit", href: "/audit", icon: "ti-clipboard-list" },
   { label: "Settings", href: "/settings", icon: "ti-settings" },
@@ -86,14 +90,14 @@ function NavLink({
   icon: string
   onClick?: () => void
 }) {
-  const { pathname } = useLocation()
-  const active = pathname === href || pathname.startsWith(href + "/")
+  // const { pathname } = useLocation()
+  // const active = pathname === href || pathname.startsWith(href + "/")
 
   return (
     <Link
       to={href}
       onClick={onClick}
-      className="flex items-center rounded-md px-3 py-2 text-sm transition-all duration-200 text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+      className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-zinc-500 transition-all duration-200 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
     >
       {label}
     </Link>
@@ -218,21 +222,36 @@ export function Header() {
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-white border border-zinc-200 shadow-xl rounded-xl p-1.5 z-50">
-            <DropdownMenuLabel className="font-normal px-2.5 py-3">
-              <p className="text-sm font-bold text-zinc-900">{user?.name ?? "Account"}</p>
-              <p className="truncate text-xs font-medium text-zinc-500 mt-0.5">
+          <DropdownMenuContent
+            align="end"
+            className="z-50 w-56 rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl"
+          >
+            <DropdownMenuLabel className="px-2.5 py-3 font-normal">
+              <p className="text-sm font-bold text-zinc-900">
+                {user?.name ?? "Account"}
+              </p>
+              <p className="mt-0.5 truncate text-xs font-medium text-zinc-500">
                 {user?.username}
               </p>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-black my-1 mx-1" />
-            <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 hover:text-black transition-colors">
-              <Link to="/profile" className="text-sm font-medium w-full block">Profile</Link>
+            <DropdownMenuSeparator className="mx-1 my-1 bg-black" />
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 transition-colors hover:text-black"
+            >
+              <Link to="/profile" className="block w-full text-sm font-medium">
+                Profile
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 hover:text-black transition-colors">
-              <Link to="/settings" className="text-sm font-medium w-full block">Settings</Link>
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer rounded-lg px-3 py-2 text-zinc-900 transition-colors hover:text-black"
+            >
+              <Link to="/settings" className="block w-full text-sm font-medium">
+                Settings
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-black my-1 mx-1" />
+            <DropdownMenuSeparator className="mx-1 my-1 bg-black" />
             <DropdownMenuItem
               className="cursor-pointer rounded-lg px-3 py-2 text-sm font-bold text-red-600 transition-colors"
               onClick={logout}

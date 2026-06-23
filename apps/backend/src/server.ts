@@ -3,6 +3,7 @@ import cors from "cors"
 import morgan from "morgan"
 import rateLimit from "express-rate-limit"
 import cookieParser from "cookie-parser"
+import path from "path"
 
 const app: Express = express()
 
@@ -41,10 +42,62 @@ import { globalErrorHandler } from "./middlewares/error.middleware"
 app.use(generalLimiter)
 app.use("/api/auth", authLimiter, authRoutes)
 
-app.use((req, res, next) => {
-  res
-    .status(404)
-    .json({ message: `Cannot find ${req.originalUrl} on this server` })
+// ---------------------------------------------------------------------------
+// Serve static files
+// ---------------------------------------------------------------------------
+
+const BUILD_PATH = path.join(process.cwd(), "public", "build")
+const PUBLIC_PATH = path.join(process.cwd(), "public")
+
+// 1. Specific handler for index.html to block caching
+const serveIndex = (req: Request, res: Response) => {
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  )
+  res.setHeader("Pragma", "no-cache")
+  res.setHeader("Expires", "0")
+  res.sendFile(path.join(BUILD_PATH, "index.html"))
+}
+
+// 2. Asset static middleware with conditional caching
+const staticOptions = {
+  setHeaders: (res: Response, filePath: string) => {
+    res.set("Access-Control-Allow-Origin", "*")
+    res.set("Cross-Origin-Resource-Policy", "cross-origin")
+
+    // Cache hashed assets (Vite JS/CSS/Images) for 1 year
+    if (filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$/)) {
+      res.set("Cache-Control", "public, max-age=31536000, immutable")
+    } else {
+      // Ensure any other file (like index.html) is not cached
+      res.set(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, proxy-revalidate"
+      )
+    }
+  },
+}
+
+// Route for root
+app.get("/", serveIndex)
+
+// Serve build folder (Vite assets)
+app.use(express.static(BUILD_PATH, staticOptions))
+
+// Serve other public assets
+app.use(express.static(PUBLIC_PATH, staticOptions))
+
+app.get("/firebase-messaging-sw.js", (req, res) => {
+  res.set("Service-Worker-Allowed", "/")
+  // SW should also not be cached to ensure updates check-in correctly
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate")
+  res.sendFile(path.join(PUBLIC_PATH, "firebase-messaging-sw.js"))
+})
+
+// 3. Fallback/Catch-all for SPA Routing
+app.use((req, res) => {
+  serveIndex(req, res)
 })
 
 app.use(globalErrorHandler)
