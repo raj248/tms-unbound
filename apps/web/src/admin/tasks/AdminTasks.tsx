@@ -51,6 +51,7 @@ import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { type TaskWithDetails, type TaskStatus } from "@workspace/types"
 import { CreateTaskDialog } from "./CreateTaskDialog"
 import { useTasks, useUpdateTask, useDeleteTask } from "@/hooks/task"
+import { TaskDetailDialog } from "./TaskDetailDialog"
 
 // ---------------------------------------------------------------------------
 // Config
@@ -208,15 +209,25 @@ function DeleteButton({
 // Table row
 // ---------------------------------------------------------------------------
 
-function TaskTableRow({ task }: { task: TaskWithDetails }) {
+function TaskTableRow({
+  task,
+  setSelectedTask,
+}: {
+  task: TaskWithDetails
+  setSelectedTask: (task: TaskWithDetails) => void
+}) {
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
   const dl = formatDeadline(task.deadline)
-
   return (
     <TableRow className="hover:bg-muted/40">
       <TableCell className="py-3 pl-6">
-        <p className="truncate text-sm font-medium">{task.name}</p>
+        <p
+          className="cursor-pointer truncate text-sm font-medium underline-offset-2 transition-colors hover:text-primary hover:underline"
+          onClick={() => setSelectedTask(task)}
+        >
+          {task.name}
+        </p>
         {task.description && (
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {task.description}
@@ -319,7 +330,13 @@ function TaskTableRow({ task }: { task: TaskWithDetails }) {
 // Kanban card
 // ---------------------------------------------------------------------------
 
-function KanbanCard({ task }: { task: TaskWithDetails }) {
+function KanbanCard({
+  task,
+  onSelectTask,
+}: {
+  task: TaskWithDetails
+  onSelectTask: (task: TaskWithDetails) => void
+}) {
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
   const dl = formatDeadline(task.deadline)
@@ -328,7 +345,13 @@ function KanbanCard({ task }: { task: TaskWithDetails }) {
     <Card className="border-zinc-200/70 shadow-none transition-shadow hover:shadow-sm dark:border-zinc-800/70">
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-sm leading-snug font-medium">{task.name}</p>
+          <p
+            className="cursor-pointer text-sm leading-snug font-medium transition-colors hover:text-primary"
+            onClick={() => onSelectTask(task)}
+          >
+            {task.name}
+          </p>
+
           <DeleteButton
             taskName={task.name}
             isPending={isDeleting}
@@ -384,9 +407,11 @@ function KanbanCard({ task }: { task: TaskWithDetails }) {
 function KanbanColumn({
   status,
   tasks,
+  onSelectTask,
 }: {
   status: TaskStatus
   tasks: TaskWithDetails[]
+  onSelectTask: (task: TaskWithDetails) => void
 }) {
   const cfg = STATUS_CONFIG[status]
   return (
@@ -406,7 +431,9 @@ function KanbanColumn({
             No tasks
           </div>
         ) : (
-          tasks.map((t) => <KanbanCard key={t.id} task={t} />)
+          tasks.map((t) => (
+            <KanbanCard key={t.id} task={t} onSelectTask={onSelectTask} />
+          ))
         )}
       </div>
     </div>
@@ -424,6 +451,7 @@ export default function AdminTasks() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
   const [search, setSearch] = useState("")
+  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null)
 
   const { data: tasks, isLoading, error } = useTasks()
 
@@ -567,7 +595,13 @@ export default function AdminTasks() {
                   </TableCell>
                 </TableRow>
               ) : (
-                sorted.map((task) => <TaskTableRow key={task.id} task={task} />)
+                sorted.map((task) => (
+                  <TaskTableRow
+                    key={task.id}
+                    task={task}
+                    setSelectedTask={setSelectedTask}
+                  />
+                ))
               )}
             </TableBody>
           </Table>
@@ -582,10 +616,19 @@ export default function AdminTasks() {
               key={s}
               status={s}
               tasks={sorted.filter((t) => t.status === s)}
+              onSelectTask={setSelectedTask}
             />
           ))}
         </div>
       )}
+
+      <TaskDetailDialog
+        task={selectedTask}
+        open={!!selectedTask}
+        onOpenChange={(v) => {
+          if (!v) setSelectedTask(null)
+        }}
+      />
     </div>
   )
 }

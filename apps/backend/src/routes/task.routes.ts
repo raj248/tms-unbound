@@ -60,6 +60,7 @@ router.get("/", async (req, res) => {
       include: {
         department: true,
         assignee: { select: { id: true, username: true, name: true } },
+        remarks: { orderBy: { createdAt: "asc" } },
       },
       orderBy: { createdAt: "desc" },
     })

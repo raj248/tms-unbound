@@ -31,7 +31,10 @@ export const useCreateRemark = () => {
       queryClient.invalidateQueries({ queryKey: ["remarks", taskId] })
 
       // Also invalidate the detailed task query since it embeds the remarks array
-      queryClient.invalidateQueries({ queryKey: ["tasks", taskId] })
+      //   queryClient.invalidateQueries({ queryKey: ["tasks", taskId] })
+
+      // Also invalidate the detailed task query since it embeds the remarks array
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
     },
   })
 }
@@ -50,7 +53,10 @@ export const useDeleteRemark = () => {
 
       // Sync caches to immediately drop the comment from the screen layout
       queryClient.invalidateQueries({ queryKey: ["remarks", taskId] })
-      queryClient.invalidateQueries({ queryKey: ["tasks", taskId] })
+      //   queryClient.invalidateQueries({ queryKey: ["tasks", taskId] })
+
+      // Also invalidate the detailed task query since it embeds the remarks array
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
     },
   })
 }
