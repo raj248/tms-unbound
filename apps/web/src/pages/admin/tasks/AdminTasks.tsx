@@ -35,53 +35,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@workspace/ui/components/alert-dialog"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 
 import { type TaskWithDetails, type TaskStatus } from "@workspace/types"
-import { CreateTaskDialog } from "./CreateTaskDialog"
+import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog"
 import { useUpdateTask, useDeleteTask, usePaginatedTasks } from "@/hooks/task"
-import { TaskDetailDialog } from "./TaskDetailDialog"
+import { useTaskModal } from "@/context/task-modal-context"
+import { PaginationFooter } from "@/components/ui/PaginationFooter"
+import { STATUS_CONFIG, StatusBadge, formatDeadline, StatusSelect, DeleteButton } from "@/components/tasks/shared"
 
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
-
-const STATUS_CONFIG: Record<
-  TaskStatus,
-  { label: string; className: string; dot: string }
-> = {
-  PENDING: {
-    label: "Pending",
-    className: "border-orange-200 bg-orange-50 text-orange-600",
-    dot: "bg-orange-400",
-  },
-  IN_PROGRESS: {
-    label: "In Progress",
-    className: "border-blue-200 bg-blue-50 text-blue-600",
-    dot: "bg-blue-400",
-  },
-  BLOCKED: {
-    label: "Blocked",
-    className: "border-red-200 bg-red-50 text-red-600",
-    dot: "bg-red-500",
-  },
-  COMPLETED: {
-    label: "Completed",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-600",
-    dot: "bg-emerald-500",
-  },
-}
 
 const FILTER_TABS: { value: "ALL" | TaskStatus; label: string }[] = [
   { value: "ALL", label: "All" },
@@ -92,129 +57,15 @@ const FILTER_TABS: { value: "ALL" | TaskStatus; label: string }[] = [
 ]
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function StatusBadge({ status }: { status: TaskStatus }) {
-  const cfg = STATUS_CONFIG[status]
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.className}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.label}
-    </span>
-  )
-}
-
-function formatDeadline(dateString: string | Date | null) {
-  if (!dateString) return null
-  const date = new Date(dateString)
-  const isOverdue = date < new Date()
-  const formatted = date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
-  return { formatted, isOverdue }
-}
-
-// ---------------------------------------------------------------------------
-// Inline status select
-// ---------------------------------------------------------------------------
-
-function StatusSelect({
-  value,
-  disabled,
-  onCommit,
-}: {
-  value: TaskStatus
-  disabled?: boolean
-  onCommit: (next: TaskStatus) => void
-}) {
-  return (
-    <Select
-      value={value}
-      onValueChange={(v) => onCommit(v as TaskStatus)}
-      disabled={disabled}
-    >
-      <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
-        <SelectValue>
-          <StatusBadge status={value} />
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {(Object.keys(STATUS_CONFIG) as TaskStatus[]).map((s) => (
-          <SelectItem key={s} value={s} className="text-xs">
-            <StatusBadge status={s} />
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Delete confirm button
-// ---------------------------------------------------------------------------
-
-function DeleteButton({
-  taskName,
-  onConfirm,
-  isPending,
-}: {
-  taskName: string
-  onConfirm: () => void
-  isPending: boolean
-}) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-          disabled={isPending}
-        >
-          {isPending ? (
-            <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <IconTrash className="h-3.5 w-3.5" />
-          )}
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete task?</AlertDialogTitle>
-          <AlertDialogDescription>
-            <span className="font-medium text-foreground">"{taskName}"</span>{" "}
-            will be permanently removed. This cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
-            onClick={onConfirm}
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Table row
 // ---------------------------------------------------------------------------
 
 function TaskTableRow({
   task,
-  setSelectedTask,
+  onSelectTask,
 }: {
   task: TaskWithDetails
-  setSelectedTask: (task: TaskWithDetails) => void
+  onSelectTask: () => void
 }) {
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
@@ -224,7 +75,7 @@ function TaskTableRow({
       <TableCell className="py-3 pl-6">
         <p
           className="cursor-pointer truncate text-sm font-medium underline-offset-2 transition-colors hover:text-primary hover:underline"
-          onClick={() => setSelectedTask(task)}
+          onClick={onSelectTask}
         >
           {task.name}
         </p>
@@ -451,7 +302,7 @@ export default function AdminTasks() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
   const [search, setSearch] = useState("")
-  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null)
+  const { openTask } = useTaskModal()
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
 
@@ -470,9 +321,9 @@ export default function AdminTasks() {
   return (
     <div className="w-full space-y-6 p-6 pb-12 md:p-8">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold">System Tasks</h1>
+          <h1 className="text-2xl font-bold text-foreground">System Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {totalTasks} task{totalTasks !== 1 ? "s" : ""} across
             departments
@@ -482,9 +333,9 @@ export default function AdminTasks() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <IconSearch className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search tasks…"
@@ -493,7 +344,7 @@ export default function AdminTasks() {
                 setSearch(e.target.value)
                 setCurrentPage(1)
               }}
-              className="h-9 w-48 rounded-full pl-8 text-sm"
+              className="h-9 w-full rounded-full pl-8 text-sm sm:w-48"
             />
           </div>
           <div className="flex flex-wrap gap-1">
@@ -573,9 +424,10 @@ export default function AdminTasks() {
       {/* Table */}
       {!isLoading && !error && viewMode === "table" && (
         <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[800px]">
+              <TableHeader className="bg-muted/40">
+                <TableRow>
                 <TableHead className="w-[26%] pl-6">Task</TableHead>
                 <TableHead className="w-[14%]">Department</TableHead>
                 <TableHead className="w-[14%]">Assignee</TableHead>
@@ -600,13 +452,14 @@ export default function AdminTasks() {
                   <TaskTableRow
                     key={task.id}
                     task={task}
-                    setSelectedTask={setSelectedTask}
+                    onSelectTask={() => openTask(task)}
                   />
                 ))
               )}
             </TableBody>
           </Table>
-        </Card>
+        </div>
+      </Card>
       )}
 
       {/* Kanban */}
@@ -617,7 +470,7 @@ export default function AdminTasks() {
               key={s}
               status={s}
               tasks={paginatedTasks.filter((t) => t.status === s)}
-              onSelectTask={setSelectedTask}
+              onSelectTask={openTask}
             />
           ))}
         </div>
@@ -625,53 +478,14 @@ export default function AdminTasks() {
 
       {/* Pagination Footer */}
       {!isLoading && !error && totalTasks > 0 && (
-        <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <span className="text-center text-xs font-medium text-muted-foreground sm:text-left">
-            Showing {paginatedTasks.length} of {totalTasks} tasks
-          </span>
-          <div className="flex flex-wrap justify-center gap-1">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 px-3 text-xs"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              &larr; Prev
-            </Button>
-            
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <Button
-                key={i}
-                variant={currentPage === i + 1 ? "secondary" : "outline"}
-                size="sm"
-                className={`h-8 w-8 p-0 text-xs ${currentPage === i + 1 ? "border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100" : ""}`}
-                onClick={() => setCurrentPage(i + 1)}
-              >
-                {i + 1}
-              </Button>
-            ))}
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 px-3 text-xs"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next &rarr;
-            </Button>
-          </div>
-        </div>
+        <PaginationFooter 
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalItems={totalTasks}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemLabel="tasks"
+        />
       )}
-
-      <TaskDetailDialog
-        task={selectedTask}
-        open={!!selectedTask}
-        onOpenChange={(v) => {
-          if (!v) setSelectedTask(null)
-        }}
-      />
     </div>
   )
 }

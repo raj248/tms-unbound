@@ -1,21 +1,19 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/context/auth-context"
+import { TaskModalProvider } from "@/context/task-modal-context"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { MainLayout } from "@/layout/MainLayout"
 
-import LoginPage from "@/login/Login"
+import LoginPage from "@/pages/auth/Login"
+import AdminDashboard from "@/pages/admin/dashboard/AdminDashboard"
+import AdminTasks from "@/pages/admin/tasks/AdminTasks"
+import Dashboard from "@/pages/department/dashboard/Dashboard"
+import Tasks from "@/pages/department/tasks/Tasks"
+import MetricsPage from "@/pages/Metrics"
 import NotFoundPage from "@/pages/NotFound"
 import SettingsPage from "@/pages/Settings"
-
-import DepartmentDashboard from "@/department/dashboard/Dashboard"
-import AdminDashboard from "@/admin/dashboard/AdminDashboard"
 import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
-
-import AdminTasks from "@/admin/tasks/AdminTasks"
-import DepartmentTasks from "@/department/tasks/Tasks"
-
-import MetricsPage from "@/pages/Metrics"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
@@ -26,8 +24,9 @@ export function App() {
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <BrowserRouter>
+          <TaskModalProvider>
+            <TooltipProvider>
+              <BrowserRouter>
               <Routes>
                 {/* Public */}
                 <Route path="/" element={<LoginPage />} />
@@ -45,11 +44,11 @@ export function App() {
                   <Route path="/admin/tasks" element={<AdminTasks />} />
                   <Route
                     path="/department/dashboard"
-                    element={<DepartmentDashboard />}
+                    element={<Dashboard />}
                   />
                   <Route
                     path="/department/tasks"
-                    element={<DepartmentTasks />}
+                    element={<Tasks />}
                   />
                   <Route path="/metrics" element={<MetricsPage />} />
                   {/* <Route path="/profile" element={<ProfilePage />} /> */}
@@ -62,7 +61,8 @@ export function App() {
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
-        </QueryClientProvider>
+        </TaskModalProvider>
+      </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>
   )

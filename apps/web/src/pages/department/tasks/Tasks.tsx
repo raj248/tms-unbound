@@ -19,9 +19,10 @@ import {
 import { Card } from "@workspace/ui/components/card"
 import { type TaskWithDetails } from "@workspace/types"
 import { usePaginatedTasks } from "@/hooks/task"
-import { TaskDetailDialog } from "@/admin/tasks/TaskDetailDialog"
 import { useAuth } from "@/context/auth-context"
 import { useUsers } from "@/hooks/user"
+import { useTaskModal } from "@/context/task-modal-context"
+import { PaginationFooter } from "@/components/ui/PaginationFooter"
 
 const getStatusStyle = (status: string) => {
   if (status === "PENDING") return "destructive"
@@ -48,8 +49,7 @@ export default function Tasks() {
   
   const currentUserObj = users?.find((u) => u.id === user?.id)
   const myDepartmentId = currentUserObj?.departments?.[0]?.id
-
-  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null)
+  const { openTask } = useTaskModal()
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<
@@ -89,7 +89,7 @@ export default function Tasks() {
   return (
     <div className="w-full space-y-6 p-8 pb-12">
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Department Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -99,9 +99,9 @@ export default function Tasks() {
       </div>
 
       {/* Filters and Search Row */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-48">
+          <div className="relative w-full sm:w-48">
             <IconSearch className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
@@ -111,7 +111,7 @@ export default function Tasks() {
                 setSearch(e.target.value)
                 setCurrentPage(1)
               }}
-              className="h-9 rounded-full pl-9"
+              className="h-9 w-full rounded-full pl-9"
             />
           </div>
           <Button
@@ -197,53 +197,14 @@ export default function Tasks() {
 
       {/* Pagination Footer */}
       {!isLoading && !error && totalTasks > 0 && (
-        <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <span className="text-center text-xs font-medium text-muted-foreground sm:text-left">
-            Showing {safeTasks.length} of {totalTasks} tasks
-          </span>
-          <div className="flex flex-wrap justify-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 text-xs"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              &larr; Prev
-            </Button>
-
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <Button
-                key={i}
-                variant={currentPage === i + 1 ? "secondary" : "outline"}
-                size="sm"
-                className={`h-8 w-8 p-0 text-xs ${currentPage === i + 1 ? "border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100" : ""}`}
-                onClick={() => setCurrentPage(i + 1)}
-              >
-                {i + 1}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 text-xs"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next &rarr;
-            </Button>
-          </div>
-        </div>
+        <PaginationFooter 
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalItems={totalTasks}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemLabel="tasks"
+        />
       )}
-
-      <TaskDetailDialog
-        task={selectedTask}
-        open={!!selectedTask}
-        onOpenChange={(v) => {
-          if (!v) setSelectedTask(null)
-        }}
-      />
     </div>
   )
 
@@ -262,7 +223,7 @@ export default function Tasks() {
         <TableCell className="block px-6 py-4 font-medium md:table-cell md:py-3">
           <p 
             className="cursor-pointer truncate text-sm font-medium text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline"
-            onClick={() => setSelectedTask(task)}
+            onClick={() => openTask(task)}
           >
             {task.name}
           </p>
