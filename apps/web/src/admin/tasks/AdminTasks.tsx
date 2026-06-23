@@ -51,7 +51,7 @@ import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { type TaskWithDetails, type TaskStatus } from "@workspace/types"
 import { CreateTaskDialog } from "./CreateTaskDialog"
 import { useUpdateTask, useDeleteTask, usePaginatedTasks } from "@/hooks/task"
-import { TaskDetailDialog } from "./TaskDetailDialog"
+import { useTaskModal } from "@/context/task-modal-context"
 
 // ---------------------------------------------------------------------------
 // Config
@@ -211,10 +211,10 @@ function DeleteButton({
 
 function TaskTableRow({
   task,
-  setSelectedTask,
+  onSelectTask,
 }: {
   task: TaskWithDetails
-  setSelectedTask: (task: TaskWithDetails) => void
+  onSelectTask: () => void
 }) {
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
@@ -224,7 +224,7 @@ function TaskTableRow({
       <TableCell className="py-3 pl-6">
         <p
           className="cursor-pointer truncate text-sm font-medium underline-offset-2 transition-colors hover:text-primary hover:underline"
-          onClick={() => setSelectedTask(task)}
+          onClick={onSelectTask}
         >
           {task.name}
         </p>
@@ -451,7 +451,7 @@ export default function AdminTasks() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
   const [search, setSearch] = useState("")
-  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null)
+  const { openTask } = useTaskModal()
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
 
@@ -600,7 +600,7 @@ export default function AdminTasks() {
                   <TaskTableRow
                     key={task.id}
                     task={task}
-                    setSelectedTask={setSelectedTask}
+                    onSelectTask={() => openTask(task)}
                   />
                 ))
               )}
@@ -617,7 +617,7 @@ export default function AdminTasks() {
               key={s}
               status={s}
               tasks={paginatedTasks.filter((t) => t.status === s)}
-              onSelectTask={setSelectedTask}
+              onSelectTask={openTask}
             />
           ))}
         </div>
@@ -664,14 +664,6 @@ export default function AdminTasks() {
           </div>
         </div>
       )}
-
-      <TaskDetailDialog
-        task={selectedTask}
-        open={!!selectedTask}
-        onOpenChange={(v) => {
-          if (!v) setSelectedTask(null)
-        }}
-      />
     </div>
   )
 }

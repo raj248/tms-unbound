@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/context/auth-context"
+import { TaskModalProvider } from "@/context/task-modal-context"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { MainLayout } from "@/layout/MainLayout"
 
@@ -26,8 +27,9 @@ export function App() {
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <BrowserRouter>
+          <TaskModalProvider>
+            <TooltipProvider>
+              <BrowserRouter>
               <Routes>
                 {/* Public */}
                 <Route path="/" element={<LoginPage />} />
@@ -62,7 +64,8 @@ export function App() {
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
-        </QueryClientProvider>
+        </TaskModalProvider>
+      </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>
   )

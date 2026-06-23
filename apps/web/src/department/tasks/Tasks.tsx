@@ -19,9 +19,9 @@ import {
 import { Card } from "@workspace/ui/components/card"
 import { type TaskWithDetails } from "@workspace/types"
 import { usePaginatedTasks } from "@/hooks/task"
-import { TaskDetailDialog } from "@/admin/tasks/TaskDetailDialog"
 import { useAuth } from "@/context/auth-context"
 import { useUsers } from "@/hooks/user"
+import { useTaskModal } from "@/context/task-modal-context"
 
 const getStatusStyle = (status: string) => {
   if (status === "PENDING") return "destructive"
@@ -48,8 +48,7 @@ export default function Tasks() {
   
   const currentUserObj = users?.find((u) => u.id === user?.id)
   const myDepartmentId = currentUserObj?.departments?.[0]?.id
-
-  const [selectedTask, setSelectedTask] = useState<TaskWithDetails | null>(null)
+  const { openTask } = useTaskModal()
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<
@@ -236,14 +235,6 @@ export default function Tasks() {
           </div>
         </div>
       )}
-
-      <TaskDetailDialog
-        task={selectedTask}
-        open={!!selectedTask}
-        onOpenChange={(v) => {
-          if (!v) setSelectedTask(null)
-        }}
-      />
     </div>
   )
 
@@ -262,7 +253,7 @@ export default function Tasks() {
         <TableCell className="block px-6 py-4 font-medium md:table-cell md:py-3">
           <p 
             className="cursor-pointer truncate text-sm font-medium text-foreground underline-offset-2 transition-colors hover:text-primary hover:underline"
-            onClick={() => setSelectedTask(task)}
+            onClick={() => openTask(task)}
           >
             {task.name}
           </p>

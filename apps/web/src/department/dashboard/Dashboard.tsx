@@ -7,7 +7,11 @@ import {
   CardDescription,
 } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
-import { mockTasksWithDetails } from "@workspace/types"
+import { IconLoader2, IconAlertTriangle } from "@tabler/icons-react"
+import { useTasks } from "@/hooks/task"
+import { useAuth } from "@/context/auth-context"
+import { useUsers } from "@/hooks/user"
+import { useTaskModal } from "@/context/task-modal-context"
 
 const formatDeadline = (dateString: string | Date | null) => {
   if (!dateString) return "No date"
@@ -61,7 +65,16 @@ const weeklyCompletions = [
 ]
 
 export default function Dashboard() {
-  const safeTasks = mockTasksWithDetails || []
+  const { data: allTasks, isLoading: tasksLoading, error } = useTasks()
+  const { user } = useAuth()
+  const { data: users, isLoading: usersLoading } = useUsers()
+  const { openTask } = useTaskModal()
+  
+  const currentUserObj = users?.find((u) => u.id === user?.id)
+  const myDepartmentId = currentUserObj?.departments?.[0]?.id
+
+  const isLoading = tasksLoading || usersLoading
+  const safeTasks = (allTasks || []).filter(t => t.departmentId === myDepartmentId)
 
   const totalTasks = safeTasks.length
   const inProgress = safeTasks.filter((t) => t.status === "IN_PROGRESS").length
@@ -78,6 +91,7 @@ export default function Dashboard() {
         due: formatDeadline(t.deadline),
         priority: derivePriority(t.status),
         isOverdue: t.status === "PENDING",
+        fullTask: t,
       }
     })
 
@@ -104,14 +118,31 @@ export default function Dashboard() {
                 Department Dashboard
               </h1>
               <p className="text-base text-zinc-500 dark:text-zinc-400">
-                Engineering · June 2026
+                {currentUserObj?.departments?.[0]?.name ?? "Engineering"} · {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
               </p>
             </div>
           </div>
 
+          {/* Loading */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-24 text-muted-foreground">
+              <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
+              <span className="text-sm">Loading dashboard…</span>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="flex items-center justify-center gap-2 py-24 text-sm text-destructive">
+              <IconAlertTriangle className="h-4 w-4" />
+              Failed to load dashboard data.
+            </div>
+          )}
+
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
-            <Card className="border-zinc-200/60 bg-white/50 shadow-sm transition-all hover:shadow-md dark:border-zinc-800/60 dark:bg-zinc-900/50">
+          {!isLoading && !error && (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+              <Card className="border-zinc-200/60 bg-white/50 shadow-sm transition-all hover:shadow-md dark:border-zinc-800/60 dark:bg-zinc-900/50">
               <CardHeader className="p-5 pb-0">
                 <CardDescription className="mb-1 font-semibold text-zinc-500 dark:text-zinc-400">
                   Total Tasks
@@ -172,7 +203,9 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+          )}
 
+          {!isLoading && !error && (
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-7">
             {/* Active Tasks Card */}
             <Card className="col-span-4 overflow-hidden border-zinc-200/60 bg-white shadow-sm dark:border-zinc-800/60 dark:bg-zinc-900">
@@ -188,7 +221,8 @@ export default function Dashboard() {
                 {activeTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center justify-between p-5 px-6 transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30"
+                    className="flex cursor-pointer items-center justify-between p-5 px-6 transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30"
+                    onClick={() => openTask(task.fullTask)}
                   >
                     <div className="flex-1 space-y-0.5">
                       <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
@@ -285,6 +319,7 @@ export default function Dashboard() {
               </Card>
             </div>
           </div>
+          )}
         </div>
       </main>
     </div>

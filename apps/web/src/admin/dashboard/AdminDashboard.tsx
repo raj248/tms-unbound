@@ -15,6 +15,7 @@ import {
   IconAlertTriangle,
 } from "@workspace/ui/lib/Icons"
 import { useTasks } from "@/hooks/task"
+import { useTaskModal } from "@/context/task-modal-context"
 
 const formatStatusText = (status: string) => {
   if (status === "PENDING") return "Pending"
@@ -25,6 +26,7 @@ const formatStatusText = (status: string) => {
 
 export default function AdminDashboard() {
   const { data: tasks, isLoading, error } = useTasks()
+  const { openTask } = useTaskModal()
 
   const totalTasks = tasks?.length || 0
   const inProgress =
@@ -89,6 +91,7 @@ export default function AdminDashboard() {
       status: formatStatusText(t.status),
       statusColor,
       initials,
+      fullTask: t,
     }
   })
 
@@ -198,7 +201,8 @@ export default function AdminDashboard() {
                     recentTasks?.map((task, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-5 transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30"
+                        className="flex cursor-pointer items-center justify-between p-5 transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-800/30"
+                        onClick={() => openTask(task.fullTask)}
                       >
                         <div className="flex items-center gap-4">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-sm font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
