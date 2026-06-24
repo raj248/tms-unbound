@@ -10,6 +10,7 @@ import {
   CreateRemarkRequest,
 } from "@workspace/types"
 import { AppError } from "../utils/app-error.utils"
+import { createAndDeliverNotification } from "../utils/notification.utils"
 
 const router: Router = Router()
 
@@ -43,6 +44,17 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
       include: { department: true },
     })
 
+    // createand deliver notification
+    createAndDeliverNotification({
+      title: "Task Created",
+      body: `Task "${newTask.name}" has been created`,
+      senderId: req.user?.userId || "",
+      senderName:
+        req.user?.name || req.user?.username || "Anonymous System User",
+      targetDeptId: departmentId,
+      isAdminOnly: false,
+    })
+
     return res.status(201).json({ success: true, data: newTask })
   } catch (error: any) {
     throw new AppError(error.message, 500)
@@ -58,7 +70,8 @@ router.get("/", async (req, res) => {
 
     const whereClause: any = {
       ...(status && status !== "ALL" && { status: status as any }),
-      ...(departmentId && departmentId !== "ALL" && { departmentId: departmentId as string }),
+      ...(departmentId &&
+        departmentId !== "ALL" && { departmentId: departmentId as string }),
     }
 
     if (search) {
@@ -137,7 +150,7 @@ router.get("/:id", async (req, res) => {
 // ==========================================
 // 4. UPDATE TASK
 // ==========================================
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: AuthenticatedRequest, res) => {
   try {
     const { id } = req.params
     const body = req.body as UpdateTaskRequest
@@ -154,7 +167,7 @@ router.put("/:id", async (req, res) => {
     }
 
     const updatedTask = await prisma.task.update({
-      where: { id },
+      where: { id: id as string },
       data: {
         ...(body.name && { name: body.name }),
         ...(body.description !== undefined && {
@@ -172,6 +185,18 @@ router.put("/:id", async (req, res) => {
       },
     })
 
+    // createand deliver notification
+    if (body.status === "COMPLETED") {
+      createAndDeliverNotification({
+        title: "Task Completed",
+        body: `Task "${updatedTask.name}" has been completed`,
+        senderId: req.user?.userId || "",
+        senderName:
+          req.user?.name || req.user?.username || "Anonymous System User",
+        targetDeptId: updatedTask.departmentId,
+        isAdminOnly: true,
+      })
+    }
     return res.json({ success: true, data: updatedTask })
   } catch (error: any) {
     throw new AppError(error.message, 500)

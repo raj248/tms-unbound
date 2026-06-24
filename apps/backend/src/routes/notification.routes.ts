@@ -114,4 +114,30 @@ router.post("/send", async (req: AuthenticatedRequest, res) => {
   }
 })
 
+// ==========================================
+// 4. MARK ALL NOTIFICATIONS AS READ
+// ==========================================
+router.put("/read-all", async (req: AuthenticatedRequest, res) => {
+  try {
+    const userId = req.user?.userId
+
+    await prisma.notificationStatus.updateMany({
+      where: {
+        userId,
+      },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    })
+
+    return res.json({
+      success: true,
+      data: { message: "All notifications marked as read" },
+    })
+  } catch (error: any) {
+    throw new AppError(error.message, 500)
+  }
+})
+
 export default router

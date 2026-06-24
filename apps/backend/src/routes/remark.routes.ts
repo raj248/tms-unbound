@@ -6,6 +6,7 @@ import {
 } from "../middlewares/auth.middleware"
 import type { CreateRemarkRequest } from "@workspace/types"
 import { AppError } from "../utils/app-error.utils"
+import { createAndDeliverNotification } from "../utils/notification.utils"
 
 // Merge params allows us to access variables like :taskId from the parent router if nested
 const router: Router = Router({ mergeParams: true })
@@ -45,6 +46,16 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
       },
     })
 
+    // createand deliver notification
+    createAndDeliverNotification({
+      title: "Remark Added",
+      body: `Remark "${newRemark.text}" has been added to task "${taskExists.name}"`,
+      senderId: req.user?.userId || "",
+      senderName:
+        req.user?.name || req.user?.username || "Anonymous System User",
+      targetDeptId: taskExists.departmentId,
+      isAdminOnly: false,
+    })
     return res.status(201).json({ success: true, data: newRemark })
   } catch (error: any) {
     if (error instanceof AppError) throw error
