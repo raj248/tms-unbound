@@ -28,13 +28,13 @@ import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog"
 import { TimeFilter } from "@/components/tasks/TimeFilter"
 
 const getStatusStyle = (status: string) => {
-  if (status === "PENDING") return "destructive"
+  if (status === "HOLD") return "destructive"
   if (status === "IN_PROGRESS") return "default"
   return "secondary"
 }
 
 const formatStatusText = (status: string) => {
-  if (status === "PENDING") return "Pending"
+  if (status === "HOLD") return "Hold"
   if (status === "IN_PROGRESS") return "In Progress"
   if (status === "COMPLETED") return "Completed"
   return status
@@ -56,7 +56,7 @@ export default function Tasks() {
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<
-    "ALL" | "IN_PROGRESS" | "COMPLETED" | "PENDING"
+    "ALL" | "IN_PROGRESS" | "COMPLETED" | "HOLD"
   >("ALL")
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
@@ -67,7 +67,7 @@ export default function Tasks() {
   }
 
   const handleFilterChange = (
-    newFilter: "ALL" | "IN_PROGRESS" | "COMPLETED" | "PENDING"
+    newFilter: "ALL" | "IN_PROGRESS" | "COMPLETED" | "HOLD"
   ) => {
     setFilter(newFilter)
     setCurrentPage(1)
@@ -153,11 +153,11 @@ export default function Tasks() {
             Completed
           </Button>
           <Button
-            onClick={() => handleFilterChange("PENDING")}
-            variant={filter === "PENDING" ? "default" : "outline"}
-            className={`h-9 rounded-full px-4 ${filter === "PENDING" ? "border border-blue-200 bg-blue-100 text-blue-700 shadow-none hover:bg-blue-200 hover:text-blue-800" : "text-muted-foreground"}`}
+            onClick={() => handleFilterChange("HOLD")}
+            variant={filter === "HOLD" ? "default" : "outline"}
+            className={`h-9 rounded-full px-4 ${filter === "HOLD" ? "border border-orange-200 bg-orange-100 text-orange-700 shadow-none hover:bg-orange-200 hover:text-orange-800" : "text-muted-foreground"}`}
           >
-            Pending
+            Hold
           </Button>
         </div>
 
@@ -258,6 +258,8 @@ export default function Tasks() {
       customStatusClass = "bg-blue-50 text-blue-600 hover:bg-blue-50"
     } else if (task.status === "COMPLETED") {
       customStatusClass = "bg-emerald-50 text-emerald-600 hover:bg-emerald-50"
+    } else if (task.status === "HOLD") {
+      customStatusClass = "bg-orange-50 text-orange-600 hover:bg-orange-50"
     }
 
     return (

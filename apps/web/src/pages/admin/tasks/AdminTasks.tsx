@@ -58,8 +58,7 @@ import {
 const FILTER_TABS: { value: "ALL" | TaskStatus; label: string }[] = [
   { value: "ALL", label: "All" },
   { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "PENDING", label: "Pending" },
-  { value: "BLOCKED", label: "Blocked" },
+  { value: "HOLD", label: "Hold" },
   { value: "COMPLETED", label: "Completed" },
 ]
 

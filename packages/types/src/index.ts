@@ -18,7 +18,7 @@ export interface PaginatedResponse<T> {
 
 export type Role = "USER" | "ADMIN"
 
-export type TaskStatus = "PENDING" | "IN_PROGRESS" | "BLOCKED" | "COMPLETED"
+export type TaskStatus = "IN_PROGRESS" | "HOLD" | "COMPLETED"
 
 export interface User {
   id: string

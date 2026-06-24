@@ -61,9 +61,10 @@ export default function MetricsPage() {
   // Metrics Filters
   const [selectedDept, setSelectedDept] = useState<string>("ALL")
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear())
-  const [viewType, setViewType] = useState<"MONTH" | "QUARTER">("MONTH")
+  const [viewType, setViewType] = useState<"MONTH" | "QUARTER" | "WEEK">("MONTH")
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth())
   const [selectedQuarter, setSelectedQuarter] = useState<number>(Math.floor(currentDate.getMonth() / 3))
+  const [selectedWeek, setSelectedWeek] = useState<number>(1)
 
   // Audit Filters
   const [timeRange, setTimeRange] = useState<TimeRange>("monthly")
@@ -94,24 +95,31 @@ export default function MetricsPage() {
       const taskDate = new Date(t.createdAt)
       if (taskDate.getFullYear() !== selectedYear) return false
 
-      // 2. Month / Quarter filter
+      // 2. Month / Quarter / Week filter
       if (viewType === "MONTH") {
         if (taskDate.getMonth() !== selectedMonth) return false
-      } else {
+      } else if (viewType === "QUARTER") {
         const q = Math.floor(taskDate.getMonth() / 3)
         if (q !== selectedQuarter) return false
+      } else if (viewType === "WEEK") {
+        if (taskDate.getMonth() !== selectedMonth) return false
+        const day = taskDate.getDate()
+        let w = 4
+        if (day <= 7) w = 1
+        else if (day <= 14) w = 2
+        else if (day <= 21) w = 3
+        if (w !== selectedWeek) return false
       }
 
       return true
     })
-  }, [allTasks, selectedYear, viewType, selectedMonth, selectedQuarter])
+  }, [allTasks, selectedYear, viewType, selectedMonth, selectedQuarter, selectedWeek])
 
   // Calculate stats for current metrics timeframe
   const totalTasks = filteredTasks.length
   const completedTasks = filteredTasks.filter(t => t.status === "COMPLETED").length
-  const blockedTasks = filteredTasks.filter(t => t.status === "BLOCKED").length
+  const holdTasks = filteredTasks.filter(t => t.status === "HOLD").length
   const inProgressTasks = filteredTasks.filter(t => t.status === "IN_PROGRESS").length
-  const pendingTasks = filteredTasks.filter(t => t.status === "PENDING").length
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
@@ -124,7 +132,7 @@ export default function MetricsPage() {
       total: number
       completed: number
       inProgress: number
-      pending: number
+      hold: number
     }>()
 
     allTasks.forEach((task) => {
@@ -146,7 +154,7 @@ export default function MetricsPage() {
           total: 0,
           completed: 0,
           inProgress: 0,
-          pending: 0,
+          hold: 0,
         })
       }
 
@@ -155,7 +163,7 @@ export default function MetricsPage() {
 
       if (task.status === "COMPLETED") stats.completed += 1
       else if (task.status === "IN_PROGRESS") stats.inProgress += 1
-      else if (task.status === "PENDING") stats.pending += 1
+      else if (task.status === "HOLD") stats.hold += 1
     })
 
     return Array.from(grouped.values())
@@ -169,7 +177,7 @@ export default function MetricsPage() {
       total: number
       completed: number
       inProgress: number
-      pending: number
+      hold: number
     }>()
 
     filteredTasks.forEach((task) => {
@@ -182,7 +190,7 @@ export default function MetricsPage() {
           total: 0,
           completed: 0,
           inProgress: 0,
-          pending: 0,
+          hold: 0,
         })
       }
 
@@ -191,7 +199,7 @@ export default function MetricsPage() {
 
       if (task.status === "COMPLETED") stats.completed += 1
       else if (task.status === "IN_PROGRESS") stats.inProgress += 1
-      else if (task.status === "PENDING") stats.pending += 1
+      else if (task.status === "HOLD") stats.hold += 1
     })
 
     return Array.from(grouped.values()).sort((a, b) => a.department.localeCompare(b.department))
@@ -258,40 +266,60 @@ export default function MetricsPage() {
 
           <div className="space-y-1">
             <label className="text-xs font-medium">View By</label>
-            <Tabs value={viewType} onValueChange={(v) => setViewType(v as "MONTH" | "QUARTER")} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 h-9">
+            <Tabs value={viewType} onValueChange={(v) => setViewType(v as "MONTH" | "QUARTER" | "WEEK")} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 h-9">
+                <TabsTrigger value="WEEK" className="text-xs">Week</TabsTrigger>
                 <TabsTrigger value="MONTH" className="text-xs">Month</TabsTrigger>
                 <TabsTrigger value="QUARTER" className="text-xs">Quarter</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-medium">
-              {viewType === "MONTH" ? "Month" : "Quarter"}
-            </label>
-            {viewType === "MONTH" ? (
-              <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m, i) => (
-                    <SelectItem key={i} value={i.toString()}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Select value={selectedQuarter.toString()} onValueChange={(v) => setSelectedQuarter(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Quarter" />
-                </SelectTrigger>
-                <SelectContent>
-                  {QUARTERS.map((q, i) => (
-                    <SelectItem key={i} value={i.toString()}>{q}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className={`grid gap-4 ${viewType === "WEEK" ? "grid-cols-2 md:col-span-2 lg:col-span-2" : "grid-cols-1"}`}>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">
+                {viewType === "MONTH" || viewType === "WEEK" ? "Month" : "Quarter"}
+              </label>
+              {viewType === "MONTH" || viewType === "WEEK" ? (
+                <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((m, i) => (
+                      <SelectItem key={i} value={i.toString()}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={selectedQuarter.toString()} onValueChange={(v) => setSelectedQuarter(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Quarter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {QUARTERS.map((q, i) => (
+                      <SelectItem key={i} value={i.toString()}>{q}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {viewType === "WEEK" && (
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Week</label>
+                <Select value={selectedWeek.toString()} onValueChange={(v) => setSelectedWeek(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Week" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Week 1 (1st - 7th)</SelectItem>
+                    <SelectItem value="2">Week 2 (8th - 14th)</SelectItem>
+                    <SelectItem value="3">Week 3 (15th - 21st)</SelectItem>
+                    <SelectItem value="4">Week 4 (22nd - End)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
         </div>
@@ -334,13 +362,13 @@ export default function MetricsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Active Blockers</CardTitle>
-                <IconAlertTriangle className="h-4 w-4 text-red-500" />
+                <CardTitle className="text-sm font-medium">Active Hold</CardTitle>
+                <IconAlertTriangle className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{blockedTasks}</div>
+                <div className="text-2xl font-bold">{holdTasks}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Tasks currently blocked
+                  Tasks currently on hold
                 </p>
               </CardContent>
             </Card>
@@ -362,7 +390,7 @@ export default function MetricsPage() {
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead className="text-right text-emerald-600 dark:text-emerald-400 print:text-emerald-700">Completed</TableHead>
                         <TableHead className="text-right text-blue-600 dark:text-blue-400 print:text-blue-700">In Progress</TableHead>
-                        <TableHead className="text-right text-amber-600 dark:text-amber-400 print:text-amber-700">Pending</TableHead>
+                        <TableHead className="text-right text-orange-600 dark:text-orange-400 print:text-orange-700">Hold</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -373,7 +401,7 @@ export default function MetricsPage() {
                             <TableCell className="text-right">{row.total}</TableCell>
                             <TableCell className="text-right">{row.completed}</TableCell>
                             <TableCell className="text-right">{row.inProgress}</TableCell>
-                            <TableCell className="text-right">{row.pending}</TableCell>
+                            <TableCell className="text-right">{row.hold}</TableCell>
                           </TableRow>
                         ))
                       ) : (
@@ -406,34 +434,23 @@ export default function MetricsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2 font-medium">
-                        <span className="h-2 w-2 rounded-full bg-orange-400" />
-                        Pending
-                      </span>
-                      <span>{pendingTasks} ({Math.round((pendingTasks/totalTasks)*100)}%)</span>
-                    </div>
-                    <Progress value={(pendingTasks/totalTasks)*100} className="h-2 [&>div]:bg-orange-400" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2 font-medium">
                         <span className="h-2 w-2 rounded-full bg-blue-400" />
                         In Progress
                       </span>
-                      <span>{inProgressTasks} ({Math.round((inProgressTasks/totalTasks)*100)}%)</span>
+                      <span>{inProgressTasks} ({totalTasks > 0 ? Math.round((inProgressTasks/totalTasks)*100) : 0}%)</span>
                     </div>
-                    <Progress value={(inProgressTasks/totalTasks)*100} className="h-2 [&>div]:bg-blue-400" />
+                    <Progress value={totalTasks > 0 ? (inProgressTasks/totalTasks)*100 : 0} className="h-2 [&>div]:bg-blue-400" />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2 font-medium">
-                        <span className="h-2 w-2 rounded-full bg-red-500" />
-                        Blocked
+                        <span className="h-2 w-2 rounded-full bg-orange-500" />
+                        Hold
                       </span>
-                      <span>{blockedTasks} ({Math.round((blockedTasks/totalTasks)*100)}%)</span>
+                      <span>{holdTasks} ({totalTasks > 0 ? Math.round((holdTasks/totalTasks)*100) : 0}%)</span>
                     </div>
-                    <Progress value={(blockedTasks/totalTasks)*100} className="h-2 [&>div]:bg-red-500" />
+                    <Progress value={totalTasks > 0 ? (holdTasks/totalTasks)*100 : 0} className="h-2 [&>div]:bg-orange-500" />
                   </div>
 
                   <div className="space-y-2">
@@ -442,9 +459,9 @@ export default function MetricsPage() {
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         Completed
                       </span>
-                      <span>{completedTasks} ({Math.round((completedTasks/totalTasks)*100)}%)</span>
+                      <span>{completedTasks} ({totalTasks > 0 ? Math.round((completedTasks/totalTasks)*100) : 0}%)</span>
                     </div>
-                    <Progress value={(completedTasks/totalTasks)*100} className="h-2 [&>div]:bg-emerald-500" />
+                    <Progress value={totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0} className="h-2 [&>div]:bg-emerald-500" />
                   </div>
                 </div>
               )}
@@ -507,9 +524,9 @@ export default function MetricsPage() {
                     />
                     <Line
                       type="monotone"
-                      dataKey="pending"
-                      name="Pending"
-                      stroke="#d97706"
+                      dataKey="hold"
+                      name="Hold"
+                      stroke="#f97316"
                       strokeWidth={3}
                       activeDot={{ r: 6 }}
                       isAnimationActive={true}
