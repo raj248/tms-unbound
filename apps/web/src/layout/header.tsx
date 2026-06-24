@@ -41,6 +41,7 @@ const getNavLinks = (role?: string) => [
     icon: "ti-list-check",
   },
   { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
+  { label: "Audit", href: "/audit", icon: "ti-clipboard-list" },
   { label: "Settings", href: "/settings", icon: "ti-settings" },
 ]
 
