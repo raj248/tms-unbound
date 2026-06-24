@@ -7,26 +7,16 @@ import {
   CardDescription,
   CardContent,
 } from "@workspace/ui/components/card"
-import { useState, useEffect } from "react"
+import { usePushNotifications } from "@/hooks/usePushNotification"
 // Import other required Shadcn components...
 
 export default function NotificationSettings() {
-  const [permission, setPermission] = useState<
-    NotificationPermission | "default"
-  >("default")
-
-  // Sync state with browser on mount
-  useEffect(() => {
-    if ("Notification" in window) {
-      setPermission(Notification.permission)
-    }
-  }, [])
+  const { permission, requestPermission } = usePushNotifications()
 
   const handleRequestPermission = async () => {
     if (!("Notification" in window)) return
 
-    const result = await Notification.requestPermission()
-    setPermission(result)
+    await requestPermission()
   }
 
   return (

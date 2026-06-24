@@ -17,9 +17,17 @@ import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
+import { usePushNotifications } from "./hooks/usePushNotification"
+import { useEffect } from "react"
 const queryClient = new QueryClient()
 
 export function App() {
+  const { onForegroundMessage, permission } = usePushNotifications()
+  useEffect(() => {
+    if (permission === "granted") {
+      onForegroundMessage()
+    }
+  }, [permission])
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
@@ -27,40 +35,40 @@ export function App() {
           <TaskModalProvider>
             <TooltipProvider>
               <BrowserRouter>
-              <Routes>
-                {/* Public */}
-                <Route path="/" element={<LoginPage />} />
+                <Routes>
+                  {/* Public */}
+                  <Route path="/" element={<LoginPage />} />
 
-                {/* Protected — all children rendered inside MainLayout via <Outlet> */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <MainLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/dashboard" element={<RoleBasedRedirect />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/tasks" element={<AdminTasks />} />
+                  {/* Protected — all children rendered inside MainLayout via <Outlet> */}
                   <Route
-                    path="/department/dashboard"
-                    element={<Dashboard />}
-                  />
-                  <Route
-                    path="/department/tasks"
-                    element={<Tasks />}
-                  />
-                  <Route path="/metrics" element={<MetricsPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Route>
+                    element={
+                      <ProtectedRoute>
+                        <MainLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route path="/dashboard" element={<RoleBasedRedirect />} />
+                    <Route
+                      path="/admin/dashboard"
+                      element={<AdminDashboard />}
+                    />
+                    <Route path="/admin/tasks" element={<AdminTasks />} />
+                    <Route
+                      path="/department/dashboard"
+                      element={<Dashboard />}
+                    />
+                    <Route path="/department/tasks" element={<Tasks />} />
+                    <Route path="/metrics" element={<MetricsPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                  </Route>
 
-                {/* Catch-all */}
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </TaskModalProvider>
-      </QueryClientProvider>
+                  {/* Catch-all */}
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </TaskModalProvider>
+        </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>
   )

@@ -1,4 +1,5 @@
 import { prisma } from "../config/db"
+import { sendPushToUserIds } from "../utils/notification.utils"
 
 interface SendNotificationPayload {
   title: string
@@ -64,7 +65,7 @@ export async function createAndDeliverNotification(
   }
 
   // 4. PUT YOUR EXISTING PUSH NOTIFICATION TRIGGER HERE
-  // e.g., sendPushToUserIds(targetUserIds, title, body);
+  sendPushToUserIds(targetUserIds, { title, body })
 
   return notification
 }

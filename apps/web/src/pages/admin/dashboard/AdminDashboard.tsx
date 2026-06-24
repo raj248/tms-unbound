@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="bg-white p-6 dark:bg-zinc-900">
-                <div className="h-[300px] w-full mt-4">
+                <div className="mt-4 h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={chartData}
