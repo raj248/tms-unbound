@@ -9,7 +9,6 @@ import {
   IconCheck,
   IconLoader2,
   IconAlertTriangle,
-  IconTrash,
 } from "@tabler/icons-react"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -23,13 +22,6 @@ import {
 } from "@workspace/ui/components/table"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -42,7 +34,12 @@ import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog"
 import { useUpdateTask, useDeleteTask, usePaginatedTasks } from "@/hooks/task"
 import { useTaskModal } from "@/context/task-modal-context"
 import { PaginationFooter } from "@/components/ui/PaginationFooter"
-import { STATUS_CONFIG, StatusBadge, formatDeadline, StatusSelect, DeleteButton } from "@/components/tasks/shared"
+import {
+  STATUS_CONFIG,
+  formatDeadline,
+  StatusSelect,
+  DeleteButton,
+} from "@/components/tasks/shared"
 
 // ---------------------------------------------------------------------------
 // Config
@@ -306,7 +303,11 @@ export default function AdminTasks() {
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
 
-  const { data: result, isLoading, error } = usePaginatedTasks({
+  const {
+    data: result,
+    isLoading,
+    error,
+  } = usePaginatedTasks({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     search: search.trim() || undefined,
@@ -316,7 +317,7 @@ export default function AdminTasks() {
 
   const paginatedTasks = result?.data ?? []
   const totalTasks = result?.total ?? 0
-  const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
+  // const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
 
   return (
     <div className="w-full space-y-6 p-6 pb-12 md:p-8">
@@ -325,8 +326,7 @@ export default function AdminTasks() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">System Tasks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {totalTasks} task{totalTasks !== 1 ? "s" : ""} across
-            departments
+            {totalTasks} task{totalTasks !== 1 ? "s" : ""} across departments
           </p>
         </div>
         <CreateTaskDialog />
@@ -428,38 +428,38 @@ export default function AdminTasks() {
             <Table className="min-w-[800px]">
               <TableHeader className="bg-muted/40">
                 <TableRow>
-                <TableHead className="w-[26%] pl-6">Task</TableHead>
-                <TableHead className="w-[14%]">Department</TableHead>
-                <TableHead className="w-[14%]">Assignee</TableHead>
-                <TableHead className="w-[14%]">Status</TableHead>
-                <TableHead className="w-[15%]">Deadline</TableHead>
-                <TableHead className="w-[8%]">Remarks</TableHead>
-                <TableHead className="w-[9%] pr-6 text-right" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedTasks.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="py-20 text-center text-sm text-muted-foreground"
-                  >
-                    No tasks match your filters.
-                  </TableCell>
+                  <TableHead className="w-[26%] pl-6">Task</TableHead>
+                  <TableHead className="w-[14%]">Department</TableHead>
+                  <TableHead className="w-[14%]">Assignee</TableHead>
+                  <TableHead className="w-[14%]">Status</TableHead>
+                  <TableHead className="w-[15%]">Deadline</TableHead>
+                  <TableHead className="w-[8%]">Remarks</TableHead>
+                  <TableHead className="w-[9%] pr-6 text-right" />
                 </TableRow>
-              ) : (
-                paginatedTasks.map((task) => (
-                  <TaskTableRow
-                    key={task.id}
-                    task={task}
-                    onSelectTask={() => openTask(task)}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {paginatedTasks.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="py-20 text-center text-sm text-muted-foreground"
+                    >
+                      No tasks match your filters.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedTasks.map((task) => (
+                    <TaskTableRow
+                      key={task.id}
+                      task={task}
+                      onSelectTask={() => openTask(task)}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       {/* Kanban */}
@@ -478,7 +478,7 @@ export default function AdminTasks() {
 
       {/* Pagination Footer */}
       {!isLoading && !error && totalTasks > 0 && (
-        <PaginationFooter 
+        <PaginationFooter
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           totalItems={totalTasks}

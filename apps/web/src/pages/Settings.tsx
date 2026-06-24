@@ -11,7 +11,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@workspace/ui/components/card"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -47,7 +46,6 @@ import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import {
   IconUser,
   IconBuilding,
-  IconAlertCircle,
   IconPlus,
   IconTrash,
   IconSwitchHorizontal,
@@ -403,12 +401,12 @@ export default function Settings() {
       label: "Departments",
       icon: <IconBuilding className="h-4 w-4 shrink-0" />,
     },
-    {
-      value: "security",
-      label: "Security",
-      icon: <IconAlertCircle className="h-4 w-4 shrink-0" />,
-      destructive: true,
-    },
+    // {
+    //   value: "security",
+    //   label: "Security",
+    //   icon: <IconAlertCircle className="h-4 w-4 shrink-0" />,
+    //   destructive: true,
+    // },
   ]
 
   return (
@@ -432,16 +430,16 @@ export default function Settings() {
       >
         {/* Sidebar */}
         <TabsList className="flex h-auto w-full shrink-0 flex-row overflow-x-auto rounded-xl border bg-zinc-100/80 p-1 md:w-48 md:flex-col md:gap-1 dark:bg-zinc-900/50">
-          {tabs.map(({ value, label, icon, destructive }) => (
+          {tabs.map(({ value, label, icon }) => (
             <TabsTrigger
               key={value}
               value={value}
               className={[
                 "flex-1 justify-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-all md:justify-start",
                 "data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-zinc-950",
-                destructive
-                  ? "text-destructive data-[state=active]:text-destructive"
-                  : "",
+                // destructive
+                //   ? "text-destructive data-[state=active]:text-destructive"
+                //   : "",
               ].join(" ")}
             >
               {icon}
@@ -638,7 +636,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* ── TAB 4: Security ── */}
-          <TabsContent value="security" className="mt-0">
+          {/* <TabsContent value="security" className="mt-0">
             <Card className="border-zinc-200 dark:border-zinc-800">
               <CardHeader className="border-b pb-4">
                 <CardTitle className="text-base">
@@ -676,7 +674,7 @@ export default function Settings() {
                 <Button size="sm">Save security rules</Button>
               </CardFooter>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </div>
       </Tabs>
     </div>

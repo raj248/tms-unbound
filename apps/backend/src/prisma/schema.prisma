@@ -28,9 +28,12 @@ model User {
   password  String
   role      Role     @default(USER)
 
+  fcmToken String?
+
   departments Department[]
   assignedTasks Task[]     @relation("TaskAssignee")
-
+  receivedNotifications NotificationStatus[]
+  
   createdAt DateTime @default(now())
 }
 
@@ -83,4 +86,35 @@ model Remark {
   authorName String   
 
   createdAt DateTime @default(now())
+}
+
+model Notification {
+  id           String    @id @default(cuid())
+  title        String
+  body         String
+  senderId     String?   // The user who triggered it (null if system auto-generated)
+  senderName   String    // Stored directly to avoid heavy join queries later
+  
+  // Targeting
+  targetDeptId String?   // If null, it means broadcasted globally to "ALL ADMINS"
+  isAdminOnly  Boolean   @default(false) 
+
+  createdAt    DateTime  @default(now())
+  
+  // Relations
+  statuses     NotificationStatus[]
+}
+
+model NotificationStatus {
+  id             String       @id @default(cuid())
+  notificationId String
+  userId         String
+  isRead         Boolean      @default(false)
+  readAt         DateTime?
+
+  // Relations
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, userId]) // Prevents duplicate delivery states
 }

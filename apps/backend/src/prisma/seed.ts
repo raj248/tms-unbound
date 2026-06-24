@@ -25,9 +25,18 @@ const DEMO_USERS = [
 ]
 
 const TASK_NAMES = [
-  "Update Landing Page", "Fix Login Bug", "Draft Q3 Report", "Audit Security Logs", 
-  "Interview Candidates", "Review Monthly Metrics", "Deploy New Release", "Setup CI/CD",
-  "Design New Logo", "User Testing", "Create Social Media Campaign", "Update Policy Manual"
+  "Update Landing Page",
+  "Fix Login Bug",
+  "Draft Q3 Report",
+  "Audit Security Logs",
+  "Interview Candidates",
+  "Review Monthly Metrics",
+  "Deploy New Release",
+  "Setup CI/CD",
+  "Design New Logo",
+  "User Testing",
+  "Create Social Media Campaign",
+  "Update Policy Manual",
 ]
 
 const TASK_STATUSES = [
@@ -38,7 +47,9 @@ const TASK_STATUSES = [
 ]
 
 function getRandomDate(start: Date, end: Date) {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+  )
 }
 
 export async function seedDatabase() {
@@ -46,7 +57,9 @@ export async function seedDatabase() {
 
   try {
     // 1. Clean out existing records to avoid unique constraint duplicates on reruns
-    console.log("🧹 Flushing existing Task, User, Department, and Remark records...")
+    console.log("🧹 Flushing existing historical tables...")
+    await prisma.notificationStatus.deleteMany()
+    await prisma.notification.deleteMany()
     await prisma.remark.deleteMany()
     await prisma.task.deleteMany()
     await prisma.user.deleteMany()
@@ -67,13 +80,10 @@ export async function seedDatabase() {
     console.log(
       `👤 Seeding ${DEMO_USERS.length} users with assigned departments...`
     )
-
-    // Hash a generic password for all seed accounts safely
     const defaultPasswordHash = await bcrypt.hash("password123", 10)
 
     const seededUsers = await Promise.all(
       DEMO_USERS.map((user) => {
-        // Pick a completely random department from our fresh pool
         const randomDept =
           seededDepartments[
             Math.floor(Math.random() * seededDepartments.length)
@@ -85,7 +95,6 @@ export async function seedDatabase() {
             name: user.name,
             password: defaultPasswordHash,
             role: user.role,
-            // Connect exactly one department to the implicit or explicit join table
             departments: {
               connect: { id: randomDept.id },
             },
@@ -96,22 +105,30 @@ export async function seedDatabase() {
         })
       })
     )
-
     console.log("✅ Users seeded and mapped to departments successfully.")
 
-    // 4. Seed Tasks and Remarks across the year
-    console.log(`📝 Seeding 150 tasks across various dates and departments...`)
+    // 4. Seed Tasks, Remarks, and corresponding Notifications
+    console.log(
+      `📝 Seeding 150 tasks along with activity notification histories...`
+    )
     const currentYear = new Date().getFullYear()
-    const startDate = new Date(currentYear, 0, 1) // Jan 1st of current year
-    const endDate = new Date(currentYear, 11, 31) // Dec 31st of current year
+    const startDate = new Date(currentYear, 0, 1)
+    const endDate = new Date(currentYear, 11, 31)
 
     for (let i = 0; i < 150; i++) {
-      const randomDept = seededDepartments[Math.floor(Math.random() * seededDepartments.length)]
-      const randomUser = Math.random() > 0.2 ? seededUsers[Math.floor(Math.random() * seededUsers.length)] : null
-      const randomStatus = TASK_STATUSES[Math.floor(Math.random() * TASK_STATUSES.length)]
-      const randomName = TASK_NAMES[Math.floor(Math.random() * TASK_NAMES.length)] + ` #${i+1}`
+      const randomDept =
+        seededDepartments[Math.floor(Math.random() * seededDepartments.length)]
+      const randomUser =
+        Math.random() > 0.2
+          ? seededUsers[Math.floor(Math.random() * seededUsers.length)]
+          : null
+      const randomStatus =
+        TASK_STATUSES[Math.floor(Math.random() * TASK_STATUSES.length)]
+      const randomName =
+        TASK_NAMES[Math.floor(Math.random() * TASK_NAMES.length)] + ` #${i + 1}`
       const createdDate = getRandomDate(startDate, endDate)
-      
+
+      // A. Create Task
       const task = await prisma.task.create({
         data: {
           name: randomName,
@@ -121,25 +138,95 @@ export async function seedDatabase() {
           assigneeId: randomUser ? randomUser.id : null,
           assigneeName: randomUser ? randomUser.name : null,
           createdAt: createdDate,
-          updatedAt: createdDate, // Simplify by making them the same
-          deadline: Math.random() > 0.5 ? getRandomDate(createdDate, endDate) : null
-        }
+          updatedAt: createdDate,
+          deadline:
+            Math.random() > 0.5 ? getRandomDate(createdDate, endDate) : null,
+        },
       })
 
-      // Add a couple of remarks randomly
+      // B. Create matching Notification log for the newly created Task
+      const taskNotification = await prisma.notification.create({
+        data: {
+          title: "🆕 New Task Assigned to Your Department",
+          body: `"${task.name}" has been created. Status: ${task.status}.`,
+          senderId: null, // System generated
+          senderName: "System Engine",
+          targetDeptId: randomDept.id,
+          isAdminOnly: false,
+          createdAt: createdDate,
+        },
+      })
+
+      // Deliver this task notification to everyone in that department + all Admins
+      const taskRecipients = seededUsers.filter(
+        (u) =>
+          u.role === "ADMIN" ||
+          u.departments.some((d) => d.id === randomDept.id)
+      )
+
+      await prisma.notificationStatus.createMany({
+        data: taskRecipients.map((recipient) => ({
+          notificationId: taskNotification.id,
+          userId: recipient.id,
+          // Randomly mark older notifications as read so your pagination history has realistic UI variety
+          isRead:
+            createdDate.getTime() < Date.now() - 7 * 86400000
+              ? Math.random() > 0.2
+              : false,
+          readAt:
+            createdDate.getTime() < Date.now() - 7 * 86400000
+              ? new Date(createdDate.getTime() + 3600000)
+              : null,
+        })),
+      })
+
+      // C. Add a Remark randomly (50% chance)
       if (Math.random() > 0.5) {
-        const remarkAuthor = seededUsers[Math.floor(Math.random() * seededUsers.length)]
+        const remarkAuthor =
+          seededUsers[Math.floor(Math.random() * seededUsers.length)]
+        const remarkDate = new Date(createdDate.getTime() + 86400000) // 1 day later
+
         await prisma.remark.create({
           data: {
             text: "Looking into this. Will update shortly.",
             taskId: task.id,
             authorName: remarkAuthor.name || remarkAuthor.username,
-            createdAt: new Date(createdDate.getTime() + 86400000) // 1 day later
-          }
+            createdAt: remarkDate,
+          },
+        })
+
+        // Create matching Notification log for the Remark
+        const remarkNotification = await prisma.notification.create({
+          data: {
+            title: `New Comment on "${task.name}"`,
+            body: `${remarkAuthor.name || remarkAuthor.username}: "Looking into this. Will update shortly."`,
+            senderId: remarkAuthor.id,
+            senderName: remarkAuthor.name || remarkAuthor.username,
+            targetDeptId: randomDept.id,
+            isAdminOnly: false,
+            createdAt: remarkDate,
+          },
+        })
+
+        // Deliver the remark notification to the same audience
+        await prisma.notificationStatus.createMany({
+          data: taskRecipients.map((recipient) => ({
+            notificationId: remarkNotification.id,
+            userId: recipient.id,
+            isRead:
+              remarkDate.getTime() < Date.now() - 7 * 86400000
+                ? Math.random() > 0.2
+                : false,
+            readAt:
+              remarkDate.getTime() < Date.now() - 7 * 86400000
+                ? new Date(remarkDate.getTime() + 1800000)
+                : null,
+          })),
         })
       }
     }
-    console.log("✅ Tasks and remarks seeded successfully.")
+
+    console.log("✅ Tasks, remarks, and notifications seeded successfully.")
 
     // Log a sample mapping to verification console
     console.log("\n📋 Sample Seed Mapping Summary:")
@@ -158,7 +245,6 @@ export async function seedDatabase() {
   }
 }
 
-// Self-execute if run directly via ts-node / tsx
 if (require.main === module) {
   seedDatabase()
 }
