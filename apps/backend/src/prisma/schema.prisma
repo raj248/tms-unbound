@@ -12,9 +12,8 @@ enum Role {
 }
 
 enum TaskStatus {
-  PENDING
   IN_PROGRESS
-  BLOCKED
+  HOLD
   COMPLETED
 }
 
@@ -58,7 +57,7 @@ model Task {
   id          String     @id @default(cuid())
   name        String     
   description String?    @db.Text
-  status      TaskStatus @default(PENDING)
+  status      TaskStatus @default(IN_PROGRESS)
   
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])

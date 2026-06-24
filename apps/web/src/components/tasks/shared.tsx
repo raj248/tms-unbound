@@ -24,20 +24,15 @@ export const STATUS_CONFIG: Record<
   TaskStatus,
   { label: string; className: string; dot: string }
 > = {
-  PENDING: {
-    label: "Pending",
-    className: "border-orange-200 bg-orange-50 text-orange-600",
-    dot: "bg-orange-400",
-  },
   IN_PROGRESS: {
     label: "In Progress",
     className: "border-blue-200 bg-blue-50 text-blue-600",
     dot: "bg-blue-400",
   },
-  BLOCKED: {
-    label: "Blocked",
-    className: "border-red-200 bg-red-50 text-red-600",
-    dot: "bg-red-500",
+  HOLD: {
+    label: "Hold",
+    className: "border-orange-200 bg-orange-50 text-orange-600",
+    dot: "bg-orange-500",
   },
   COMPLETED: {
     label: "Completed",
@@ -85,7 +80,7 @@ export function StatusSelect({
       onValueChange={(v) => onCommit(v as TaskStatus)}
       disabled={disabled}
     >
-      <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
+      <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:hidden">
         <SelectValue>
           <StatusBadge status={value} />
         </SelectValue>

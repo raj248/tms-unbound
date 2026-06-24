@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -39,13 +39,36 @@ interface FormErrors {
 // ---------------------------------------------------------------------------
 // CreateTaskDialog
 // ---------------------------------------------------------------------------
-export function CreateTaskDialog() {
+export function CreateTaskDialog({ 
+  fixedDepartmentId,
+  initialData,
+  trigger,
+  title = "Create New Task"
+}: { 
+  fixedDepartmentId?: string;
+  initialData?: { name?: string; description?: string; departmentId?: string; deadline?: string };
+  trigger?: React.ReactNode;
+  title?: string;
+} = {}) {
   const [open, setOpen] = useState(false)
 
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [departmentId, setDepartmentId] = useState("")
-  const [deadline, setDeadline] = useState("")
+  const [name, setName] = useState(initialData?.name || "")
+  const [description, setDescription] = useState(initialData?.description || "")
+  const [departmentId, setDepartmentId] = useState(fixedDepartmentId || initialData?.departmentId || "")
+  const [deadline, setDeadline] = useState(initialData?.deadline ? initialData.deadline.split("T")[0] : "")
+  const [deadlinePreset, setDeadlinePreset] = useState<"week" | "month" | "custom">("custom")
+
+  useEffect(() => {
+    if (deadlinePreset === "week") {
+      const d = new Date()
+      d.setDate(d.getDate() + 7)
+      setDeadline(d.toISOString().split("T")[0])
+    } else if (deadlinePreset === "month") {
+      const d = new Date()
+      d.setDate(d.getDate() + 30)
+      setDeadline(d.toISOString().split("T")[0])
+    }
+  }, [deadlinePreset])
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [successMsg, setSuccessMsg] = useState("")
@@ -53,10 +76,10 @@ export function CreateTaskDialog() {
   const createTaskMutation = useCreateTask()
   const { data: departments } = useDepartments()
   function resetForm() {
-    setName("")
-    setDescription("")
-    setDepartmentId("")
-    setDeadline("")
+    setName(initialData?.name || "")
+    setDescription(initialData?.description || "")
+    if (!fixedDepartmentId) setDepartmentId(initialData?.departmentId || "")
+    setDeadline(initialData?.deadline || "")
     setErrors({})
     setSuccessMsg("")
   }
@@ -97,10 +120,10 @@ export function CreateTaskDialog() {
         // Clear form tracking states only if the server accepts it
         setErrors({})
         setSuccessMsg("Task created successfully!")
-        setName("")
-        setDescription("")
-        setDepartmentId("")
-        setDeadline("")
+        setName(initialData?.name || "")
+        setDescription(initialData?.description || "")
+        if (!fixedDepartmentId) setDepartmentId(initialData?.departmentId || "")
+        setDeadline(initialData?.deadline || "")
         setOpen(false)
       },
       onError: (error: any) => {
@@ -119,17 +142,21 @@ export function CreateTaskDialog() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {/* ── Trigger ── */}
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <IconPlus className="h-4 w-4" />
-          New Task
-        </Button>
+        {trigger ? (
+          trigger
+        ) : (
+          <Button className="gap-2">
+            <IconPlus className="h-4 w-4" />
+            New Task
+          </Button>
+        )}
       </DialogTrigger>
 
       {/* ── Content ── */}
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader className="border-b px-6 py-5">
           <DialogTitle className="text-base font-semibold">
-            Create New Task
+            {title}
           </DialogTitle>
         </DialogHeader>
 
@@ -161,13 +188,14 @@ export function CreateTaskDialog() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Department <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={departmentId}
+                disabled={!!fixedDepartmentId}
                 onValueChange={(val) => {
                   setDepartmentId(val)
                   clearError("departmentId")
@@ -179,10 +207,12 @@ export function CreateTaskDialog() {
                   <SelectValue placeholder="Select…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments?.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
+                  {departments
+                    ?.filter((d) => !fixedDepartmentId || d.id === fixedDepartmentId)
+                    .map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.name}
+                      </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -194,16 +224,39 @@ export function CreateTaskDialog() {
             </div>
 
             <div className="space-y-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                Deadline Preset
+              </Label>
+              <Select
+                value={deadlinePreset}
+                onValueChange={(val: "week" | "month" | "custom") => {
+                  setDeadlinePreset(val)
+                  clearError("deadline")
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select preset" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">1 Week (7 days)</SelectItem>
+                  <SelectItem value="month">1 Month (30 days)</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
               <Label
                 htmlFor="task-deadline"
                 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
               >
-                Deadline
+                Deadline Date
               </Label>
               <Input
                 id="task-deadline"
                 type="date"
                 value={deadline}
+                disabled={deadlinePreset !== "custom"}
                 onChange={(e) => {
                   setDeadline(e.target.value)
                   clearError("deadline")
