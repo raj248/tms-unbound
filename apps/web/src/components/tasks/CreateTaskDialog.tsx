@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,20 @@ export function CreateTaskDialog({
   const [name, setName] = useState(initialData?.name || "")
   const [description, setDescription] = useState(initialData?.description || "")
   const [departmentId, setDepartmentId] = useState(fixedDepartmentId || initialData?.departmentId || "")
-  const [deadline, setDeadline] = useState(initialData?.deadline || "")
+  const [deadline, setDeadline] = useState(initialData?.deadline ? initialData.deadline.split("T")[0] : "")
+  const [deadlinePreset, setDeadlinePreset] = useState<"week" | "month" | "custom">("custom")
+
+  useEffect(() => {
+    if (deadlinePreset === "week") {
+      const d = new Date()
+      d.setDate(d.getDate() + 7)
+      setDeadline(d.toISOString().split("T")[0])
+    } else if (deadlinePreset === "month") {
+      const d = new Date()
+      d.setDate(d.getDate() + 30)
+      setDeadline(d.toISOString().split("T")[0])
+    }
+  }, [deadlinePreset])
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [successMsg, setSuccessMsg] = useState("")
@@ -175,7 +188,7 @@ export function CreateTaskDialog({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Department <span className="text-destructive">*</span>
@@ -211,16 +224,39 @@ export function CreateTaskDialog({
             </div>
 
             <div className="space-y-1.5">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                Deadline Preset
+              </Label>
+              <Select
+                value={deadlinePreset}
+                onValueChange={(val: "week" | "month" | "custom") => {
+                  setDeadlinePreset(val)
+                  clearError("deadline")
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select preset" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">1 Week (7 days)</SelectItem>
+                  <SelectItem value="month">1 Month (30 days)</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
               <Label
                 htmlFor="task-deadline"
                 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
               >
-                Deadline
+                Deadline Date
               </Label>
               <Input
                 id="task-deadline"
                 type="date"
                 value={deadline}
+                disabled={deadlinePreset !== "custom"}
                 onChange={(e) => {
                   setDeadline(e.target.value)
                   clearError("deadline")
