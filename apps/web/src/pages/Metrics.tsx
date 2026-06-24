@@ -20,6 +20,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { Progress } from "@workspace/ui/components/progress"
 import { IconChartBar, IconTarget, IconAlertTriangle } from "@tabler/icons-react"
+import { Badge } from "@workspace/ui/components/badge"
 import {
   Table,
   TableBody,
@@ -30,18 +31,7 @@ import {
 } from "@workspace/ui/components/table"
 import { IconPrinter } from "@workspace/ui/lib/Icons"
 import { Button } from "@workspace/ui/components/button"
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts"
 
-type TimeRange = "monthly" | "quarterly" | "yearly"
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -51,7 +41,7 @@ const QUARTERS = ["Q1", "Q2", "Q3", "Q4"]
 
 export default function MetricsPage() {
   const currentDate = new Date()
-  
+
   const { user } = useAuth()
   const { data: users = [] } = useUsers()
   const currentUserObj = users.find((u) => u.id === user?.id)
@@ -65,9 +55,6 @@ export default function MetricsPage() {
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth())
   const [selectedQuarter, setSelectedQuarter] = useState<number>(Math.floor(currentDate.getMonth() / 3))
   const [selectedWeek, setSelectedWeek] = useState<number>(1)
-
-  // Audit Filters
-  const [timeRange, setTimeRange] = useState<TimeRange>("monthly")
 
   const { data: departments = [] } = useDepartments()
 
@@ -123,52 +110,6 @@ export default function MetricsPage() {
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
-  // Calculate audit trend data
-  const aggregatedData = useMemo(() => {
-    if (!allTasks) return []
-
-    const grouped = new Map<string, {
-      period: string
-      total: number
-      completed: number
-      inProgress: number
-      hold: number
-    }>()
-
-    allTasks.forEach((task) => {
-      const date = new Date(task.createdAt)
-      let periodKey: string
-
-      if (timeRange === "monthly") {
-        periodKey = date.toLocaleString("default", { month: "short", year: "numeric" })
-      } else if (timeRange === "quarterly") {
-        const q = Math.floor(date.getMonth() / 3) + 1
-        periodKey = `Q${q} ${date.getFullYear()}`
-      } else {
-        periodKey = `${date.getFullYear()}`
-      }
-
-      if (!grouped.has(periodKey)) {
-        grouped.set(periodKey, {
-          period: periodKey,
-          total: 0,
-          completed: 0,
-          inProgress: 0,
-          hold: 0,
-        })
-      }
-
-      const stats = grouped.get(periodKey)!
-      stats.total += 1
-
-      if (task.status === "COMPLETED") stats.completed += 1
-      else if (task.status === "IN_PROGRESS") stats.inProgress += 1
-      else if (task.status === "HOLD") stats.hold += 1
-    })
-
-    return Array.from(grouped.values())
-  }, [allTasks, timeRange])
-
   const departmentData = useMemo(() => {
     if (!filteredTasks) return []
 
@@ -211,7 +152,7 @@ export default function MetricsPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col gap-6 overflow-auto p-6 md:p-8 bg-zinc-50/30 dark:bg-zinc-950/30 print:bg-white print:m-0 print:min-h-0 print:p-0 print:overflow-visible">
-      
+
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 print:text-black">
@@ -221,7 +162,7 @@ export default function MetricsPage() {
             Track departmental progress and audit task resolutions over time.
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3 print:hidden">
           <Button onClick={handlePrint} variant="outline" className="gap-2">
             <IconPrinter className="h-4 w-4" />
@@ -231,10 +172,10 @@ export default function MetricsPage() {
       </header>
 
       {/* Metrics Filters - Hidden when printing */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end print:hidden bg-white dark:bg-zinc-900 p-4 rounded-md border shadow-sm">
-        <div className="flex-1 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end print:hidden bg-white dark:bg-zinc-900 p-4 rounded-md">
+        <div className="flex-1 flex flex-wrap items-end gap-4 lg:gap-6">
           {isAdmin && (
-            <div className="space-y-1">
+            <div className="space-y-1 w-full sm:w-[180px]">
               <label className="text-xs font-medium">Department</label>
               <Select value={selectedDept} onValueChange={setSelectedDept}>
                 <SelectTrigger>
@@ -250,7 +191,7 @@ export default function MetricsPage() {
             </div>
           )}
 
-          <div className="space-y-1">
+          <div className="space-y-1 w-full sm:w-[140px]">
             <label className="text-xs font-medium">Year</label>
             <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(Number(v))}>
               <SelectTrigger>
@@ -264,7 +205,7 @@ export default function MetricsPage() {
             </Select>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 w-full sm:w-[240px]">
             <label className="text-xs font-medium">View By</label>
             <Tabs value={viewType} onValueChange={(v) => setViewType(v as "MONTH" | "QUARTER" | "WEEK")} className="w-full">
               <TabsList className="grid w-full grid-cols-3 h-9">
@@ -275,8 +216,8 @@ export default function MetricsPage() {
             </Tabs>
           </div>
 
-          <div className={`grid gap-4 ${viewType === "WEEK" ? "grid-cols-2 md:col-span-2 lg:col-span-2" : "grid-cols-1"}`}>
-            <div className="space-y-1">
+          <div className="flex flex-wrap w-full sm:w-auto gap-4 lg:gap-6">
+            <div className="space-y-1 w-full sm:w-[140px]">
               <label className="text-xs font-medium">
                 {viewType === "MONTH" || viewType === "WEEK" ? "Month" : "Quarter"}
               </label>
@@ -306,7 +247,7 @@ export default function MetricsPage() {
             </div>
 
             {viewType === "WEEK" && (
-              <div className="space-y-1">
+              <div className="space-y-1 w-full sm:w-[180px]">
                 <label className="text-xs font-medium">Week</label>
                 <Select value={selectedWeek.toString()} onValueChange={(v) => setSelectedWeek(Number(v))}>
                   <SelectTrigger>
@@ -345,7 +286,7 @@ export default function MetricsPage() {
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
@@ -437,9 +378,9 @@ export default function MetricsPage() {
                         <span className="h-2 w-2 rounded-full bg-blue-400" />
                         In Progress
                       </span>
-                      <span>{inProgressTasks} ({totalTasks > 0 ? Math.round((inProgressTasks/totalTasks)*100) : 0}%)</span>
+                      <span>{inProgressTasks} ({totalTasks > 0 ? Math.round((inProgressTasks / totalTasks) * 100) : 0}%)</span>
                     </div>
-                    <Progress value={totalTasks > 0 ? (inProgressTasks/totalTasks)*100 : 0} className="h-2 [&>div]:bg-blue-400" />
+                    <Progress value={totalTasks > 0 ? (inProgressTasks / totalTasks) * 100 : 0} className="h-2 [&>div]:bg-blue-400" />
                   </div>
 
                   <div className="space-y-2">
@@ -448,9 +389,9 @@ export default function MetricsPage() {
                         <span className="h-2 w-2 rounded-full bg-orange-500" />
                         Hold
                       </span>
-                      <span>{holdTasks} ({totalTasks > 0 ? Math.round((holdTasks/totalTasks)*100) : 0}%)</span>
+                      <span>{holdTasks} ({totalTasks > 0 ? Math.round((holdTasks / totalTasks) * 100) : 0}%)</span>
                     </div>
-                    <Progress value={totalTasks > 0 ? (holdTasks/totalTasks)*100 : 0} className="h-2 [&>div]:bg-orange-500" />
+                    <Progress value={totalTasks > 0 ? (holdTasks / totalTasks) * 100 : 0} className="h-2 [&>div]:bg-orange-500" />
                   </div>
 
                   <div className="space-y-2">
@@ -459,86 +400,72 @@ export default function MetricsPage() {
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         Completed
                       </span>
-                      <span>{completedTasks} ({totalTasks > 0 ? Math.round((completedTasks/totalTasks)*100) : 0}%)</span>
+                      <span>{completedTasks} ({totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%)</span>
                     </div>
-                    <Progress value={totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0} className="h-2 [&>div]:bg-emerald-500" />
+                    <Progress value={totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0} className="h-2 [&>div]:bg-emerald-500" />
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
-          
-          {/* Trend Analysis Graph taking full width below */}
+
+          {/* Tasks List */}
           <Card className="md:col-span-12 print:break-inside-avoid mt-2">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-0">
-              <div>
-                <CardTitle className="text-lg font-bold">Audit Trend Analysis</CardTitle>
-                <CardDescription>
-                  Task resolutions grouped by {timeRange} across the entire workspace
-                </CardDescription>
-              </div>
-              
-              <div className="w-40 print:hidden">
-                <Select value={timeRange} onValueChange={(val: TimeRange) => setTimeRange(val)}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Filtered Tasks</CardTitle>
+              <CardDescription>
+                Tasks matching your current metrics filters ({filteredTasks.length})
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[350px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={aggregatedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(161, 161, 170, 0.2)" />
-                    <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
-                    <Tooltip cursor={{ fill: "rgba(244, 244, 245, 0.1)" }} contentStyle={{ borderRadius: "8px", border: "1px solid #e4e4e7", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
-                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Line
-                      type="monotone"
-                      dataKey="completed"
-                      name="Completed"
-                      stroke="#059669"
-                      strokeWidth={3}
-                      activeDot={{ r: 6 }}
-                      isAnimationActive={true}
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="inProgress"
-                      name="In Progress"
-                      stroke="#2563eb"
-                      strokeWidth={3}
-                      activeDot={{ r: 6 }}
-                      isAnimationActive={true}
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="hold"
-                      name="Hold"
-                      stroke="#f97316"
-                      strokeWidth={3}
-                      activeDot={{ r: 6 }}
-                      isAnimationActive={true}
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+              <div className="rounded-md border border-zinc-200 dark:border-zinc-800 overflow-hidden print:border-gray-300">
+                <Table>
+                  <TableHeader className="bg-zinc-50 dark:bg-zinc-900/50 print:bg-gray-50">
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Created At</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTasks.length > 0 ? (
+                      filteredTasks.map((task) => {
+                        let customStatusClass = ""
+                        if (task.status === "IN_PROGRESS") {
+                          customStatusClass = "bg-blue-50 text-blue-600 border-transparent"
+                        } else if (task.status === "COMPLETED") {
+                          customStatusClass = "bg-emerald-50 text-emerald-600 border-transparent"
+                        } else if (task.status === "HOLD") {
+                          customStatusClass = "bg-orange-50 text-orange-600 border-transparent"
+                        }
+
+                        return (
+                          <TableRow key={task.id} className="hover:bg-muted/50">
+                            <TableCell className="font-medium">{task.name}</TableCell>
+                            <TableCell>
+                              <Badge className={`px-2.5 py-0.5 text-[10px] font-bold ${customStatusClass}`}>
+                                {task.status.replace("_", " ")}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{task.department?.name || "Unassigned"}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{new Date(task.createdAt).toLocaleDateString()}</TableCell>
+                          </TableRow>
+                        )
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                          No tasks found for the selected filters.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
-          
+
         </div>
       )}
     </div>

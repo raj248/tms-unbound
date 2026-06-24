@@ -110,7 +110,7 @@ export function TimeFilter({ onChange }: TimeFilterProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-[180px] justify-start text-left font-normal h-9">
+        <Button variant="secondary" className="w-[180px] justify-start text-left font-normal h-9">
           <IconCalendarEvent className="mr-2 h-4 w-4" />
           <span className="truncate">{activeLabel}</span>
         </Button>
