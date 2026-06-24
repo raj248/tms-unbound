@@ -69,7 +69,7 @@ function TaskTableRow({
   const dl = formatDeadline(task.deadline)
   return (
     <TableRow className="flex flex-col border-b border-border hover:bg-muted/40 md:table-row">
-      <TableCell className="block py-4 pl-6 md:table-cell md:py-3 md:pl-6">
+      <TableCell className="block min-w-0 py-4 pl-6 md:table-cell md:py-3 md:pl-6">
         <p
           className="cursor-pointer truncate text-sm font-medium underline-offset-2 transition-colors hover:text-primary hover:underline"
           onClick={onSelectTask}
@@ -429,7 +429,7 @@ export default function AdminTasks() {
       {/* Table */}
       {!isLoading && !error && viewMode === "table" && (
         <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
-          <Table>
+          <Table className="block md:table w-full">
             <TableHeader className="hidden bg-muted/40 md:table-header-group">
               <TableRow>
                 <TableHead className="w-[26%] pl-6">Task</TableHead>
@@ -441,12 +441,12 @@ export default function AdminTasks() {
                 <TableHead className="w-[9%] pr-6 text-right" />
               </TableRow>
             </TableHeader>
-              <TableBody>
+              <TableBody className="block md:table-row-group">
                 {paginatedTasks.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={7}
-                      className="py-20 text-center text-sm text-muted-foreground"
+                      className="min-w-0 py-20 text-center text-sm text-muted-foreground"
                     >
                       No tasks match your filters.
                     </TableCell>
