@@ -100,7 +100,7 @@ export const usePushNotifications = () => {
       // Only sync to backend if the token changed
       const storedToken = localStorage.getItem("fcm_token")
       if (storedToken !== token) {
-        await api.post("/user/save-token", { token })
+        await api.post("/notifications/save-token", { token })
         localStorage.setItem("fcm_token", token)
       }
 

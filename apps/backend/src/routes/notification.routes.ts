@@ -10,6 +10,42 @@ import { AppError } from "../utils/app-error.utils"
 const router: Router = Router()
 router.use(requireAuth)
 
+// save fcm token
+router.post("/save-token", async (req: AuthenticatedRequest, res) => {
+  try {
+    const { token } = req.body
+    const userId = req.user?.userId
+
+    if (!token) {
+      throw new AppError("Token is required", 400)
+    }
+
+    const existingToken = await prisma.user.findUnique({
+      where: { id: userId },
+    })
+
+    if (existingToken?.fcmToken === token) {
+      return res.json({
+        success: true,
+        data: { message: "Token already exists" },
+      })
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { fcmToken: token },
+    })
+
+    return res.json({
+      success: true,
+      data: { message: "Token saved successfully" },
+    })
+  } catch (error: any) {
+    if (error instanceof AppError) throw error
+    throw new AppError(error.message, 500)
+  }
+})
+
 // ==========================================
 // 1. GET MY NOTIFICATION HISTORY
 // ==========================================
