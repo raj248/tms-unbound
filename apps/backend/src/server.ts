@@ -44,7 +44,7 @@ import userRoutes from "./routes/user.routes"
 import notificationRoutes from "./routes/notification.routes"
 import { globalErrorHandler } from "./middlewares/error.middleware"
 
-app.use(generalLimiter)
+// app.use(generalLimiter)
 app.use("/api/auth", authLimiter, authRoutes)
 app.use("/api/tasks", taskRoutes)
 app.use("/api/departments", departmentRoutes)
