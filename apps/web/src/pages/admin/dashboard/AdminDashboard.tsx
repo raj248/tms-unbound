@@ -18,8 +18,8 @@ import { useTasks } from "@/hooks/task"
 import { useTaskModal } from "@/context/task-modal-context"
 import { useMemo } from "react"
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -217,7 +217,7 @@ export default function AdminDashboard() {
               <CardContent className="bg-white p-6 dark:bg-zinc-900">
                 <div className="h-[300px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
+                    <LineChart
                       data={chartData}
                       margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                     >
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
                         tick={{ fill: "#71717a", fontSize: 12 }}
                       />
                       <Tooltip
-                        cursor={{ fill: "rgba(244, 244, 245, 0.5)" }}
+                        cursor={{ fill: "rgba(244, 244, 245, 0.1)" }}
                         contentStyle={{
                           borderRadius: "8px",
                           border: "1px solid #e4e4e7",
@@ -246,27 +246,40 @@ export default function AdminDashboard() {
                         }}
                       />
                       <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                      <Bar
+                      <Line
+                        type="monotone"
                         dataKey="COMPLETED"
                         name="Completed"
-                        stackId="a"
-                        fill="#059669"
-                        radius={[0, 0, 4, 4]}
+                        stroke="#059669"
+                        strokeWidth={3}
+                        activeDot={{ r: 6 }}
+                        isAnimationActive={true}
+                        animationDuration={1500}
+                        animationEasing="ease-out"
                       />
-                      <Bar
+                      <Line
+                        type="monotone"
                         dataKey="IN_PROGRESS"
                         name="In Progress"
-                        stackId="a"
-                        fill="#2563eb"
+                        stroke="#2563eb"
+                        strokeWidth={3}
+                        activeDot={{ r: 6 }}
+                        isAnimationActive={true}
+                        animationDuration={1500}
+                        animationEasing="ease-out"
                       />
-                      <Bar
+                      <Line
+                        type="monotone"
                         dataKey="PENDING"
                         name="Pending"
-                        stackId="a"
-                        fill="#d97706"
-                        radius={[4, 4, 0, 0]}
+                        stroke="#d97706"
+                        strokeWidth={3}
+                        activeDot={{ r: 6 }}
+                        isAnimationActive={true}
+                        animationDuration={1500}
+                        animationEasing="ease-out"
                       />
-                    </BarChart>
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>

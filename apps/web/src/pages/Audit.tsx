@@ -25,8 +25,8 @@ import {
 import { IconLoader2, IconAlertTriangle, IconPrinter } from "@workspace/ui/lib/Icons"
 import { Button } from "@workspace/ui/components/button"
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -98,26 +98,8 @@ export default function AuditPage() {
     }>()
 
     tasks.forEach((task) => {
-      // Only include tasks that match the selected period logic? 
-      // Actually, to make it simple, we group ALL tasks by department 
-      // AND their respective period. But typically "department split" means 
-      // an overall breakdown across the whole timeframe or broken down by period.
-      // Let's group by Department and Period to show a detailed split.
-      const date = new Date(task.createdAt)
-      let periodKey = ""
-
-      if (timeRange === "monthly") {
-        periodKey = date.toLocaleString("default", { month: "short", year: "numeric" })
-      } else if (timeRange === "quarterly") {
-        const q = Math.floor(date.getMonth() / 3) + 1
-        periodKey = `Q${q} ${date.getFullYear()}`
-      } else {
-        periodKey = `${date.getFullYear()}`
-      }
-
       const deptName = task.department?.name || "Unassigned"
-      // Key is Department + Period
-      const key = `${deptName}-${periodKey}`
+      const key = deptName
 
       if (!grouped.has(key)) {
         grouped.set(key, {
@@ -138,7 +120,7 @@ export default function AuditPage() {
     })
 
     return Array.from(grouped.values()).sort((a, b) => a.department.localeCompare(b.department))
-  }, [tasks, timeRange])
+  }, [tasks])
 
   const handlePrint = () => {
     window.print()
@@ -206,16 +188,46 @@ export default function AuditPage() {
                 <CardContent>
                   <div className="h-[350px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={aggregatedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <LineChart data={aggregatedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(161, 161, 170, 0.2)" />
                         <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 12 }} />
-                        <Tooltip cursor={{ fill: "rgba(244, 244, 245, 0.5)" }} contentStyle={{ borderRadius: "8px", border: "1px solid #e4e4e7", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
+                        <Tooltip cursor={{ fill: "rgba(244, 244, 245, 0.1)" }} contentStyle={{ borderRadius: "8px", border: "1px solid #e4e4e7", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
                         <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                        <Bar dataKey="completed" name="Completed" stackId={timeRange === 'yearly' ? undefined : 'a'} fill="#059669" radius={timeRange === 'yearly' ? [4, 4, 0, 0] : [0, 0, 4, 4]} />
-                        <Bar dataKey="inProgress" name="In Progress" stackId={timeRange === 'yearly' ? undefined : 'a'} fill="#2563eb" radius={timeRange === 'yearly' ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
-                        <Bar dataKey="pending" name="Pending" stackId={timeRange === 'yearly' ? undefined : 'a'} fill="#d97706" radius={[4, 4, 0, 0]} />
-                      </BarChart>
+                        <Line
+                          type="monotone"
+                          dataKey="completed"
+                          name="Completed"
+                          stroke="#059669"
+                          strokeWidth={3}
+                          activeDot={{ r: 6 }}
+                          isAnimationActive={true}
+                          animationDuration={1500}
+                          animationEasing="ease-out"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="inProgress"
+                          name="In Progress"
+                          stroke="#2563eb"
+                          strokeWidth={3}
+                          activeDot={{ r: 6 }}
+                          isAnimationActive={true}
+                          animationDuration={1500}
+                          animationEasing="ease-out"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="pending"
+                          name="Pending"
+                          stroke="#d97706"
+                          strokeWidth={3}
+                          activeDot={{ r: 6 }}
+                          isAnimationActive={true}
+                          animationDuration={1500}
+                          animationEasing="ease-out"
+                        />
+                      </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
