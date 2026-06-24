@@ -57,7 +57,8 @@ export default function Login() {
           navigate("/department/dashboard")
         }
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } }
       const errorMessage =
         error.response?.data?.message || "Invalid email or password."
       toast.error("Login Failed", { description: errorMessage })

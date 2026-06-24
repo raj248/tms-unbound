@@ -10,7 +10,6 @@ import {
   IconDashboard,
   IconActivity,
   IconBell,
-  IconChartBar,
   IconLoader2,
   IconAlertTriangle,
 } from "@workspace/ui/lib/Icons"

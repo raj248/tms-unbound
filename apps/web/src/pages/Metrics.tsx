@@ -80,12 +80,13 @@ export default function MetricsPage() {
   )
 
   const availableYears = useMemo(() => {
+    const currentDate = new Date()
     if (!allTasks.length) return [currentDate.getFullYear()]
     const years = new Set<number>()
     allTasks.forEach(t => years.add(new Date(t.createdAt).getFullYear()))
     years.add(currentDate.getFullYear())
     return Array.from(years).sort((a, b) => b - a)
-  }, [allTasks, currentDate])
+  }, [allTasks])
 
   const filteredTasks = useMemo(() => {
     return allTasks.filter(t => {
@@ -128,7 +129,7 @@ export default function MetricsPage() {
 
     allTasks.forEach((task) => {
       const date = new Date(task.createdAt)
-      let periodKey = ""
+      let periodKey: string
 
       if (timeRange === "monthly") {
         periodKey = date.toLocaleString("default", { month: "short", year: "numeric" })

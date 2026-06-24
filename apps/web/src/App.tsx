@@ -51,8 +51,6 @@ export function App() {
                     element={<Tasks />}
                   />
                   <Route path="/metrics" element={<MetricsPage />} />
-                  {/* <Route path="/profile" element={<ProfilePage />} /> */}
-                  {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
                   <Route path="/settings" element={<SettingsPage />} />
                 </Route>
 
