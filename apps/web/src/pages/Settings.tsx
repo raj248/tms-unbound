@@ -385,22 +385,28 @@ export default function Settings() {
   const { mutate: deleteDepartment, isPending: deletingDept } =
     useDeleteDepartment()
 
+  const isAdmin = user?.role === "ADMIN"
+
   const tabs = [
     {
       value: "general",
       label: "General",
       icon: <IconSettings className="h-4 w-4 shrink-0" />,
     },
-    {
-      value: "users",
-      label: "User Management",
-      icon: <IconUser className="h-4 w-4 shrink-0" />,
-    },
-    {
-      value: "departments",
-      label: "Departments",
-      icon: <IconBuilding className="h-4 w-4 shrink-0" />,
-    },
+    ...(isAdmin
+      ? [
+          {
+            value: "users",
+            label: "User Management",
+            icon: <IconUser className="h-4 w-4 shrink-0" />,
+          },
+          {
+            value: "departments",
+            label: "Departments",
+            icon: <IconBuilding className="h-4 w-4 shrink-0" />,
+          },
+        ]
+      : []),
     // {
     //   value: "security",
     //   label: "Security",
@@ -502,6 +508,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* ── TAB 2: Users ── */}
+          {isAdmin && (
           <TabsContent value="users" className="mt-0 space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b pb-4">
@@ -586,8 +593,10 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* ── TAB 3: Departments ── */}
+          {isAdmin && (
           <TabsContent value="departments" className="mt-0 space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b pb-4">
@@ -634,6 +643,7 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* ── TAB 4: Security ── */}
           {/* <TabsContent value="security" className="mt-0">
