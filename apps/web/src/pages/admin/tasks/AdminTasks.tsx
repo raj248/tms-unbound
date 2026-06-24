@@ -45,7 +45,6 @@ import { useDepartments } from "@/hooks/department"
 import { useTaskModal } from "@/context/task-modal-context"
 import { PaginationFooter } from "@/components/ui/PaginationFooter"
 import {
-  STATUS_CONFIG,
   formatDeadline,
   StatusSelect,
   DeleteButton,
@@ -100,7 +99,9 @@ function TaskTableRow({
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
-        <span className="text-xs text-muted-foreground md:hidden">Department:</span>
+        <span className="text-xs text-muted-foreground md:hidden">
+          Department:
+        </span>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <IconBuilding className="h-3.5 w-3.5 shrink-0" />
           {task.department?.name ?? "—"}
@@ -108,7 +109,9 @@ function TaskTableRow({
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
-        <span className="text-xs text-muted-foreground md:hidden">Assignee:</span>
+        <span className="text-xs text-muted-foreground md:hidden">
+          Assignee:
+        </span>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <IconUser className="h-3.5 w-3.5 shrink-0" />
           {task.assignee?.name ?? task.assigneeName ?? "Unassigned"}
@@ -125,20 +128,28 @@ function TaskTableRow({
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
-        <span className="text-xs text-muted-foreground md:hidden">Last Updated:</span>
+        <span className="text-xs text-muted-foreground md:hidden">
+          Last Updated:
+        </span>
         <span className="text-xs text-muted-foreground">
           {task.updatedAt ? formatDeadline(task.updatedAt)?.formatted : "—"}
         </span>
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
-        <span className="text-xs text-muted-foreground md:hidden">Deadline:</span>
+        <span className="text-xs text-muted-foreground md:hidden">
+          Deadline:
+        </span>
         {dl ? (
-          <span className={`flex items-center gap-1 text-xs font-medium ${dl.isOverdue && task.status !== "COMPLETED" ? "text-red-500" : "text-muted-foreground"}`}>
+          <span
+            className={`flex items-center gap-1 text-xs font-medium ${dl.isOverdue && task.status !== "COMPLETED" ? "text-red-500" : "text-muted-foreground"}`}
+          >
             <IconCalendar className="h-3.5 w-3.5 shrink-0" />
             {dl.formatted}
             {dl.isOverdue && task.status !== "COMPLETED" && (
-              <span className="ml-1 rounded bg-red-100 px-1 py-0.5 text-[9px] text-red-500">Overdue</span>
+              <span className="ml-1 rounded bg-red-100 px-1 py-0.5 text-[9px] text-red-500">
+                Overdue
+              </span>
             )}
           </span>
         ) : (
@@ -147,7 +158,9 @@ function TaskTableRow({
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
-        <span className="text-xs text-muted-foreground md:hidden">Remarks:</span>
+        <span className="text-xs text-muted-foreground md:hidden">
+          Remarks:
+        </span>
         {task.remarks?.length > 0 ? (
           <TooltipProvider>
             <Tooltip>
@@ -326,7 +339,10 @@ export default function AdminTasks() {
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
   const [departmentId, setDepartmentId] = useState<string>("ALL")
   const [search, setSearch] = useState("")
-  const [dateRange, setDateRange] = useState<{ startDate?: string; endDate?: string }>({})
+  const [dateRange, setDateRange] = useState<{
+    startDate?: string
+    endDate?: string
+  }>({})
   const { openTask } = useTaskModal()
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
@@ -352,7 +368,7 @@ export default function AdminTasks() {
   const totalTasks = result?.total ?? 0
 
   return (
-    <div className="w-full min-w-0 space-y-6 p-4 sm:p-6 pb-12 md:p-8">
+    <div className="w-full min-w-0 space-y-6 p-4 pb-12 sm:p-6 md:p-8">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
@@ -480,7 +496,7 @@ export default function AdminTasks() {
       {/* Table */}
       {!isLoading && !error && viewMode === "table" && (
         <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
-          <Table className="block md:table w-full">
+          <Table className="block w-full md:table">
             <TableHeader className="hidden bg-muted/40 md:table-header-group">
               <TableRow>
                 <TableHead className="w-[20%] pl-6">Task</TableHead>
@@ -493,45 +509,55 @@ export default function AdminTasks() {
                 <TableHead className="w-[8%] pr-6 text-right" />
               </TableRow>
             </TableHeader>
-              <TableBody className="block md:table-row-group">
-                {paginatedTasks.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="min-w-0 py-20 text-center text-sm text-muted-foreground"
-                    >
-                      No tasks match your filters.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  Object.entries(
-                    paginatedTasks.reduce((acc, task) => {
+            <TableBody className="block md:table-row-group">
+              {paginatedTasks.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={8}
+                    className="min-w-0 py-20 text-center text-sm text-muted-foreground"
+                  >
+                    No tasks match your filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                Object.entries(
+                  paginatedTasks.reduce(
+                    (acc, task) => {
                       const dateStr = task.createdAt
-                        ? new Date(task.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                        ? new Date(task.createdAt).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })
                         : "Unknown Date"
                       if (!acc[dateStr]) acc[dateStr] = []
                       acc[dateStr].push(task)
                       return acc
-                    }, {} as Record<string, typeof paginatedTasks>)
-                  ).map(([dateStr, tasks]) => (
-                    <Fragment key={dateStr}>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
-                        <TableCell colSpan={8} className="py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-6 border-b">
-                          {dateStr}
-                        </TableCell>
-                      </TableRow>
-                      {tasks.map((task) => (
-                        <TaskTableRow
-                          key={task.id}
-                          task={task}
-                          onSelectTask={() => openTask(task)}
-                        />
-                      ))}
-                    </Fragment>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                    },
+                    {} as Record<string, typeof paginatedTasks>
+                  )
+                ).map(([dateStr, tasks]) => (
+                  <Fragment key={dateStr}>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableCell
+                        colSpan={8}
+                        className="border-b py-2 pl-6 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                      >
+                        {dateStr}
+                      </TableCell>
+                    </TableRow>
+                    {tasks.map((task) => (
+                      <TaskTableRow
+                        key={task.id}
+                        task={task}
+                        onSelectTask={() => openTask(task)}
+                      />
+                    ))}
+                  </Fragment>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </Card>
       )}
 
@@ -539,14 +565,21 @@ export default function AdminTasks() {
       {!isLoading && !error && viewMode === "kanban" && (
         <div className="flex flex-col gap-6 pb-4">
           {Object.entries(
-            paginatedTasks.reduce((acc, task) => {
-              const dateStr = task.createdAt
-                ? new Date(task.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                : "Unknown Date"
-              if (!acc[dateStr]) acc[dateStr] = []
-              acc[dateStr].push(task)
-              return acc
-            }, {} as Record<string, typeof paginatedTasks>)
+            paginatedTasks.reduce(
+              (acc, task) => {
+                const dateStr = task.createdAt
+                  ? new Date(task.createdAt).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : "Unknown Date"
+                if (!acc[dateStr]) acc[dateStr] = []
+                acc[dateStr].push(task)
+                return acc
+              },
+              {} as Record<string, typeof paginatedTasks>
+            )
           ).map(([dateStr, tasks]) => (
             <div key={dateStr} className="flex flex-col gap-3">
               <div className="flex items-center gap-2 border-b border-border pb-2">

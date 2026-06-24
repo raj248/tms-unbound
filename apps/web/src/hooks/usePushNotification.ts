@@ -122,7 +122,6 @@ export const usePushNotifications = () => {
     if (typeof window === "undefined" || !("Notification" in window)) {
       return () => {}
     }
-
     const messaging = await getSafeMessaging()
     if (!messaging) return () => {}
 

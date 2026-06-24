@@ -39,7 +39,6 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
         deadline: deadline ? new Date(deadline) : null,
         assigneeName:
           req.user?.name || req.user?.username || "Anonymous System User",
-        status: "PENDING",
       },
       include: { department: true },
     })
@@ -66,7 +65,16 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
 // ==========================================
 router.get("/", async (req, res) => {
   try {
-    const { status, departmentId, search, sortOrder, page, limit, startDate, endDate } = req.query
+    const {
+      status,
+      departmentId,
+      search,
+      sortOrder,
+      page,
+      limit,
+      startDate,
+      endDate,
+    } = req.query
 
     const whereClause: any = {
       ...(status && status !== "ALL" && { status: status as any }),

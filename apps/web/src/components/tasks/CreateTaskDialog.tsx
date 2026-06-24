@@ -39,24 +39,35 @@ interface FormErrors {
 // ---------------------------------------------------------------------------
 // CreateTaskDialog
 // ---------------------------------------------------------------------------
-export function CreateTaskDialog({ 
+export function CreateTaskDialog({
   fixedDepartmentId,
   initialData,
   trigger,
-  title = "Create New Task"
-}: { 
-  fixedDepartmentId?: string;
-  initialData?: { name?: string; description?: string; departmentId?: string; deadline?: string };
-  trigger?: React.ReactNode;
-  title?: string;
+  title = "Create New Task",
+}: {
+  fixedDepartmentId?: string
+  initialData?: {
+    name?: string
+    description?: string
+    departmentId?: string
+    deadline?: string
+  }
+  trigger?: React.ReactNode
+  title?: string
 } = {}) {
   const [open, setOpen] = useState(false)
 
   const [name, setName] = useState(initialData?.name || "")
   const [description, setDescription] = useState(initialData?.description || "")
-  const [departmentId, setDepartmentId] = useState(fixedDepartmentId || initialData?.departmentId || "")
-  const [deadline, setDeadline] = useState(initialData?.deadline ? initialData.deadline.split("T")[0] : "")
-  const [deadlinePreset, setDeadlinePreset] = useState<"week" | "month" | "custom">("custom")
+  const [departmentId, setDepartmentId] = useState(
+    fixedDepartmentId || initialData?.departmentId || ""
+  )
+  const [deadline, setDeadline] = useState(
+    initialData?.deadline ? initialData.deadline.split("T")[0] : ""
+  )
+  const [deadlinePreset, setDeadlinePreset] = useState<
+    "week" | "month" | "custom"
+  >("custom")
 
   useEffect(() => {
     if (deadlinePreset === "week") {
@@ -113,7 +124,7 @@ export function CreateTaskDialog({
     }
 
     // TODO: replace with real API call
-    console.log("CreateTaskRequest →", payload)
+    // console.log("CreateTaskRequest →", payload)
 
     createTaskMutation.mutate(payload, {
       onSuccess: () => {
@@ -155,9 +166,7 @@ export function CreateTaskDialog({
       {/* ── Content ── */}
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader className="border-b px-6 py-5">
-          <DialogTitle className="text-base font-semibold">
-            {title}
-          </DialogTitle>
+          <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
         </DialogHeader>
 
         <div className="max-h-[65vh] space-y-5 overflow-y-auto px-6 py-5">
@@ -188,7 +197,7 @@ export function CreateTaskDialog({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Department <span className="text-destructive">*</span>
@@ -208,12 +217,14 @@ export function CreateTaskDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {departments
-                    ?.filter((d) => !fixedDepartmentId || d.id === fixedDepartmentId)
+                    ?.filter(
+                      (d) => !fixedDepartmentId || d.id === fixedDepartmentId
+                    )
                     .map((d) => (
                       <SelectItem key={d.id} value={d.id}>
                         {d.name}
                       </SelectItem>
-                  ))}
+                    ))}
                 </SelectContent>
               </Select>
               {errors.departmentId && (
