@@ -68,8 +68,8 @@ function TaskTableRow({
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
   const dl = formatDeadline(task.deadline)
   return (
-    <TableRow className="hover:bg-muted/40">
-      <TableCell className="py-3 pl-6">
+    <TableRow className="flex flex-col border-b border-border hover:bg-muted/40 md:table-row">
+      <TableCell className="block py-4 pl-6 md:table-cell md:py-3 md:pl-6">
         <p
           className="cursor-pointer truncate text-sm font-medium underline-offset-2 transition-colors hover:text-primary hover:underline"
           onClick={onSelectTask}
@@ -83,21 +83,24 @@ function TaskTableRow({
         )}
       </TableCell>
 
-      <TableCell className="py-3">
+      <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
+        <span className="text-xs text-muted-foreground md:hidden">Department:</span>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <IconBuilding className="h-3.5 w-3.5 shrink-0" />
           {task.department?.name ?? "—"}
         </span>
       </TableCell>
 
-      <TableCell className="py-3">
+      <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
+        <span className="text-xs text-muted-foreground md:hidden">Assignee:</span>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <IconUser className="h-3.5 w-3.5 shrink-0" />
           {task.assignee?.name ?? task.assigneeName ?? "Unassigned"}
         </span>
       </TableCell>
 
-      <TableCell className="py-3">
+      <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
+        <span className="text-xs text-muted-foreground md:hidden">Status:</span>
         <StatusSelect
           value={task.status}
           disabled={isUpdating}
@@ -105,7 +108,8 @@ function TaskTableRow({
         />
       </TableCell>
 
-      <TableCell className="py-3">
+      <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
+        <span className="text-xs text-muted-foreground md:hidden">Deadline:</span>
         {dl ? (
           <span
             className={`flex items-center gap-1 text-xs font-medium ${dl.isOverdue && task.status !== "COMPLETED" ? "text-red-500" : "text-muted-foreground"}`}
@@ -123,7 +127,8 @@ function TaskTableRow({
         )}
       </TableCell>
 
-      <TableCell className="py-3">
+      <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
+        <span className="text-xs text-muted-foreground md:hidden">Remarks:</span>
         {task.remarks?.length > 0 ? (
           <TooltipProvider>
             <Tooltip>
@@ -156,7 +161,7 @@ function TaskTableRow({
         )}
       </TableCell>
 
-      <TableCell className="py-3 pr-6 text-right">
+      <TableCell className="flex justify-end px-6 py-3 md:table-cell md:py-3 md:pr-6 md:pl-0 md:text-right">
         <div className="flex items-center justify-end gap-1">
           {task.status === "COMPLETED" && (
             <span className="mr-1 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
@@ -320,7 +325,7 @@ export default function AdminTasks() {
   // const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
 
   return (
-    <div className="w-full space-y-6 p-6 pb-12 md:p-8">
+    <div className="w-full min-w-0 space-y-6 p-4 sm:p-6 pb-12 md:p-8">
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
@@ -424,19 +429,18 @@ export default function AdminTasks() {
       {/* Table */}
       {!isLoading && !error && viewMode === "table" && (
         <Card className="overflow-hidden border-zinc-200/60 shadow-none dark:border-zinc-800/60">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[800px]">
-              <TableHeader className="bg-muted/40">
-                <TableRow>
-                  <TableHead className="w-[26%] pl-6">Task</TableHead>
-                  <TableHead className="w-[14%]">Department</TableHead>
-                  <TableHead className="w-[14%]">Assignee</TableHead>
-                  <TableHead className="w-[14%]">Status</TableHead>
-                  <TableHead className="w-[15%]">Deadline</TableHead>
-                  <TableHead className="w-[8%]">Remarks</TableHead>
-                  <TableHead className="w-[9%] pr-6 text-right" />
-                </TableRow>
-              </TableHeader>
+          <Table>
+            <TableHeader className="hidden bg-muted/40 md:table-header-group">
+              <TableRow>
+                <TableHead className="w-[26%] pl-6">Task</TableHead>
+                <TableHead className="w-[14%]">Department</TableHead>
+                <TableHead className="w-[14%]">Assignee</TableHead>
+                <TableHead className="w-[14%]">Status</TableHead>
+                <TableHead className="w-[15%]">Deadline</TableHead>
+                <TableHead className="w-[8%]">Remarks</TableHead>
+                <TableHead className="w-[9%] pr-6 text-right" />
+              </TableRow>
+            </TableHeader>
               <TableBody>
                 {paginatedTasks.length === 0 ? (
                   <TableRow>
@@ -458,7 +462,6 @@ export default function AdminTasks() {
                 )}
               </TableBody>
             </Table>
-          </div>
         </Card>
       )}
 
