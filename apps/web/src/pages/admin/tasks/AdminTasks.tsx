@@ -28,10 +28,18 @@ import {
   TooltipTrigger,
 } from "@workspace/ui/components/tooltip"
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 
 import { type TaskWithDetails, type TaskStatus } from "@workspace/types"
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog"
 import { useUpdateTask, useDeleteTask, usePaginatedTasks } from "@/hooks/task"
+import { useDepartments } from "@/hooks/department"
 import { useTaskModal } from "@/context/task-modal-context"
 import { PaginationFooter } from "@/components/ui/PaginationFooter"
 import {
@@ -303,10 +311,13 @@ export default function AdminTasks() {
   const [viewMode, setViewMode] = useState<ViewMode>("table")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
+  const [departmentId, setDepartmentId] = useState<string>("ALL")
   const [search, setSearch] = useState("")
   const { openTask } = useTaskModal()
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
+
+  const { data: departments } = useDepartments()
 
   const {
     data: result,
@@ -318,6 +329,7 @@ export default function AdminTasks() {
     search: search.trim() || undefined,
     status: filter === "ALL" ? undefined : filter,
     sortOrder,
+    departmentId: departmentId === "ALL" ? undefined : departmentId,
   })
 
   const paginatedTasks = result?.data ?? []
@@ -352,6 +364,27 @@ export default function AdminTasks() {
               className="h-9 w-full rounded-full pl-8 text-sm sm:w-48"
             />
           </div>
+
+          <Select
+            value={departmentId}
+            onValueChange={(val) => {
+              setDepartmentId(val)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="h-9 w-[160px] rounded-full text-xs">
+              <SelectValue placeholder="All Departments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Departments</SelectItem>
+              {departments?.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <div className="flex flex-wrap gap-1">
             {FILTER_TABS.map(({ value, label }) => (
               <button

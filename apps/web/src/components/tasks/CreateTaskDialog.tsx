@@ -39,12 +39,12 @@ interface FormErrors {
 // ---------------------------------------------------------------------------
 // CreateTaskDialog
 // ---------------------------------------------------------------------------
-export function CreateTaskDialog() {
+export function CreateTaskDialog({ fixedDepartmentId }: { fixedDepartmentId?: string } = {}) {
   const [open, setOpen] = useState(false)
 
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
-  const [departmentId, setDepartmentId] = useState("")
+  const [departmentId, setDepartmentId] = useState(fixedDepartmentId || "")
   const [deadline, setDeadline] = useState("")
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -55,7 +55,7 @@ export function CreateTaskDialog() {
   function resetForm() {
     setName("")
     setDescription("")
-    setDepartmentId("")
+    if (!fixedDepartmentId) setDepartmentId("")
     setDeadline("")
     setErrors({})
     setSuccessMsg("")
@@ -99,7 +99,7 @@ export function CreateTaskDialog() {
         setSuccessMsg("Task created successfully!")
         setName("")
         setDescription("")
-        setDepartmentId("")
+        if (!fixedDepartmentId) setDepartmentId("")
         setDeadline("")
         setOpen(false)
       },
@@ -168,6 +168,7 @@ export function CreateTaskDialog() {
               </Label>
               <Select
                 value={departmentId}
+                disabled={!!fixedDepartmentId}
                 onValueChange={(val) => {
                   setDepartmentId(val)
                   clearError("departmentId")
@@ -179,10 +180,12 @@ export function CreateTaskDialog() {
                   <SelectValue placeholder="Select…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments?.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
+                  {departments
+                    ?.filter((d) => !fixedDepartmentId || d.id === fixedDepartmentId)
+                    .map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.name}
+                      </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

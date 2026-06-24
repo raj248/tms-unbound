@@ -23,6 +23,7 @@ import { useAuth } from "@/context/auth-context"
 import { useUsers } from "@/hooks/user"
 import { useTaskModal } from "@/context/task-modal-context"
 import { PaginationFooter } from "@/components/ui/PaginationFooter"
+import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog"
 
 const getStatusStyle = (status: string) => {
   if (status === "PENDING") return "destructive"
@@ -104,6 +105,9 @@ export default function Tasks() {
             {totalTasks} tasks available
           </p>
         </div>
+        {myDepartmentId && (
+          <CreateTaskDialog fixedDepartmentId={myDepartmentId} />
+        )}
       </div>
 
       {/* Filters and Search Row */}
