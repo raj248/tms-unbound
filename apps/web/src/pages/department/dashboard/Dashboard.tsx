@@ -12,6 +12,15 @@ import { useTasks } from "@/hooks/task"
 import { useAuth } from "@/context/auth-context"
 import { useUsers } from "@/hooks/user"
 import { useTaskModal } from "@/context/task-modal-context"
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts"
 
 const formatDeadline = (dateString: string | Date | null) => {
   if (!dateString) return "No date"
@@ -26,42 +35,12 @@ const derivePriority = (status: string) => {
 }
 
 const weeklyCompletions = [
-  {
-    label: "May 5",
-    count: 2,
-    height: "h-10",
-    color: "bg-indigo-200 dark:bg-indigo-500/20",
-  },
-  {
-    label: "May 12",
-    count: 3,
-    height: "h-16",
-    color: "bg-indigo-300 dark:bg-indigo-500/40",
-  },
-  {
-    label: "May 19",
-    count: 1,
-    height: "h-6",
-    color: "bg-indigo-200 dark:bg-indigo-500/20",
-  },
-  {
-    label: "May 26",
-    count: 4,
-    height: "h-20",
-    color: "bg-indigo-500 dark:bg-indigo-500",
-  },
-  {
-    label: "Jun 9",
-    count: 2,
-    height: "h-10",
-    color: "bg-indigo-200 dark:bg-indigo-500/20",
-  },
-  {
-    label: "Jun 16",
-    count: 4,
-    height: "h-20",
-    color: "bg-indigo-600 dark:bg-indigo-400",
-  },
+  { label: "May 5", count: 2 },
+  { label: "May 12", count: 3 },
+  { label: "May 19", count: 1 },
+  { label: "May 26", count: 4 },
+  { label: "Jun 9", count: 2 },
+  { label: "Jun 16", count: 4 },
 ]
 
 export default function Dashboard() {
@@ -95,17 +74,37 @@ export default function Dashboard() {
       }
     })
 
-  const activities = safeTasks.slice(0, 3).map((t, idx) => ({
-    id: t.id,
-    text: `${t.name} marked as ${t.status === "PENDING" ? "Pending" : t.status === "IN_PROGRESS" ? "In Progress" : "Completed"}`,
-    time: `Today, ${9 + idx}:00 AM`,
-    dotColor:
-      t.status === "COMPLETED"
-        ? "bg-emerald-500"
-        : t.status === "PENDING"
-          ? "bg-red-500"
-          : "bg-indigo-500",
-  }))
+  const recentTasks = [...safeTasks]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5)
+
+  const activities = recentTasks.map((t) => {
+    const isToday = new Date(t.updatedAt).toDateString() === new Date().toDateString()
+    const timeStr = new Date(t.updatedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    const dateStr = new Date(t.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    
+    return {
+      id: t.id,
+      text: `${t.name} marked as ${
+        t.status === "PENDING"
+          ? "Pending"
+          : t.status === "IN_PROGRESS"
+            ? "In Progress"
+            : t.status === "BLOCKED"
+              ? "Blocked"
+              : "Completed"
+      }`,
+      time: isToday ? `Today, ${timeStr}` : `${dateStr}, ${timeStr}`,
+      dotColor:
+        t.status === "COMPLETED"
+          ? "bg-emerald-500"
+          : t.status === "PENDING"
+            ? "bg-orange-500"
+            : t.status === "BLOCKED"
+              ? "bg-red-500"
+              : "bg-blue-500",
+    }
+  })
 
   return (
     <div className="-m-6 flex min-h-[calc(100vh-3.5rem)] bg-zinc-50/30 dark:bg-zinc-950/30">
@@ -268,23 +267,26 @@ export default function Dashboard() {
                     </span>
                   </div>
                 </CardHeader>
-                <CardContent className="mt-auto flex flex-1 items-end justify-between gap-3 px-6 pt-2 pb-6">
-                  {weeklyCompletions.map((week, idx) => (
-                    <div
-                      key={idx}
-                      className="group flex flex-1 flex-col items-center"
-                    >
-                      <span className="mb-2 text-xs font-semibold text-zinc-400 transition-colors group-hover:text-zinc-900 dark:text-zinc-500 dark:group-hover:text-zinc-100">
-                        {week.count}
-                      </span>
-                      <div
-                        className={`w-full ${week.height} ${week.color} rounded-md transition-all group-hover:opacity-80`}
-                      ></div>
-                      <span className="mt-2 text-center text-[10px] font-medium text-zinc-400 dark:text-zinc-500">
-                        {week.label}
-                      </span>
-                    </div>
-                  ))}
+                <CardContent className="mt-auto h-[180px] px-6 pb-6 pt-2 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={weeklyCompletions} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(161, 161, 170, 0.2)" />
+                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 10 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: "#71717a", fontSize: 10 }} />
+                      <Tooltip cursor={{ fill: "rgba(244, 244, 245, 0.1)" }} contentStyle={{ borderRadius: "8px", border: "1px solid #e4e4e7", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", fontSize: "12px" }} />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        name="Tasks"
+                        stroke="#6366f1"
+                        strokeWidth={3}
+                        activeDot={{ r: 6 }}
+                        isAnimationActive={true}
+                        animationDuration={1500}
+                        animationEasing="ease-out"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
 

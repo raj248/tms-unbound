@@ -18,7 +18,7 @@ import {
 } from "@workspace/ui/components/table"
 import { Card } from "@workspace/ui/components/card"
 import { type TaskWithDetails } from "@workspace/types"
-import { usePaginatedTasks } from "@/hooks/task"
+import { usePaginatedTasks, useUpdateTask } from "@/hooks/task"
 import { useAuth } from "@/context/auth-context"
 import { useUsers } from "@/hooks/user"
 import { useTaskModal } from "@/context/task-modal-context"
@@ -218,6 +218,7 @@ export default function Tasks() {
 
   function TaskRow({ task }: { task: TaskWithDetails }) {
     const statusVariant = getStatusStyle(task.status) as any
+    const { mutate: updateTask, isPending } = useUpdateTask()
 
     let customStatusClass = ""
     if (task.status === "IN_PROGRESS") {
@@ -267,16 +268,7 @@ export default function Tasks() {
         </TableCell>
 
         <TableCell className="flex justify-end px-6 py-3 pb-4 text-right md:table-cell md:py-3">
-          {task.status !== "COMPLETED" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1.5 px-3 text-[11px]"
-            >
-              <IconEdit className="h-3 w-3 text-muted-foreground" />
-              Update
-            </Button>
-          ) : (
+          {task.status === "BLOCKED" ? null : task.status === "COMPLETED" ? (
             <Button
               variant="secondary"
               size="sm"
@@ -284,6 +276,28 @@ export default function Tasks() {
             >
               <IconCheck className="h-3 w-3 text-muted-foreground" />
               Done
+            </Button>
+          ) : task.status === "IN_PROGRESS" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 px-3 text-[11px] hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
+              disabled={isPending}
+              onClick={() => updateTask({ id: task.id, status: "COMPLETED" })}
+            >
+              <IconCheck className="h-3 w-3 text-emerald-500" />
+              Complete
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 px-3 text-[11px] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+              disabled={isPending}
+              onClick={() => updateTask({ id: task.id, status: "IN_PROGRESS" })}
+            >
+              <IconEdit className="h-3 w-3 text-blue-500" />
+              Start
             </Button>
           )}
         </TableCell>

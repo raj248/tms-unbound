@@ -58,6 +58,7 @@ export const useCreateTask = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks-paginated"] })
     },
   })
 }
@@ -74,6 +75,7 @@ export const useUpdateTask = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       queryClient.invalidateQueries({ queryKey: ["tasks", variables.id] })
+      queryClient.invalidateQueries({ queryKey: ["tasks-paginated"] })
     },
   })
 }
@@ -89,6 +91,7 @@ export const useDeleteTask = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks-paginated"] })
     },
   })
 }
