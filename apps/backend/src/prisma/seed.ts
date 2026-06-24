@@ -40,9 +40,8 @@ const TASK_NAMES = [
 ]
 
 const TASK_STATUSES = [
-  TaskStatus.PENDING,
   TaskStatus.IN_PROGRESS,
-  TaskStatus.BLOCKED,
+  TaskStatus.HOLD,
   TaskStatus.COMPLETED,
 ]
 

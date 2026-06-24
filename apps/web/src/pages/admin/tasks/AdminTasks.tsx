@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react"
+import { useState, Fragment, useEffect } from "react"
 import {
   IconSearch,
   IconArrowsSort,
@@ -49,7 +49,7 @@ import {
   StatusSelect,
   DeleteButton,
 } from "@/components/tasks/shared"
-
+import { useAuth } from "@/context/auth-context"
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
@@ -334,6 +334,10 @@ function KanbanCard({
 type ViewMode = "table" | "kanban"
 
 export default function AdminTasks() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === "ADMIN"
+  const [myDepartment, setMyDepartment] = useState<string>("")
+
   const [viewMode, setViewMode] = useState<ViewMode>("table")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
@@ -366,6 +370,12 @@ export default function AdminTasks() {
 
   const paginatedTasks = result?.data ?? []
   const totalTasks = result?.total ?? 0
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setMyDepartment(result?.data[0].department.name ?? "")
+    }
+  }, [result])
 
   return (
     <div className="w-full min-w-0 space-y-6 p-4 pb-12 sm:p-6 md:p-8">
@@ -402,12 +412,17 @@ export default function AdminTasks() {
               setDepartmentId(val)
               setCurrentPage(1)
             }}
+            disabled={!isAdmin}
           >
             <SelectTrigger className="h-9 w-[160px] rounded-full text-xs">
-              <SelectValue placeholder="All Departments" />
+              <SelectValue
+                placeholder={!isAdmin ? "All Departments" : myDepartment}
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All Departments</SelectItem>
+              <SelectItem value="ALL">
+                {isAdmin ? "All Departments" : myDepartment}
+              </SelectItem>
               {departments?.map((dept) => (
                 <SelectItem key={dept.id} value={dept.id}>
                   {dept.name}

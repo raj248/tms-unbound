@@ -28,7 +28,7 @@ import {
 } from "recharts"
 
 const formatStatusText = (status: string) => {
-  if (status === "PENDING") return "Pending"
+  if (status === "HOLD") return "Hold"
   if (status === "IN_PROGRESS") return "In Progress"
   if (status === "COMPLETED") return "Completed"
   return status
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
 
     const deptMap = new Map<
       string,
-      { name: string; COMPLETED: number; IN_PROGRESS: number; PENDING: number }
+      { name: string; COMPLETED: number; IN_PROGRESS: number; HOLD: number }
     >()
 
     tasks.forEach((task) => {
@@ -53,14 +53,14 @@ export default function AdminDashboard() {
           name: deptName,
           COMPLETED: 0,
           IN_PROGRESS: 0,
-          PENDING: 0,
+          HOLD: 0,
         })
       }
       const current = deptMap.get(deptName)!
       if (
         task.status === "COMPLETED" ||
         task.status === "IN_PROGRESS" ||
-        task.status === "PENDING"
+        task.status === "HOLD"
       ) {
         current[task.status] += 1
       }
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
   const inProgress =
     tasks?.filter((t) => t.status === "IN_PROGRESS").length || 0
   const completed = tasks?.filter((t) => t.status === "COMPLETED").length || 0
-  const pending = tasks?.filter((t) => t.status === "PENDING").length || 0
+  const hold = tasks?.filter((t) => t.status === "HOLD").length || 0
 
   const metrics = [
     {
@@ -101,8 +101,8 @@ export default function AdminDashboard() {
       bg: "bg-blue-50 dark:bg-blue-500/10",
     },
     {
-      title: "Pending",
-      value: pending.toString(),
+      title: "Hold",
+      value: hold.toString(),
       desc: "Waiting to be started",
       icon: IconBell,
       color: "text-amber-600",
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
       : "UN"
     let statusColor =
       "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
-    if (t.status === "PENDING")
+    if (t.status === "HOLD")
       statusColor =
         "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10"
     if (t.status === "IN_PROGRESS")
@@ -269,8 +269,8 @@ export default function AdminDashboard() {
                       />
                       <Line
                         type="monotone"
-                        dataKey="PENDING"
-                        name="Pending"
+                        dataKey="HOLD"
+                        name="Hold"
                         stroke="#d97706"
                         strokeWidth={3}
                         activeDot={{ r: 6 }}

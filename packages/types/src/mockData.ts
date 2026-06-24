@@ -106,7 +106,7 @@ export const mockTasks: Task[] = [
     name: "Write Unit Tests for Payment Webhooks",
     description:
       "Ensure incoming payload validation schema captures transaction events correctly even when underlying database clusters encounter heavy concurrency.",
-    status: "PENDING",
+    status: "IN_PROGRESS",
     departmentId: "cuj1234567890dept2",
     assigneeId: null,
     assigneeName: null,
@@ -119,7 +119,7 @@ export const mockTasks: Task[] = [
     name: "Create Marketing Campaign Assets",
     description:
       "Design banners, social media posts, and email templates for the upcoming Q3 product launch.",
-    status: "BLOCKED",
+    status: "HOLD",
     departmentId: "cuj1234567890dept4",
     assigneeId: "cuj1234567890user4",
     assigneeName: "Alice Wonderland",
@@ -130,7 +130,8 @@ export const mockTasks: Task[] = [
   {
     id: "cuj1234567890task5",
     name: "Review Security Audit",
-    description: "Analyze the latest penetration testing report and patch the listed high-priority vulnerabilities.",
+    description:
+      "Analyze the latest penetration testing report and patch the listed high-priority vulnerabilities.",
     status: "IN_PROGRESS",
     departmentId: "cuj1234567890dept1",
     assigneeId: "cuj1234567890user5",

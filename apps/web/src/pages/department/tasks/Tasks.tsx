@@ -74,7 +74,10 @@ export default function Tasks() {
   }
 
   const [search, setSearch] = useState("")
-  const [dateRange, setDateRange] = useState<{ startDate?: string; endDate?: string }>({})
+  const [dateRange, setDateRange] = useState<{
+    startDate?: string
+    endDate?: string
+  }>({})
 
   const {
     data: result,
@@ -193,7 +196,9 @@ export default function Tasks() {
               <TableRow>
                 <TableHead className="w-[30%]">Task</TableHead>
                 <TableHead className="w-[15%] text-center">Status</TableHead>
-                <TableHead className="w-[15%] text-center">Last Updated</TableHead>
+                <TableHead className="w-[15%] text-center">
+                  Last Updated
+                </TableHead>
                 <TableHead className="w-[15%] text-center">Deadline</TableHead>
                 <TableHead className="w-[25%] pr-6 text-right">
                   Action
@@ -212,22 +217,34 @@ export default function Tasks() {
                 </TableRow>
               ) : (
                 Object.entries(
-                  safeTasks.reduce((acc, task) => {
-                    const dateStr = task.createdAt
-                      ? new Date(task.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                      : "Unknown Date"
-                    if (!acc[dateStr]) acc[dateStr] = []
-                    acc[dateStr].push(task)
-                    return acc
-                  }, {} as Record<string, typeof safeTasks>)
+                  safeTasks.reduce(
+                    (acc, task) => {
+                      const dateStr = task.createdAt
+                        ? new Date(task.createdAt).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : "Unknown Date"
+                      if (!acc[dateStr]) acc[dateStr] = []
+                      acc[dateStr].push(task)
+                      return acc
+                    },
+                    {} as Record<string, typeof safeTasks>
+                  )
                 ).map(([dateStr, tasks]) => (
                   <Fragment key={dateStr}>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableCell colSpan={5} className="py-2 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b">
+                      <TableCell
+                        colSpan={5}
+                        className="border-b px-6 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                      >
                         {dateStr}
                       </TableCell>
                     </TableRow>
-                    {tasks.map((task) => <TaskRow key={task.id} task={task} />)}
+                    {tasks.map((task) => (
+                      <TaskRow key={task.id} task={task} />
+                    ))}
                   </Fragment>
                 ))
               )}
@@ -301,7 +318,9 @@ export default function Tasks() {
         </TableCell>
 
         <TableCell className="flex justify-between px-6 py-1 md:table-cell md:py-3 md:text-center">
-          <span className="text-xs text-muted-foreground md:hidden">Updated:</span>
+          <span className="text-xs text-muted-foreground md:hidden">
+            Updated:
+          </span>
           <span className="text-xs text-muted-foreground">
             {task.updatedAt ? formatDeadline(task.updatedAt) : "—"}
           </span>
@@ -310,7 +329,7 @@ export default function Tasks() {
         <TableCell className="flex justify-between px-6 py-1 md:table-cell md:py-3 md:text-center">
           <span className="text-xs text-muted-foreground md:hidden">Due:</span>
           <span
-            className={`text-xs font-semibold ${task.status === "PENDING" ? "text-destructive" : "text-muted-foreground"}`}
+            className={`text-xs font-semibold ${task.status === "IN_PROGRESS" ? "text-destructive" : "text-muted-foreground"}`}
           >
             {formatDeadline(task.deadline)}
           </span>
@@ -336,7 +355,7 @@ export default function Tasks() {
                 </Button>
               }
             />
-            {task.status === "BLOCKED" ? null : task.status === "COMPLETED" ? (
+            {task.status === "HOLD" ? null : task.status === "COMPLETED" ? (
               <Button
                 variant="secondary"
                 size="sm"
@@ -349,7 +368,7 @@ export default function Tasks() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1.5 px-3 text-[11px] hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
+                className="h-7 gap-1.5 px-3 text-[11px] hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600"
                 disabled={isPending}
                 onClick={() => updateTask({ id: task.id, status: "COMPLETED" })}
               >
@@ -360,9 +379,11 @@ export default function Tasks() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1.5 px-3 text-[11px] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                className="h-7 gap-1.5 px-3 text-[11px] hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
                 disabled={isPending}
-                onClick={() => updateTask({ id: task.id, status: "IN_PROGRESS" })}
+                onClick={() =>
+                  updateTask({ id: task.id, status: "IN_PROGRESS" })
+                }
               >
                 <IconEdit className="h-3 w-3 text-blue-500" />
                 Start
