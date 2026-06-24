@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, Fragment } from "react"
 import {
   IconSearch,
   IconArrowsSort,
@@ -9,6 +9,7 @@ import {
   IconCheck,
   IconLoader2,
   IconAlertTriangle,
+  IconCopy,
 } from "@tabler/icons-react"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -84,11 +85,18 @@ function TaskTableRow({
         >
           {task.name}
         </p>
-        {task.description && (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {task.description}
-          </p>
-        )}
+        <div className="mt-0.5 flex flex-col gap-0.5">
+          {task.description && (
+            <p className="truncate text-xs text-muted-foreground">
+              {task.description}
+            </p>
+          )}
+          {task.createdAt && (
+            <p className="text-[10px] text-muted-foreground/70">
+              Created {formatDeadline(task.createdAt)?.formatted}
+            </p>
+          )}
+        </div>
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
@@ -117,17 +125,20 @@ function TaskTableRow({
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
+        <span className="text-xs text-muted-foreground md:hidden">Last Updated:</span>
+        <span className="text-xs text-muted-foreground">
+          {task.updatedAt ? formatDeadline(task.updatedAt)?.formatted : "—"}
+        </span>
+      </TableCell>
+
+      <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3">
         <span className="text-xs text-muted-foreground md:hidden">Deadline:</span>
         {dl ? (
-          <span
-            className={`flex items-center gap-1 text-xs font-medium ${dl.isOverdue && task.status !== "COMPLETED" ? "text-red-500" : "text-muted-foreground"}`}
-          >
+          <span className={`flex items-center gap-1 text-xs font-medium ${dl.isOverdue && task.status !== "COMPLETED" ? "text-red-500" : "text-muted-foreground"}`}>
             <IconCalendar className="h-3.5 w-3.5 shrink-0" />
             {dl.formatted}
             {dl.isOverdue && task.status !== "COMPLETED" && (
-              <span className="ml-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] text-red-500">
-                Overdue
-              </span>
+              <span className="ml-1 rounded bg-red-100 px-1 py-0.5 text-[9px] text-red-500">Overdue</span>
             )}
           </span>
         ) : (
@@ -176,6 +187,23 @@ function TaskTableRow({
               <IconCheck className="h-3.5 w-3.5" /> Done
             </span>
           )}
+          <CreateTaskDialog
+            initialData={{
+              name: task.name + " (Copy)",
+              description: task.description || undefined,
+              departmentId: task.departmentId,
+            }}
+            title="Duplicate Task"
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              >
+                <IconCopy className="h-4 w-4" />
+              </Button>
+            }
+          />
           <DeleteButton
             taskName={task.name}
             isPending={isDeleting}
@@ -213,11 +241,30 @@ function KanbanCard({
             {task.name}
           </p>
 
-          <DeleteButton
-            taskName={task.name}
-            isPending={isDeleting}
-            onConfirm={() => deleteTask(task.id)}
-          />
+          <div className="flex items-center gap-1">
+            <CreateTaskDialog
+              initialData={{
+                name: task.name + " (Copy)",
+                description: task.description || undefined,
+                departmentId: task.departmentId,
+              }}
+              title="Duplicate Task"
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                >
+                  <IconCopy className="h-3.5 w-3.5" />
+                </Button>
+              }
+            />
+            <DeleteButton
+              taskName={task.name}
+              isPending={isDeleting}
+              onConfirm={() => deleteTask(task.id)}
+            />
+          </div>
         </div>
 
         {task.description && (
@@ -241,12 +288,18 @@ function KanbanCard({
             <IconUser className="h-3 w-3" />
             {task.assignee?.name ?? task.assigneeName ?? "Unassigned"}
           </span>
+          {task.createdAt && (
+            <span className="flex items-center gap-1">
+              <IconCalendar className="h-3 w-3" />
+              Created: {formatDeadline(task.createdAt)?.formatted}
+            </span>
+          )}
           {dl && (
             <span
               className={`flex items-center gap-1 ${dl.isOverdue && task.status !== "COMPLETED" ? "font-semibold text-red-500" : ""}`}
             >
               <IconCalendar className="h-3 w-3" />
-              {dl.formatted}
+              Due: {dl.formatted}
             </span>
           )}
           {task.remarks?.length > 0 && (
@@ -465,32 +518,51 @@ export default function AdminTasks() {
           <Table className="block md:table w-full">
             <TableHeader className="hidden bg-muted/40 md:table-header-group">
               <TableRow>
-                <TableHead className="w-[26%] pl-6">Task</TableHead>
-                <TableHead className="w-[14%]">Department</TableHead>
-                <TableHead className="w-[14%]">Assignee</TableHead>
-                <TableHead className="w-[14%]">Status</TableHead>
-                <TableHead className="w-[15%]">Deadline</TableHead>
+                <TableHead className="w-[20%] pl-6">Task</TableHead>
+                <TableHead className="w-[12%]">Department</TableHead>
+                <TableHead className="w-[12%]">Assignee</TableHead>
+                <TableHead className="w-[12%]">Status</TableHead>
+                <TableHead className="w-[14%]">Last Updated</TableHead>
+                <TableHead className="w-[14%]">Deadline</TableHead>
                 <TableHead className="w-[8%]">Remarks</TableHead>
-                <TableHead className="w-[9%] pr-6 text-right" />
+                <TableHead className="w-[8%] pr-6 text-right" />
               </TableRow>
             </TableHeader>
               <TableBody className="block md:table-row-group">
                 {paginatedTasks.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="min-w-0 py-20 text-center text-sm text-muted-foreground"
                     >
                       No tasks match your filters.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedTasks.map((task) => (
-                    <TaskTableRow
-                      key={task.id}
-                      task={task}
-                      onSelectTask={() => openTask(task)}
-                    />
+                  Object.entries(
+                    paginatedTasks.reduce((acc, task) => {
+                      const dateStr = task.createdAt
+                        ? new Date(task.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                        : "Unknown Date"
+                      if (!acc[dateStr]) acc[dateStr] = []
+                      acc[dateStr].push(task)
+                      return acc
+                    }, {} as Record<string, typeof paginatedTasks>)
+                  ).map(([dateStr, tasks]) => (
+                    <Fragment key={dateStr}>
+                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                        <TableCell colSpan={8} className="py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-6 border-b">
+                          {dateStr}
+                        </TableCell>
+                      </TableRow>
+                      {tasks.map((task) => (
+                        <TaskTableRow
+                          key={task.id}
+                          task={task}
+                          onSelectTask={() => openTask(task)}
+                        />
+                      ))}
+                    </Fragment>
                   ))
                 )}
               </TableBody>

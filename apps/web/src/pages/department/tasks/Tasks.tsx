@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState, Fragment } from "react"
 import {
   IconSearch,
   IconArrowsSort,
   IconEdit,
   IconCheck,
+  IconCopy,
 } from "@tabler/icons-react"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -181,10 +182,11 @@ export default function Tasks() {
           <Table>
             <TableHeader className="hidden bg-muted/50 md:table-header-group">
               <TableRow>
-                <TableHead className="w-[35%]">Task</TableHead>
+                <TableHead className="w-[30%]">Task</TableHead>
                 <TableHead className="w-[15%] text-center">Status</TableHead>
-                <TableHead className="w-[20%] text-center">Due Date</TableHead>
-                <TableHead className="w-[15%] pr-6 text-right">
+                <TableHead className="w-[15%] text-center">Last Updated</TableHead>
+                <TableHead className="w-[15%] text-center">Deadline</TableHead>
+                <TableHead className="w-[25%] pr-6 text-right">
                   Action
                 </TableHead>
               </TableRow>
@@ -193,14 +195,32 @@ export default function Tasks() {
               {safeTasks.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="py-20 text-center text-sm text-muted-foreground"
                   >
                     No tasks match your filters.
                   </TableCell>
                 </TableRow>
               ) : (
-                safeTasks.map((task) => <TaskRow key={task.id} task={task} />)
+                Object.entries(
+                  safeTasks.reduce((acc, task) => {
+                    const dateStr = task.createdAt
+                      ? new Date(task.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                      : "Unknown Date"
+                    if (!acc[dateStr]) acc[dateStr] = []
+                    acc[dateStr].push(task)
+                    return acc
+                  }, {} as Record<string, typeof safeTasks>)
+                ).map(([dateStr, tasks]) => (
+                  <Fragment key={dateStr}>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableCell colSpan={5} className="py-2 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b">
+                        {dateStr}
+                      </TableCell>
+                    </TableRow>
+                    {tasks.map((task) => <TaskRow key={task.id} task={task} />)}
+                  </Fragment>
+                ))
               )}
             </TableBody>
           </Table>
@@ -240,10 +260,17 @@ export default function Tasks() {
           >
             {task.name}
           </p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {task.department?.name || "Unassigned Dept"} ·{" "}
-            {task.assigneeName || "Unassigned"}
-          </p>
+          <div className="mt-0.5 flex flex-col gap-0.5">
+            <p className="truncate text-xs text-muted-foreground">
+              {task.department?.name || "Unassigned Dept"} ·{" "}
+              {task.assigneeName || "Unassigned"}
+            </p>
+            {task.createdAt && (
+              <p className="text-[10px] text-muted-foreground/70">
+                Created {formatDeadline(task.createdAt)}
+              </p>
+            )}
+          </div>
         </TableCell>
 
         <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:py-3 md:text-center">
@@ -263,6 +290,13 @@ export default function Tasks() {
         </TableCell>
 
         <TableCell className="flex justify-between px-6 py-1 md:table-cell md:py-3 md:text-center">
+          <span className="text-xs text-muted-foreground md:hidden">Updated:</span>
+          <span className="text-xs text-muted-foreground">
+            {task.updatedAt ? formatDeadline(task.updatedAt) : "—"}
+          </span>
+        </TableCell>
+
+        <TableCell className="flex justify-between px-6 py-1 md:table-cell md:py-3 md:text-center">
           <span className="text-xs text-muted-foreground md:hidden">Due:</span>
           <span
             className={`text-xs font-semibold ${task.status === "PENDING" ? "text-destructive" : "text-muted-foreground"}`}
@@ -272,38 +306,58 @@ export default function Tasks() {
         </TableCell>
 
         <TableCell className="flex justify-end px-6 py-3 pb-4 text-right md:table-cell md:py-3">
-          {task.status === "BLOCKED" ? null : task.status === "COMPLETED" ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-7 cursor-default gap-1.5 px-3 text-[11px] hover:bg-secondary"
-            >
-              <IconCheck className="h-3 w-3 text-muted-foreground" />
-              Done
-            </Button>
-          ) : task.status === "IN_PROGRESS" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1.5 px-3 text-[11px] hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
-              disabled={isPending}
-              onClick={() => updateTask({ id: task.id, status: "COMPLETED" })}
-            >
-              <IconCheck className="h-3 w-3 text-emerald-500" />
-              Complete
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1.5 px-3 text-[11px] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
-              disabled={isPending}
-              onClick={() => updateTask({ id: task.id, status: "IN_PROGRESS" })}
-            >
-              <IconEdit className="h-3 w-3 text-blue-500" />
-              Start
-            </Button>
-          )}
+          <div className="flex items-center justify-end gap-2">
+            <CreateTaskDialog
+              fixedDepartmentId={task.departmentId}
+              initialData={{
+                name: task.name + " (Copy)",
+                description: task.description || undefined,
+              }}
+              title="Duplicate Task"
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 px-3 text-[11px]"
+                >
+                  <IconCopy className="h-3 w-3" />
+                  Duplicate
+                </Button>
+              }
+            />
+            {task.status === "BLOCKED" ? null : task.status === "COMPLETED" ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-7 cursor-default gap-1.5 px-3 text-[11px] hover:bg-secondary"
+              >
+                <IconCheck className="h-3 w-3 text-muted-foreground" />
+                Done
+              </Button>
+            ) : task.status === "IN_PROGRESS" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 px-3 text-[11px] hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
+                disabled={isPending}
+                onClick={() => updateTask({ id: task.id, status: "COMPLETED" })}
+              >
+                <IconCheck className="h-3 w-3 text-emerald-500" />
+                Complete
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 px-3 text-[11px] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                disabled={isPending}
+                onClick={() => updateTask({ id: task.id, status: "IN_PROGRESS" })}
+              >
+                <IconEdit className="h-3 w-3 text-blue-500" />
+                Start
+              </Button>
+            )}
+          </div>
         </TableCell>
       </TableRow>
     )

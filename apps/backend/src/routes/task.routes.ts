@@ -73,9 +73,10 @@ router.get("/", async (req, res) => {
 
     const orderByClause: any = []
     if (sortOrder === "asc" || sortOrder === "desc") {
-      orderByClause.push({ deadline: sortOrder })
+      orderByClause.push({ createdAt: sortOrder })
+    } else {
+      orderByClause.push({ createdAt: "desc" })
     }
-    orderByClause.push({ createdAt: "desc" })
 
     const queryOptions: any = {
       where: whereClause,

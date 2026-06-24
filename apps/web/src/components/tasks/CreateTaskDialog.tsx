@@ -39,13 +39,23 @@ interface FormErrors {
 // ---------------------------------------------------------------------------
 // CreateTaskDialog
 // ---------------------------------------------------------------------------
-export function CreateTaskDialog({ fixedDepartmentId }: { fixedDepartmentId?: string } = {}) {
+export function CreateTaskDialog({ 
+  fixedDepartmentId,
+  initialData,
+  trigger,
+  title = "Create New Task"
+}: { 
+  fixedDepartmentId?: string;
+  initialData?: { name?: string; description?: string; departmentId?: string; deadline?: string };
+  trigger?: React.ReactNode;
+  title?: string;
+} = {}) {
   const [open, setOpen] = useState(false)
 
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [departmentId, setDepartmentId] = useState(fixedDepartmentId || "")
-  const [deadline, setDeadline] = useState("")
+  const [name, setName] = useState(initialData?.name || "")
+  const [description, setDescription] = useState(initialData?.description || "")
+  const [departmentId, setDepartmentId] = useState(fixedDepartmentId || initialData?.departmentId || "")
+  const [deadline, setDeadline] = useState(initialData?.deadline || "")
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [successMsg, setSuccessMsg] = useState("")
@@ -53,10 +63,10 @@ export function CreateTaskDialog({ fixedDepartmentId }: { fixedDepartmentId?: st
   const createTaskMutation = useCreateTask()
   const { data: departments } = useDepartments()
   function resetForm() {
-    setName("")
-    setDescription("")
-    if (!fixedDepartmentId) setDepartmentId("")
-    setDeadline("")
+    setName(initialData?.name || "")
+    setDescription(initialData?.description || "")
+    if (!fixedDepartmentId) setDepartmentId(initialData?.departmentId || "")
+    setDeadline(initialData?.deadline || "")
     setErrors({})
     setSuccessMsg("")
   }
@@ -97,10 +107,10 @@ export function CreateTaskDialog({ fixedDepartmentId }: { fixedDepartmentId?: st
         // Clear form tracking states only if the server accepts it
         setErrors({})
         setSuccessMsg("Task created successfully!")
-        setName("")
-        setDescription("")
-        if (!fixedDepartmentId) setDepartmentId("")
-        setDeadline("")
+        setName(initialData?.name || "")
+        setDescription(initialData?.description || "")
+        if (!fixedDepartmentId) setDepartmentId(initialData?.departmentId || "")
+        setDeadline(initialData?.deadline || "")
         setOpen(false)
       },
       onError: (error: any) => {
@@ -119,17 +129,21 @@ export function CreateTaskDialog({ fixedDepartmentId }: { fixedDepartmentId?: st
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {/* ── Trigger ── */}
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <IconPlus className="h-4 w-4" />
-          New Task
-        </Button>
+        {trigger ? (
+          trigger
+        ) : (
+          <Button className="gap-2">
+            <IconPlus className="h-4 w-4" />
+            New Task
+          </Button>
+        )}
       </DialogTrigger>
 
       {/* ── Content ── */}
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader className="border-b px-6 py-5">
           <DialogTitle className="text-base font-semibold">
-            Create New Task
+            {title}
           </DialogTitle>
         </DialogHeader>
 
