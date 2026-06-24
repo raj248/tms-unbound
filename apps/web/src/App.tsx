@@ -13,7 +13,6 @@ import Tasks from "@/pages/department/tasks/Tasks"
 import MetricsPage from "@/pages/Metrics"
 import NotFoundPage from "@/pages/NotFound"
 import SettingsPage from "@/pages/Settings"
-import AuditPage from "@/pages/Audit"
 import RoleBasedRedirect from "@/components/auth/RoleBasedRedirect"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -52,7 +51,6 @@ export function App() {
                     element={<Tasks />}
                   />
                   <Route path="/metrics" element={<MetricsPage />} />
-                  <Route path="/audit" element={<AuditPage />} />
                   {/* <Route path="/profile" element={<ProfilePage />} /> */}
                   {/* <Route path="/profile/:id" element={<ProfilePage />} /> */}
                   <Route path="/settings" element={<SettingsPage />} />
