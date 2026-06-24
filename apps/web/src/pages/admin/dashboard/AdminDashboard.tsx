@@ -16,6 +16,17 @@ import {
 } from "@workspace/ui/lib/Icons"
 import { useTasks } from "@/hooks/task"
 import { useTaskModal } from "@/context/task-modal-context"
+import { useMemo } from "react"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts"
 
 const formatStatusText = (status: string) => {
   if (status === "PENDING") return "Pending"
@@ -27,6 +38,37 @@ const formatStatusText = (status: string) => {
 export default function AdminDashboard() {
   const { data: tasks, isLoading, error } = useTasks()
   const { openTask } = useTaskModal()
+
+  const chartData = useMemo(() => {
+    if (!tasks) return []
+
+    const deptMap = new Map<
+      string,
+      { name: string; COMPLETED: number; IN_PROGRESS: number; PENDING: number }
+    >()
+
+    tasks.forEach((task) => {
+      const deptName = task.department?.name || "Unassigned"
+      if (!deptMap.has(deptName)) {
+        deptMap.set(deptName, {
+          name: deptName,
+          COMPLETED: 0,
+          IN_PROGRESS: 0,
+          PENDING: 0,
+        })
+      }
+      const current = deptMap.get(deptName)!
+      if (
+        task.status === "COMPLETED" ||
+        task.status === "IN_PROGRESS" ||
+        task.status === "PENDING"
+      ) {
+        current[task.status] += 1
+      }
+    })
+
+    return Array.from(deptMap.values())
+  }, [tasks])
 
   const totalTasks = tasks?.length || 0
   const inProgress =
@@ -173,13 +215,59 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="bg-white p-6 dark:bg-zinc-900">
-                <div className="flex h-[300px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-950/50">
-                  <div className="mb-3 rounded-full bg-indigo-50 p-3 dark:bg-indigo-500/10">
-                    <IconChartBar className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                    Interactive Chart Area
-                  </span>
+                <div className="h-[300px] w-full mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={chartData}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="rgba(161, 161, 170, 0.2)"
+                      />
+                      <XAxis
+                        dataKey="name"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "#71717a", fontSize: 12 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "#71717a", fontSize: 12 }}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "rgba(244, 244, 245, 0.5)" }}
+                        contentStyle={{
+                          borderRadius: "8px",
+                          border: "1px solid #e4e4e7",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                        }}
+                      />
+                      <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                      <Bar
+                        dataKey="COMPLETED"
+                        name="Completed"
+                        stackId="a"
+                        fill="#059669"
+                        radius={[0, 0, 4, 4]}
+                      />
+                      <Bar
+                        dataKey="IN_PROGRESS"
+                        name="In Progress"
+                        stackId="a"
+                        fill="#2563eb"
+                      />
+                      <Bar
+                        dataKey="PENDING"
+                        name="Pending"
+                        stackId="a"
+                        fill="#d97706"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
