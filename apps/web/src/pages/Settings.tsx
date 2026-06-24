@@ -111,8 +111,9 @@ function AddUserDialog() {
         reset()
         setOpen(false)
       },
-      onError: (err: any) => {
-        setError(err.response.data.message)
+      onError: (err: unknown) => {
+        const error = err as { response?: { data?: { message?: string } } }
+        setError(error.response?.data?.message || "Failed to create user.")
       },
     })
   }
@@ -385,28 +386,28 @@ export default function Settings() {
   const { mutate: deleteDepartment, isPending: deletingDept } =
     useDeleteDepartment()
 
+  const isAdmin = user?.role === "ADMIN"
+
   const tabs = [
     {
       value: "general",
       label: "General",
       icon: <IconSettings className="h-4 w-4 shrink-0" />,
     },
-    {
-      value: "users",
-      label: "User Management",
-      icon: <IconUser className="h-4 w-4 shrink-0" />,
-    },
-    {
-      value: "departments",
-      label: "Departments",
-      icon: <IconBuilding className="h-4 w-4 shrink-0" />,
-    },
-    // {
-    //   value: "security",
-    //   label: "Security",
-    //   icon: <IconAlertCircle className="h-4 w-4 shrink-0" />,
-    //   destructive: true,
-    // },
+    ...(isAdmin
+      ? [
+          {
+            value: "users",
+            label: "User Management",
+            icon: <IconUser className="h-4 w-4 shrink-0" />,
+          },
+          {
+            value: "departments",
+            label: "Departments",
+            icon: <IconBuilding className="h-4 w-4 shrink-0" />,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -502,6 +503,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* ── TAB 2: Users ── */}
+          {isAdmin && (
           <TabsContent value="users" className="mt-0 space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b pb-4">
@@ -530,7 +532,7 @@ export default function Settings() {
                       const departmentName =
                         u.departments?.[0]?.name ??
                         departments.find(
-                          (d) => d.id === (u as any).departmentId
+                          (d) => d.id === (u as { departmentId?: string }).departmentId
                         )?.name ??
                         "No Department"
 
@@ -586,8 +588,10 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* ── TAB 3: Departments ── */}
+          {isAdmin && (
           <TabsContent value="departments" className="mt-0 space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b pb-4">
@@ -634,47 +638,7 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* ── TAB 4: Security ── */}
-          {/* <TabsContent value="security" className="mt-0">
-            <Card className="border-zinc-200 dark:border-zinc-800">
-              <CardHeader className="border-b pb-4">
-                <CardTitle className="text-base">
-                  Session Configuration
-                </CardTitle>
-                <CardDescription>
-                  Configure authentication boundaries and idle session limits.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-5">
-                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                  <div className="space-y-0.5">
-                    <Label className="text-sm font-medium">
-                      Session Timeout
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Automatically terminate idle sessions after a set period.
-                    </p>
-                  </div>
-                  <Select defaultValue="60">
-                    <SelectTrigger className="w-full sm:w-36">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                      <SelectItem value="480">8 hours</SelectItem>
-                      <SelectItem value="never">Never</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-              <CardFooter className="justify-end border-t bg-zinc-50 px-6 py-3 dark:bg-zinc-900/50">
-                <Button size="sm">Save security rules</Button>
-              </CardFooter>
-            </Card>
-          </TabsContent> */}
+          )}
         </div>
       </Tabs>
     </div>

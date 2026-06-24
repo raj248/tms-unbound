@@ -7,12 +7,13 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
 export const loginUser = async (
   username: string,
   password: string
-): Promise<any> => {
-  const res = await api.post<any>(`${API_URL}/auth/login`, {
+): Promise<unknown> => {
+  const res = await api.post<unknown>(`${API_URL}/auth/login`, {
     username,
     password,
   })
-  return res.data
+  // Cast to a generic object to access data
+  return (res as { data: unknown }).data
 }
 
 export const checkUserSession = async () => {

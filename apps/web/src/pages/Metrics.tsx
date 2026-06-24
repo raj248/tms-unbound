@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react"
 import { useTasks } from "@/hooks/task"
 import { useDepartments } from "@/hooks/department"
+import { useAuth } from "@/context/auth-context"
+import { useUsers } from "@/hooks/user"
 import {
   Card,
   CardContent,
@@ -50,6 +52,12 @@ const QUARTERS = ["Q1", "Q2", "Q3", "Q4"]
 export default function MetricsPage() {
   const currentDate = new Date()
   
+  const { user } = useAuth()
+  const { data: users = [] } = useUsers()
+  const currentUserObj = users.find((u) => u.id === user?.id)
+  const myDepartmentId = currentUserObj?.departments?.[0]?.id
+  const isAdmin = user?.role === "ADMIN"
+
   // Metrics Filters
   const [selectedDept, setSelectedDept] = useState<string>("ALL")
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear())
@@ -61,26 +69,32 @@ export default function MetricsPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("monthly")
 
   const { data: departments = [] } = useDepartments()
-  const { data: allTasks = [], isLoading } = useTasks()
+
+  // For non-admins, force the department to their own.
+  const effectiveDept = isAdmin ? selectedDept : (myDepartmentId || "ALL")
+
+  // Use frontend query parameter implementation for API
+  const { data: allTasks = [], isLoading } = useTasks(
+    undefined,
+    effectiveDept === "ALL" ? undefined : effectiveDept
+  )
 
   const availableYears = useMemo(() => {
+    const currentDate = new Date()
     if (!allTasks.length) return [currentDate.getFullYear()]
     const years = new Set<number>()
     allTasks.forEach(t => years.add(new Date(t.createdAt).getFullYear()))
     years.add(currentDate.getFullYear())
     return Array.from(years).sort((a, b) => b - a)
-  }, [allTasks, currentDate])
+  }, [allTasks])
 
   const filteredTasks = useMemo(() => {
     return allTasks.filter(t => {
-      // 1. Department filter
-      if (selectedDept !== "ALL" && t.departmentId !== selectedDept) return false
-
-      // 2. Year filter
+      // 1. Year filter
       const taskDate = new Date(t.createdAt)
       if (taskDate.getFullYear() !== selectedYear) return false
 
-      // 3. Month / Quarter filter
+      // 2. Month / Quarter filter
       if (viewType === "MONTH") {
         if (taskDate.getMonth() !== selectedMonth) return false
       } else {
@@ -90,7 +104,7 @@ export default function MetricsPage() {
 
       return true
     })
-  }, [allTasks, selectedDept, selectedYear, viewType, selectedMonth, selectedQuarter])
+  }, [allTasks, selectedYear, viewType, selectedMonth, selectedQuarter])
 
   // Calculate stats for current metrics timeframe
   const totalTasks = filteredTasks.length
@@ -115,7 +129,7 @@ export default function MetricsPage() {
 
     allTasks.forEach((task) => {
       const date = new Date(task.createdAt)
-      let periodKey = ""
+      let periodKey: string
 
       if (timeRange === "monthly") {
         periodKey = date.toLocaleString("default", { month: "short", year: "numeric" })
@@ -211,20 +225,22 @@ export default function MetricsPage() {
       {/* Metrics Filters - Hidden when printing */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end print:hidden bg-white dark:bg-zinc-900 p-4 rounded-md border shadow-sm">
         <div className="flex-1 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-          <div className="space-y-1">
-            <label className="text-xs font-medium">Department</label>
-            <Select value={selectedDept} onValueChange={setSelectedDept}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Departments" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Departments</SelectItem>
-                {departments.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isAdmin && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Department</label>
+              <Select value={selectedDept} onValueChange={setSelectedDept}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Departments" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Departments</SelectItem>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-1">
             <label className="text-xs font-medium">Year</label>
