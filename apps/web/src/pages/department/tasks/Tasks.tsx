@@ -25,6 +25,7 @@ import { useUsers } from "@/hooks/user"
 import { useTaskModal } from "@/context/task-modal-context"
 import { PaginationFooter } from "@/components/ui/PaginationFooter"
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog"
+import { TimeFilter } from "@/components/tasks/TimeFilter"
 
 const getStatusStyle = (status: string) => {
   if (status === "PENDING") return "destructive"
@@ -73,6 +74,7 @@ export default function Tasks() {
   }
 
   const [search, setSearch] = useState("")
+  const [dateRange, setDateRange] = useState<{ startDate?: string; endDate?: string }>({})
 
   const {
     data: result,
@@ -85,6 +87,8 @@ export default function Tasks() {
     status: filter === "ALL" ? undefined : filter,
     sortOrder,
     departmentId: myDepartmentId,
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
     enabled: !!myDepartmentId,
   })
 
@@ -156,16 +160,21 @@ export default function Tasks() {
             Pending
           </Button>
         </div>
-        <Button
-          onClick={handleSortToggle}
-          variant="outline"
-          className="flex h-9 items-center gap-2 rounded-full px-4 text-muted-foreground transition-all"
-        >
-          <IconArrowsSort
-            className={`h-4 w-4 transition-transform duration-300 ${sortOrder === "desc" ? "rotate-180" : ""}`}
-          />
-          Sort: {sortOrder === "asc" ? "Oldest First" : "Newest First"}
-        </Button>
+
+        <div className="flex items-center gap-2">
+          <TimeFilter onChange={setDateRange} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSortToggle}
+            className="h-9 gap-1.5 rounded-full px-4 text-xs text-muted-foreground"
+          >
+            <IconArrowsSort
+              className={`h-4 w-4 transition-transform ${sortOrder === "desc" ? "rotate-180" : ""}`}
+            />
+            {sortOrder === "asc" ? "Oldest First" : "Newest First"}
+          </Button>
+        </div>
       </div>
 
       {/* Task Table Structure */}

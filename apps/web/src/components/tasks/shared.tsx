@@ -85,7 +85,7 @@ export function StatusSelect({
       onValueChange={(v) => onCommit(v as TaskStatus)}
       disabled={disabled}
     >
-      <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:h-3 [&>svg]:w-3">
+      <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:hidden">
         <SelectValue>
           <StatusBadge status={value} />
         </SelectValue>

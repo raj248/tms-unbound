@@ -26,6 +26,8 @@ export const usePaginatedTasks = (params: {
   status?: string
   sortOrder?: "asc" | "desc"
   departmentId?: string
+  startDate?: string
+  endDate?: string
   enabled?: boolean
 }) => {
   return useQuery<{ data: TaskWithDetails[]; total: number }, Error>({
@@ -39,6 +41,8 @@ export const usePaginatedTasks = (params: {
         ...(params.status && { status: params.status }),
         ...(params.sortOrder && { sortOrder: params.sortOrder }),
         ...(params.departmentId && { departmentId: params.departmentId }),
+        ...(params.startDate && { startDate: params.startDate }),
+        ...(params.endDate && { endDate: params.endDate }),
       }).toString()
 
       const { data } = await api.get(`/tasks?${query}`)

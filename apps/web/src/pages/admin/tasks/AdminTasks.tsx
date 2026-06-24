@@ -39,6 +39,7 @@ import {
 
 import { type TaskWithDetails, type TaskStatus } from "@workspace/types"
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog"
+import { TimeFilter } from "@/components/tasks/TimeFilter"
 import { useUpdateTask, useDeleteTask, usePaginatedTasks } from "@/hooks/task"
 import { useDepartments } from "@/hooks/department"
 import { useTaskModal } from "@/context/task-modal-context"
@@ -231,7 +232,7 @@ function KanbanCard({
   const dl = formatDeadline(task.deadline)
 
   return (
-    <Card className="border-zinc-200/70 shadow-none transition-shadow hover:shadow-sm dark:border-zinc-800/70">
+    <Card className="border-zinc-200/70 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800/70">
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <p
@@ -315,46 +316,6 @@ function KanbanCard({
 }
 
 // ---------------------------------------------------------------------------
-// Kanban column
-// ---------------------------------------------------------------------------
-
-function KanbanColumn({
-  status,
-  tasks,
-  onSelectTask,
-}: {
-  status: TaskStatus
-  tasks: TaskWithDetails[]
-  onSelectTask: (task: TaskWithDetails) => void
-}) {
-  const cfg = STATUS_CONFIG[status]
-  return (
-    <div className="flex min-w-[260px] flex-1 flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-          <span className="text-sm font-semibold">{cfg.label}</span>
-        </div>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-          {tasks.length}
-        </span>
-      </div>
-      <div className="space-y-2">
-        {tasks.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-200 py-8 text-center text-xs text-muted-foreground dark:border-zinc-800">
-            No tasks
-          </div>
-        ) : (
-          tasks.map((t) => (
-            <KanbanCard key={t.id} task={t} onSelectTask={onSelectTask} />
-          ))
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -366,6 +327,7 @@ export default function AdminTasks() {
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
   const [departmentId, setDepartmentId] = useState<string>("ALL")
   const [search, setSearch] = useState("")
+  const [dateRange, setDateRange] = useState<{ startDate?: string; endDate?: string }>({})
   const { openTask } = useTaskModal()
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 10
@@ -383,11 +345,12 @@ export default function AdminTasks() {
     status: filter === "ALL" ? undefined : filter,
     sortOrder,
     departmentId: departmentId === "ALL" ? undefined : departmentId,
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
   })
 
   const paginatedTasks = result?.data ?? []
   const totalTasks = result?.total ?? 0
-  // const totalPages = Math.ceil(totalTasks / ITEMS_PER_PAGE)
 
   return (
     <div className="w-full min-w-0 space-y-6 p-4 sm:p-6 pb-12 md:p-8">
@@ -457,6 +420,9 @@ export default function AdminTasks() {
               </button>
             ))}
           </div>
+
+          {/* Time filter component */}
+          <TimeFilter onChange={setDateRange} />
         </div>
 
         <div className="flex items-center gap-2">
@@ -570,16 +536,33 @@ export default function AdminTasks() {
         </Card>
       )}
 
-      {/* Kanban */}
+      {/* Kanban / Grid View */}
       {!isLoading && !error && viewMode === "kanban" && (
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {(Object.keys(STATUS_CONFIG) as TaskStatus[]).map((s) => (
-            <KanbanColumn
-              key={s}
-              status={s}
-              tasks={paginatedTasks.filter((t) => t.status === s)}
-              onSelectTask={openTask}
-            />
+        <div className="flex flex-col gap-6 pb-4">
+          {Object.entries(
+            paginatedTasks.reduce((acc, task) => {
+              const dateStr = task.createdAt
+                ? new Date(task.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                : "Unknown Date"
+              if (!acc[dateStr]) acc[dateStr] = []
+              acc[dateStr].push(task)
+              return acc
+            }, {} as Record<string, typeof paginatedTasks>)
+          ).map(([dateStr, tasks]) => (
+            <div key={dateStr} className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <IconCalendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">{dateStr}</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  {tasks.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {tasks.map((t) => (
+                  <KanbanCard key={t.id} task={t} onSelectTask={openTask} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

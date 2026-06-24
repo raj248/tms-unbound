@@ -54,11 +54,17 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
 // ==========================================
 router.get("/", async (req, res) => {
   try {
-    const { status, departmentId, search, sortOrder, page, limit } = req.query
+    const { status, departmentId, search, sortOrder, page, limit, startDate, endDate } = req.query
 
     const whereClause: any = {
       ...(status && status !== "ALL" && { status: status as any }),
       ...(departmentId && departmentId !== "ALL" && { departmentId: departmentId as string }),
+    }
+
+    if (startDate || endDate) {
+      whereClause.createdAt = {}
+      if (startDate) whereClause.createdAt.gte = new Date(startDate as string)
+      if (endDate) whereClause.createdAt.lte = new Date(endDate as string)
     }
 
     if (search) {
