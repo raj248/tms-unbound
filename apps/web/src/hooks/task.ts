@@ -2,6 +2,24 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CreateTaskRequest, Task, TaskWithDetails } from "@workspace/types"
 import api from "@/lib/api"
 
+/**
+ * --- READ (Single Task Detail By ID) ---
+ */
+export const useTask = (id: string | null) => {
+  return useQuery<TaskWithDetails, Error>({
+    // Cache array key is segmented strictly by the explicit record ID passed
+    queryKey: ["tasks", "detail", id],
+    // Only run the query execution loop over the air if a real ID is provided
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await api.get(`/tasks/${id}`)
+      return data.data // Assuming standard `{ success: true, data: task }` format
+    },
+    // Prevent old modal layouts from flashing while fresh data handles loading windows
+    placeholderData: (previousData) => previousData,
+  })
+}
+
 // --- 1. READ (Get All Tasks) ---
 export const useTasks = (
   status?: string | null,
@@ -79,6 +97,9 @@ export const useUpdateTask = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       queryClient.invalidateQueries({ queryKey: ["tasks", variables.id] })
+      queryClient.invalidateQueries({
+        queryKey: ["tasks", "detail", variables.id],
+      })
       queryClient.invalidateQueries({ queryKey: ["tasks-paginated"] })
     },
   })

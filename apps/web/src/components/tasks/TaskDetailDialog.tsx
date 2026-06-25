@@ -21,13 +21,18 @@ import {
   IconTrash,
   IconLoader2,
   IconMessageCircle,
+  IconChartBar,
+  IconCheck,
+  IconPencil,
+  IconX,
 } from "@tabler/icons-react"
 import type { TaskWithDetails, TaskStatus } from "@workspace/types"
 import { useRemarks, useCreateRemark, useDeleteRemark } from "@/hooks/remark"
+import { useUpdateTask } from "@/hooks/task"
 import { useAuth } from "@/context/auth-context"
 
 // ---------------------------------------------------------------------------
-// Config (mirrors AdminTasks)
+// Status config
 // ---------------------------------------------------------------------------
 
 const STATUS_CONFIG: Record<
@@ -40,7 +45,7 @@ const STATUS_CONFIG: Record<
     dot: "bg-blue-400",
   },
   HOLD: {
-    label: "Blocked",
+    label: "Hold",
     className: "border-red-200 bg-red-50 text-red-600",
     dot: "bg-red-500",
   },
@@ -82,6 +87,147 @@ function formatTime(d: string | Date) {
 }
 
 // ---------------------------------------------------------------------------
+// Inline metric editor
+// ---------------------------------------------------------------------------
+
+function MetricEditor({ task }: { task: TaskWithDetails }) {
+  const { mutate: updateTask, isPending } = useUpdateTask()
+
+  const [editing, setEditing] = useState(false)
+  const [label, setLabel] = useState(task.metricLabel ?? "")
+  const [value, setValue] = useState<string>(
+    task.metricValue != null ? String(task.metricValue) : ""
+  )
+  const [saved, setSaved] = useState(false)
+
+  // Keep local state in sync if the task prop updates (e.g. after invalidation)
+  useEffect(() => {
+    if (!editing) {
+      setLabel(task.metricLabel ?? "")
+      setValue(task.metricValue != null ? String(task.metricValue) : "")
+    }
+  }, [task.metricLabel, task.metricValue, editing])
+
+  function handleSave() {
+    const numericValue = value.trim() === "" ? null : Number(value)
+    if (value.trim() !== "" && isNaN(numericValue!)) return // invalid number
+
+    updateTask(
+      {
+        id: task.id,
+        metricLabel: label.trim() || null,
+        metricValue: numericValue,
+      },
+      {
+        onSuccess: () => {
+          setEditing(false)
+          setSaved(true)
+          setTimeout(() => setSaved(false), 2000)
+        },
+      }
+    )
+  }
+
+  function handleCancel() {
+    setLabel(task.metricLabel ?? "")
+    setValue(task.metricValue != null ? String(task.metricValue) : "")
+    setEditing(false)
+  }
+
+  // ── View mode ──
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-1.5 rounded-md bg-zinc-100 px-2 py-1 dark:bg-zinc-800">
+        <IconChartBar className="h-3.5 w-3.5 shrink-0 text-primary" />
+
+        {task.metricValue != null ? (
+          <span className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+            {task.metricLabel ? `${task.metricLabel}: ` : "Metric: "}
+            <strong className="font-semibold">
+              {task.metricValue.toLocaleString("en-US")}
+            </strong>
+          </span>
+        ) : (
+          <span className="text-[11px] text-muted-foreground">
+            No metric set
+          </span>
+        )}
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setEditing(true)}
+                className="ml-0.5 text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {saved ? (
+                  <IconCheck className="h-3 w-3 text-emerald-500" />
+                ) : (
+                  <IconPencil className="h-3 w-3" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              Edit metric
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    )
+  }
+
+  // ── Edit mode ──
+  return (
+    <div className="flex min-w-[280px] items-center gap-1.5 rounded-md border bg-background px-2 py-1 shadow-sm">
+      <IconChartBar className="h-3.5 w-3.5 shrink-0 text-primary" />
+
+      <Input
+        placeholder="Label (e.g. Revenue)"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        className="h-6 w-40 border-0 bg-transparent p-0 text-[11px] shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
+        autoFocus
+      />
+
+      <span className="text-[11px] text-muted-foreground">:</span>
+
+      <Input
+        placeholder="Value"
+        type="number"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSave()
+          if (e.key === "Escape") handleCancel()
+        }}
+        className="h-6 w-28 border-0 bg-transparent p-0 text-[11px] font-semibold shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
+      />
+
+      {/* Save */}
+      <button
+        onClick={handleSave}
+        disabled={isPending}
+        className="text-emerald-600 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isPending ? (
+          <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <IconCheck className="h-3.5 w-3.5" />
+        )}
+      </button>
+
+      {/* Cancel */}
+      <button
+        onClick={handleCancel}
+        className="text-muted-foreground hover:text-foreground"
+      >
+        <IconX className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Remark bubble
 // ---------------------------------------------------------------------------
 
@@ -105,12 +251,10 @@ function RemarkBubble({
     <div
       className={`group flex items-end gap-2 ${isOwn ? "flex-row-reverse" : "flex-row"}`}
     >
-      {/* Avatar */}
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">
         {remark.authorName.charAt(0).toUpperCase()}
       </div>
 
-      {/* Bubble */}
       <div
         className={`relative max-w-[72%] ${isOwn ? "items-end" : "items-start"} flex flex-col gap-0.5`}
       >
@@ -136,7 +280,6 @@ function RemarkBubble({
         </div>
       </div>
 
-      {/* Delete — only visible on hover, only for own remarks */}
       {isOwn && (
         <TooltipProvider>
           <Tooltip>
@@ -186,10 +329,12 @@ function DateSeparator({ label }: { label: string }) {
 export function TaskDetailDialog({
   task,
   open,
+  isLoading,
   onOpenChange,
 }: {
   task: TaskWithDetails | null
   open: boolean
+  isLoading: boolean
   onOpenChange: (v: boolean) => void
 }) {
   const { user } = useAuth()
@@ -201,7 +346,6 @@ export function TaskDetailDialog({
   )
   const { mutate: createRemark, isPending: sending } = useCreateRemark()
 
-  // Scroll to bottom when remarks load or new one arrives
   useEffect(() => {
     if (open) {
       setTimeout(
@@ -220,7 +364,6 @@ export function TaskDetailDialog({
     )
   }
 
-  // Group remarks by calendar day for date separators
   const grouped: { label: string; items: typeof remarks }[] = []
   for (const r of remarks) {
     const label = formatDate(r.createdAt, {
@@ -239,6 +382,17 @@ export function TaskDetailDialog({
     new Date(task.deadline) < new Date() &&
     task.status !== "COMPLETED"
 
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="flex h-[85vh] max-h-[720px] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+          <div className="flex h-full items-center justify-center">
+            <IconLoader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[85vh] max-h-[720px] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
@@ -259,15 +413,17 @@ export function TaskDetailDialog({
           </div>
 
           {/* Meta row */}
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <IconBuilding className="h-3.5 w-3.5 shrink-0" />
               {task?.department?.name ?? "—"}
             </span>
+
             <span className="flex items-center gap-1.5">
               <IconUser className="h-3.5 w-3.5 shrink-0" />
               {task?.assignee?.name ?? task?.assigneeName ?? "Unassigned"}
             </span>
+
             <span
               className={`flex items-center gap-1.5 ${isOverdue ? "font-semibold text-red-500" : ""}`}
             >
@@ -279,12 +435,14 @@ export function TaskDetailDialog({
                 </span>
               )}
             </span>
+
+            {/* Metric — editable */}
+            {task && <MetricEditor task={task} />}
           </div>
         </DialogHeader>
 
         {/* ── Remarks thread ── */}
         <div className="flex flex-1 flex-col overflow-hidden bg-zinc-50/60 dark:bg-zinc-900/30">
-          {/* Scrollable message area */}
           <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
             {loadingRemarks ? (
               <div className="flex items-center justify-center py-16 text-muted-foreground">

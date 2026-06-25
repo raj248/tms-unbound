@@ -58,7 +58,11 @@ model Task {
   name        String     
   description String?    @db.Text
   status      TaskStatus @default(IN_PROGRESS)
-  
+
+// New Flexible Numerical Metric Fields
+  metricValue  Float?     // Stores the raw number (supports decimals like 450.75)
+  metricLabel  String?    // Describes what the number means (e.g., "Books Sold")
+    
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])
 

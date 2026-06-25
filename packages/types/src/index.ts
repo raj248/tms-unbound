@@ -44,6 +44,10 @@ export interface Task {
   name: string
   description: string | null
   status: TaskStatus
+
+  metricValue: number | null
+  metricLabel: string | null
+
   departmentId: string
   assigneeId: string | null
   assigneeName: string | null
@@ -166,6 +170,10 @@ export interface UpdateTaskRequest {
   name?: string
   description?: string
   status?: TaskStatus
+
+  metricValue: number | null
+  metricLabel: string | null
+
   departmentId?: string
   assigneeId?: string | null
   deadline?: string | Date | null

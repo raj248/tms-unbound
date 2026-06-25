@@ -296,6 +296,13 @@ router.put("/:id", async (req: AuthenticatedRequest, res) => {
         ...(body.deadline !== undefined && {
           deadline: body.deadline ? new Date(body.deadline) : null,
         }),
+        ...(body.metricValue !== undefined && {
+          metricValue:
+            body.metricValue !== null ? Number(body.metricValue) : null,
+        }),
+        ...(body.metricLabel !== undefined && {
+          metricLabel: body.metricLabel,
+        }),
       },
     })
 
