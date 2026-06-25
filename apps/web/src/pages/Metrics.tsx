@@ -31,7 +31,7 @@ import {
 } from "@workspace/ui/components/table"
 import { IconPrinter } from "@workspace/ui/lib/Icons"
 import { Button } from "@workspace/ui/components/button"
-
+import { generateMetricsPDF } from "@/lib/pdf"
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -148,7 +148,32 @@ export default function MetricsPage() {
   }, [filteredTasks])
 
   const handlePrint = () => {
-    window.print()
+    const deptName = effectiveDept === "ALL" 
+      ? "All Departments" 
+      : departments.find(d => d.id === effectiveDept)?.name || "Unknown"
+      
+    let timeframeStr = `${selectedYear}`
+    if (viewType === "MONTH") {
+      timeframeStr = `${MONTHS[selectedMonth]} ${selectedYear}`
+    } else if (viewType === "QUARTER") {
+      timeframeStr = `${QUARTERS[selectedQuarter]} ${selectedYear}`
+    } else if (viewType === "WEEK") {
+      timeframeStr = `Week ${selectedWeek}, ${MONTHS[selectedMonth]} ${selectedYear}`
+    }
+
+    generateMetricsPDF({
+      title: "Metrics & Audit Report",
+      totalTasks,
+      completionRate,
+      holdTasks,
+      totalMetricValue,
+      departmentData,
+      tasks: filteredTasks,
+      filters: {
+        department: deptName,
+        timeframe: timeframeStr
+      }
+    })
   }
 
   return (
