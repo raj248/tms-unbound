@@ -90,32 +90,29 @@ function formatTime(d: string | Date) {
 // Inline metric editor
 // ---------------------------------------------------------------------------
 
-function MetricEditor({ task }: { task: TaskWithDetails }) {
+function AdminMetricEditor({ task, isAdmin }: { task: TaskWithDetails, isAdmin: boolean }) {
   const { mutate: updateTask, isPending } = useUpdateTask()
 
   const [editing, setEditing] = useState(false)
-  const [label, setLabel] = useState(task.metricLabel ?? "")
   const [value, setValue] = useState<string>(
     task.metricValue != null ? String(task.metricValue) : ""
   )
   const [saved, setSaved] = useState(false)
 
-  // Keep local state in sync if the task prop updates (e.g. after invalidation)
   useEffect(() => {
     if (!editing) {
-      setLabel(task.metricLabel ?? "")
       setValue(task.metricValue != null ? String(task.metricValue) : "")
     }
-  }, [task.metricLabel, task.metricValue, editing])
+  }, [task.metricValue, editing])
 
   function handleSave() {
     const numericValue = value.trim() === "" ? null : Number(value)
-    if (value.trim() !== "" && isNaN(numericValue!)) return // invalid number
+    if (value.trim() !== "" && isNaN(numericValue!)) return
 
     updateTask(
       {
         id: task.id,
-        metricLabel: label.trim() || null,
+        metricLabel: "Value",
         metricValue: numericValue,
       },
       {
@@ -129,7 +126,6 @@ function MetricEditor({ task }: { task: TaskWithDetails }) {
   }
 
   function handleCancel() {
-    setLabel(task.metricLabel ?? "")
     setValue(task.metricValue != null ? String(task.metricValue) : "")
     setEditing(false)
   }
@@ -142,57 +138,47 @@ function MetricEditor({ task }: { task: TaskWithDetails }) {
 
         {task.metricValue != null ? (
           <span className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
-            {task.metricLabel ? `${task.metricLabel}: ` : "Metric: "}
-            <strong className="font-semibold">
-              {task.metricValue.toLocaleString("en-US")}
-            </strong>
+            Assigned Value: <strong className="font-semibold">{task.metricValue.toLocaleString("en-US")}</strong>
           </span>
         ) : (
           <span className="text-[11px] text-muted-foreground">
-            No metric set
+            No value assigned
           </span>
         )}
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setEditing(true)}
-                className="ml-0.5 text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {saved ? (
-                  <IconCheck className="h-3 w-3 text-emerald-500" />
-                ) : (
-                  <IconPencil className="h-3 w-3" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              Edit metric
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {isAdmin && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="ml-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {saved ? (
+                    <IconCheck className="h-3 w-3 text-emerald-500" />
+                  ) : (
+                    <IconPencil className="h-3 w-3" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                Edit numeric value
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
     )
   }
 
   // ── Edit mode ──
   return (
-    <div className="flex min-w-[280px] items-center gap-1.5 rounded-md border bg-background px-2 py-1 shadow-sm">
+    <div className="flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 shadow-sm">
       <IconChartBar className="h-3.5 w-3.5 shrink-0 text-primary" />
+      <span className="text-[11px] text-muted-foreground font-medium">Value:</span>
 
       <Input
-        placeholder="Label (e.g. Revenue)"
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        className="h-6 w-40 border-0 bg-transparent p-0 text-[11px] shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
-        autoFocus
-      />
-
-      <span className="text-[11px] text-muted-foreground">:</span>
-
-      <Input
-        placeholder="Value"
+        placeholder="Enter number"
         type="number"
         value={value}
         onChange={(e) => setValue(e.target.value)}
@@ -200,7 +186,8 @@ function MetricEditor({ task }: { task: TaskWithDetails }) {
           if (e.key === "Enter") handleSave()
           if (e.key === "Escape") handleCancel()
         }}
-        className="h-6 w-28 border-0 bg-transparent p-0 text-[11px] font-semibold shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
+        className="h-6 w-24 border-0 bg-transparent p-0 text-[11px] font-semibold shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-0"
+        autoFocus
       />
 
       {/* Save */}
@@ -339,6 +326,7 @@ export function TaskDetailDialog({
 }) {
   const { user } = useAuth()
   const [text, setText] = useState("")
+  const [numericValue, setNumericValue] = useState("")
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const { data: remarks = [], isLoading: loadingRemarks } = useRemarks(
@@ -356,11 +344,20 @@ export function TaskDetailDialog({
   }, [remarks.length, open])
 
   function handleSend() {
-    const trimmed = text.trim()
-    if (!trimmed || !task) return
+    const trimmedText = text.trim()
+    const trimmedNum = numericValue.trim()
+    if (!trimmedText || !task) return
+    
+    const finalText = trimmedNum ? `${trimmedText} : ${trimmedNum}` : trimmedText
+    
     createRemark(
-      { taskId: task.id, text: trimmed },
-      { onSuccess: () => setText("") }
+      { taskId: task.id, text: finalText },
+      { 
+        onSuccess: () => {
+          setText("")
+          setNumericValue("")
+        } 
+      }
     )
   }
 
@@ -436,8 +433,8 @@ export function TaskDetailDialog({
               )}
             </span>
 
-            {/* Metric — editable */}
-            {task && <MetricEditor task={task} />}
+            {/* Metric — editable by Admin only */}
+            {task && <AdminMetricEditor task={task} isAdmin={user?.role === "ADMIN"} />}
           </div>
         </DialogHeader>
 
@@ -488,6 +485,20 @@ export function TaskDetailDialog({
                   }
                 }}
                 className="h-9 flex-1 rounded-full bg-muted/60 text-sm focus-visible:ring-1"
+                disabled={sending}
+              />
+              <Input
+                placeholder="0"
+                type="number"
+                value={numericValue}
+                onChange={(e) => setNumericValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
+                className="h-9 w-20 shrink-0 rounded-full bg-muted/60 text-sm focus-visible:ring-1 text-center"
                 disabled={sending}
               />
               <Button

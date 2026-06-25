@@ -10,6 +10,7 @@ import {
   IconLoader2,
   IconAlertTriangle,
   IconCopy,
+  IconChartBar,
 } from "@tabler/icons-react"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
@@ -123,7 +124,13 @@ function TaskTableRow({
         <StatusSelect
           value={task.status}
           disabled={isUpdating}
-          onCommit={(status) => updateTask({ id: task.id, status })}
+          onCommit={(status, newDeadline) => {
+            updateTask({ 
+              id: task.id, 
+              status, 
+              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {})
+            })
+          }}
         />
       </TableCell>
 
@@ -191,6 +198,15 @@ function TaskTableRow({
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
+      </TableCell>
+
+      <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3 md:text-right">
+        <span className="text-xs text-muted-foreground md:hidden">
+          Value:
+        </span>
+        <span className="text-xs font-semibold">
+          {task.metricValue != null ? task.metricValue.toLocaleString("en-US") : "—"}
+        </span>
       </TableCell>
 
       <TableCell className="flex justify-end px-6 py-3 md:table-cell md:py-3 md:pr-6 md:pl-0 md:text-right">
@@ -289,7 +305,13 @@ function KanbanCard({
         <StatusSelect
           value={task.status}
           disabled={isUpdating}
-          onCommit={(status) => updateTask({ id: task.id, status })}
+          onCommit={(status, newDeadline) => {
+            updateTask({ 
+              id: task.id, 
+              status, 
+              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {})
+            })
+          }}
         />
 
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
@@ -321,6 +343,12 @@ function KanbanCard({
               {task.remarks.length}
             </span>
           )}
+          {task.metricValue != null && (
+            <span className="flex items-center gap-1 font-semibold text-primary">
+              <IconChartBar className="h-3 w-3" />
+              {task.metricValue.toLocaleString("en-US")}
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -333,7 +361,7 @@ function KanbanCard({
 
 type ViewMode = "table" | "kanban"
 
-export default function AdminTasks() {
+export default function Tasks() {
   const { user } = useAuth()
   const isAdmin = user?.role === "ADMIN"
   const [myDepartment, setMyDepartment] = useState<string>("")
@@ -514,13 +542,14 @@ export default function AdminTasks() {
           <Table className="block w-full md:table">
             <TableHeader className="hidden bg-muted/40 md:table-header-group">
               <TableRow>
-                <TableHead className="w-[20%] pl-6">Task</TableHead>
-                <TableHead className="w-[12%]">Department</TableHead>
-                <TableHead className="w-[12%]">Assignee</TableHead>
-                <TableHead className="w-[12%]">Status</TableHead>
-                <TableHead className="w-[14%]">Last Updated</TableHead>
-                <TableHead className="w-[14%]">Deadline</TableHead>
-                <TableHead className="w-[8%]">Remarks</TableHead>
+                <TableHead className="w-[18%] pl-6">Task</TableHead>
+                <TableHead className="w-[11%]">Department</TableHead>
+                <TableHead className="w-[11%]">Assignee</TableHead>
+                <TableHead className="w-[11%]">Status</TableHead>
+                <TableHead className="w-[12%]">Last Updated</TableHead>
+                <TableHead className="w-[12%]">Deadline</TableHead>
+                <TableHead className="w-[7%]">Remarks</TableHead>
+                <TableHead className="w-[10%] text-right">Value</TableHead>
                 <TableHead className="w-[8%] pr-6 text-right" />
               </TableRow>
             </TableHeader>
@@ -528,7 +557,7 @@ export default function AdminTasks() {
               {paginatedTasks.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9}
                     className="min-w-0 py-20 text-center text-sm text-muted-foreground"
                   >
                     No tasks match your filters.
@@ -555,7 +584,7 @@ export default function AdminTasks() {
                   <Fragment key={dateStr}>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableCell
-                        colSpan={8}
+                        colSpan={9}
                         className="border-b py-2 pl-6 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                       >
                         {dateStr}

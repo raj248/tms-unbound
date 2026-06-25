@@ -18,7 +18,7 @@ export interface TimeFilterProps {
   onChange: (range: { startDate?: string; endDate?: string }) => void
 }
 
-const YEARS = ["2024", "2025", "2026", "2027", "2028"]
+const YEARS = ["2024", "2025", "2026"]
 const MONTHS = [
   { value: "0", label: "January" },
   { value: "1", label: "February" },

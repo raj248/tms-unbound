@@ -9,6 +9,14 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog"
+import { Input } from "@workspace/ui/components/input"
+import { useState } from "react"
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -72,27 +80,70 @@ export function StatusSelect({
 }: {
   value: TaskStatus
   disabled?: boolean
-  onCommit: (next: TaskStatus) => void
+  onCommit: (next: TaskStatus, newDeadline?: Date) => void
 }) {
+  const [reopenOpen, setReopenOpen] = useState(false)
+  const [newDeadline, setNewDeadline] = useState("")
+
+  const handleChange = (v: TaskStatus) => {
+    if (value === "COMPLETED" && v === "IN_PROGRESS") {
+      setReopenOpen(true)
+    } else {
+      onCommit(v)
+    }
+  }
+
+  const handleConfirmReopen = () => {
+    onCommit("IN_PROGRESS", newDeadline ? new Date(newDeadline) : undefined)
+    setReopenOpen(false)
+    setNewDeadline("")
+  }
+
   return (
-    <Select
-      value={value}
-      onValueChange={(v) => onCommit(v as TaskStatus)}
-      disabled={disabled}
-    >
-      <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:hidden">
-        <SelectValue>
-          <StatusBadge status={value} />
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {(Object.keys(STATUS_CONFIG) as TaskStatus[]).map((s) => (
-          <SelectItem key={s} value={s} className="text-xs">
-            <StatusBadge status={s} />
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <>
+      <Select
+        value={value}
+        onValueChange={handleChange}
+        disabled={disabled}
+      >
+        <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:hidden">
+          <SelectValue>
+            <StatusBadge status={value} />
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {(Object.keys(STATUS_CONFIG) as TaskStatus[]).map((s) => (
+            <SelectItem key={s} value={s} className="text-xs">
+              <StatusBadge status={s} />
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Dialog open={reopenOpen} onOpenChange={setReopenOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reopen Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Please set a new deadline for this reopened task.
+            </p>
+            <Input
+              type="date"
+              value={newDeadline}
+              onChange={(e) => setNewDeadline(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setReopenOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmReopen}>Reopen Task</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

@@ -50,12 +50,7 @@ export default function Login() {
         toast.success("Welcome back!", { description: "Login successful." })
 
         const sessionRes = await refresh()
-
-        if (sessionRes?.data?.user?.role === "ADMIN") {
-          navigate("/admin/dashboard")
-        } else {
-          navigate("/department/dashboard")
-        }
+        navigate("/dashboard")
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
@@ -91,9 +86,9 @@ export default function Login() {
             <img
               src="/unbound_logo.png"
               alt="Unbound Script Logo"
-              className="h-12 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
-            <span className="text-3xl font-extrabold tracking-tight text-zinc-900">
+            <span className="text-4xl font-extrabold tracking-tight text-zinc-900">
               Unbound Script
             </span>
           </div>
@@ -161,9 +156,9 @@ export default function Login() {
             <img
               src="/unbound_logo.png"
               alt="Unbound Script Logo"
-              className="h-10 w-auto object-contain"
+              className="h-16 w-auto object-contain"
             />
-            <span className="text-2xl font-extrabold tracking-tight text-zinc-900">
+            <span className="text-3xl font-extrabold tracking-tight text-zinc-900">
               Unbound Script
             </span>
           </div>
