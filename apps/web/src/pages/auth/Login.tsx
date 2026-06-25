@@ -49,7 +49,7 @@ export default function Login() {
         sessionStorage.setItem("refreshToken", refreshToken)
         toast.success("Welcome back!", { description: "Login successful." })
 
-        const sessionRes = await refresh()
+        await refresh()
         navigate("/dashboard")
       }
     } catch (err: unknown) {
