@@ -151,12 +151,12 @@ export async function sendPushToUserIds(
         token: chunk[idx].token,
       }))
       .filter(
-        ({ res }) =>
+        ({ res }: { res: SendResponse }) =>
           !res.success &&
           (res.error?.code === "messaging/registration-token-not-registered" ||
             res.error?.code === "messaging/invalid-registration-token")
       )
-      .map(({ token }) => token)
+      .map(({ token }: { token: string }) => token)
 
     if (tokensToRemove.length > 0) {
       console.log(`[FCM] Removing ${tokensToRemove.length} invalid tokens…`)

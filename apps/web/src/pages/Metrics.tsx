@@ -109,6 +109,7 @@ export default function MetricsPage() {
   const inProgressTasks = filteredTasks.filter(t => t.status === "IN_PROGRESS").length
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+  const totalMetricValue = filteredTasks.reduce((sum, task) => sum + (task.metricValue || 0), 0)
 
   const departmentData = useMemo(() => {
     if (!filteredTasks) return []
@@ -273,7 +274,7 @@ export default function MetricsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-12 print:block print:space-y-6">
           {/* Top Metrics Cards - take 8 columns */}
-          <div className="md:col-span-8 grid gap-6 md:grid-cols-3 print:grid-cols-3 print:gap-4 print:mb-6">
+          <div className="md:col-span-8 grid gap-6 md:grid-cols-4 print:grid-cols-4 print:gap-4 print:mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
@@ -314,8 +315,21 @@ export default function MetricsPage() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+                <IconChartBar className="h-4 w-4 text-indigo-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalMetricValue.toLocaleString("en-US")}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sum of task values
+                </p>
+              </CardContent>
+            </Card>
+
             {/* Department Breakdown integrated here */}
-            <Card className="md:col-span-3 print:col-span-3 print:break-inside-avoid print:shadow-none print:border-gray-200">
+            <Card className="md:col-span-4 print:col-span-4 print:break-inside-avoid print:shadow-none print:border-gray-200">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">Department Breakdown</CardTitle>
                 <CardDescription>
@@ -426,6 +440,7 @@ export default function MetricsPage() {
                       <TableHead>Status</TableHead>
                       <TableHead>Department</TableHead>
                       <TableHead>Created At</TableHead>
+                      <TableHead className="text-right">Value</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -450,12 +465,15 @@ export default function MetricsPage() {
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">{task.department?.name || "Unassigned"}</TableCell>
                             <TableCell className="text-muted-foreground text-sm">{new Date(task.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-right font-medium">
+                              {task.metricValue != null ? task.metricValue.toLocaleString("en-US") : "—"}
+                            </TableCell>
                           </TableRow>
                         )
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                           No tasks found for the selected filters.
                         </TableCell>
                       </TableRow>

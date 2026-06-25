@@ -32,7 +32,7 @@ import type { NotificationHistoryItem } from "@workspace/types"
 const getNavLinks = (role?: string) => [
   {
     label: "Dashboard",
-    href: role === "ADMIN" ? "/admin/dashboard" : "/department/dashboard",
+    href: "/dashboard",
     icon: "ti-layout-dashboard",
   },
   {
@@ -41,7 +41,6 @@ const getNavLinks = (role?: string) => [
     icon: "ti-list-check",
   },
   { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
-  { label: "Audit", href: "/audit", icon: "ti-clipboard-list" },
   { label: "Settings", href: "/settings", icon: "ti-settings" },
 ]
 

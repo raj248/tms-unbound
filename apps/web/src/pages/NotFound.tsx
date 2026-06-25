@@ -46,11 +46,11 @@ export default function NotFound() {
           </Button>
 
           <Button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             className="inline-flex w-full items-center gap-2 sm:w-auto"
           >
             <TablerIcons.IconHome className="h-4 w-4" />
-            Back to Home
+            Back to Dashboard
           </Button>
         </CardFooter>
       </Card>
