@@ -80,6 +80,8 @@ export const mockTasks: Task[] = [
     name: "Fix CORS issue on Auth Router",
     description:
       "Update the Express backend initialization to pass cross-origin access rules configurations mapping directly to port 5173 rather than wildcards.",
+    metricValue: 10,
+    metricLabel: "Unit Tests",
     status: "COMPLETED",
     departmentId: "cuj1234567890dept1",
     assigneeId: "cuj1234567890user1",
@@ -93,6 +95,8 @@ export const mockTasks: Task[] = [
     name: "Design Prisma Migration Profile",
     description:
       "Shift baseline tracking indices from autoincrement integer rows to global CUID arrays and build standard relational cascading profiles.",
+    metricValue: 10,
+    metricLabel: "Unit Tests",
     status: "IN_PROGRESS",
     departmentId: "cuj1234567890dept1",
     assigneeId: "cuj1234567890user2",
@@ -106,6 +110,8 @@ export const mockTasks: Task[] = [
     name: "Write Unit Tests for Payment Webhooks",
     description:
       "Ensure incoming payload validation schema captures transaction events correctly even when underlying database clusters encounter heavy concurrency.",
+    metricValue: 10,
+    metricLabel: "Unit Tests",
     status: "IN_PROGRESS",
     departmentId: "cuj1234567890dept2",
     assigneeId: null,
@@ -119,6 +125,8 @@ export const mockTasks: Task[] = [
     name: "Create Marketing Campaign Assets",
     description:
       "Design banners, social media posts, and email templates for the upcoming Q3 product launch.",
+    metricValue: 10,
+    metricLabel: "Unit Tests",
     status: "HOLD",
     departmentId: "cuj1234567890dept4",
     assigneeId: "cuj1234567890user4",
@@ -132,6 +140,8 @@ export const mockTasks: Task[] = [
     name: "Review Security Audit",
     description:
       "Analyze the latest penetration testing report and patch the listed high-priority vulnerabilities.",
+    metricValue: 10,
+    metricLabel: "Unit Tests",
     status: "IN_PROGRESS",
     departmentId: "cuj1234567890dept1",
     assigneeId: "cuj1234567890user5",
