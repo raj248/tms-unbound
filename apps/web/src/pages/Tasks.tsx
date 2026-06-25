@@ -124,7 +124,13 @@ function TaskTableRow({
         <StatusSelect
           value={task.status}
           disabled={isUpdating}
-          onCommit={(status) => updateTask({ id: task.id, status })}
+          onCommit={(status, newDeadline) => {
+            updateTask({ 
+              id: task.id, 
+              status, 
+              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {})
+            })
+          }}
         />
       </TableCell>
 
@@ -299,7 +305,13 @@ function KanbanCard({
         <StatusSelect
           value={task.status}
           disabled={isUpdating}
-          onCommit={(status) => updateTask({ id: task.id, status })}
+          onCommit={(status, newDeadline) => {
+            updateTask({ 
+              id: task.id, 
+              status, 
+              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {})
+            })
+          }}
         />
 
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
@@ -349,7 +361,7 @@ function KanbanCard({
 
 type ViewMode = "table" | "kanban"
 
-export default function AdminTasks() {
+export default function Tasks() {
   const { user } = useAuth()
   const isAdmin = user?.role === "ADMIN"
   const [myDepartment, setMyDepartment] = useState<string>("")

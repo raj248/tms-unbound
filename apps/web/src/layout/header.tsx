@@ -37,7 +37,7 @@ const getNavLinks = (role?: string) => [
   },
   {
     label: "Tasks",
-    href: role === "ADMIN" ? "/admin/tasks" : "/department/tasks",
+    href: "/tasks",
     icon: "ti-list-check",
   },
   { label: "Metrics", href: "/metrics", icon: "ti-chart-bar" },
