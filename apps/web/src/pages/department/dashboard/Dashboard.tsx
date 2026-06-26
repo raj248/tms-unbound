@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
+import { Button } from "@workspace/ui/components/button"
 import {
   IconUser,
   IconDashboard,
@@ -17,7 +18,14 @@ import { useTasks } from "@/hooks/task"
 import { useAuth } from "@/context/auth-context"
 import { useUsers } from "@/hooks/user"
 import { useTaskModal } from "@/context/task-modal-context"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import {
   LineChart,
   Line,
@@ -56,22 +64,27 @@ export default function Dashboard() {
   const chartData = useMemo(() => {
     if (!tasks || tasks.length === 0) return []
 
-    const deptMap = new Map<
+    const groupMap = new Map<
       string,
       { name: string; COMPLETED: number; IN_PROGRESS: number; HOLD: number }
     >()
 
     tasks.forEach((task) => {
-      const deptName = task.department?.name || "Unassigned"
-      if (!deptMap.has(deptName)) {
-        deptMap.set(deptName, {
-          name: deptName,
+      let groupKey = "Unknown"
+      if (task.createdAt) {
+        const date = new Date(task.createdAt)
+        groupKey = date.toLocaleString("en-US", { month: "short", year: "numeric" })
+      }
+
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, {
+          name: groupKey,
           COMPLETED: 0,
           IN_PROGRESS: 0,
           HOLD: 0,
         })
       }
-      const current = deptMap.get(deptName)!
+      const current = groupMap.get(groupKey)!
       if (
         task.status === "COMPLETED" ||
         task.status === "IN_PROGRESS" ||
@@ -81,7 +94,9 @@ export default function Dashboard() {
       }
     })
 
-    return Array.from(deptMap.values())
+    const result = Array.from(groupMap.values())
+    result.sort((a, b) => a.name.localeCompare(b.name))
+    return result
   }, [tasks])
 
   const totalTasks = tasks?.length || 0
@@ -229,7 +244,7 @@ export default function Dashboard() {
                   Task Completion Overview
                 </CardTitle>
                 <CardDescription className="text-zinc-500">
-                  {isAdmin ? "Task resolution performance tracked across all departments." : "Task resolution performance tracked in your department."}
+                  Task resolution performance tracked over time.
                 </CardDescription>
               </CardHeader>
               <CardContent className="bg-white p-6 dark:bg-zinc-900">

@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
+import { Button } from "@workspace/ui/components/button"
 import {
   IconUser,
   IconDashboard,
@@ -15,7 +16,14 @@ import {
 } from "@workspace/ui/lib/Icons"
 import { useTasks } from "@/hooks/task"
 import { useTaskModal } from "@/context/task-modal-context"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
 import {
   LineChart,
   Line,
@@ -37,26 +45,45 @@ const formatStatusText = (status: string) => {
 export default function AdminDashboard() {
   const { data: tasks, isLoading, error } = useTasks()
   const { openTask } = useTaskModal()
+  const [departmentFilter, setDepartmentFilter] = useState<string>("ALL")
+
+  const uniqueDepartments = useMemo(() => {
+    if (!tasks) return []
+    const depts = new Set<string>()
+    tasks.forEach((t) => {
+      if (t.department?.name) depts.add(t.department.name)
+    })
+    return Array.from(depts).sort()
+  }, [tasks])
 
   const chartData = useMemo(() => {
     if (!tasks) return []
 
-    const deptMap = new Map<
+    const groupMap = new Map<
       string,
       { name: string; COMPLETED: number; IN_PROGRESS: number; HOLD: number }
     >()
 
-    tasks.forEach((task) => {
-      const deptName = task.department?.name || "Unassigned"
-      if (!deptMap.has(deptName)) {
-        deptMap.set(deptName, {
-          name: deptName,
+    const filteredTasks = departmentFilter === "ALL" 
+      ? tasks 
+      : tasks.filter((t) => t.department?.name === departmentFilter)
+
+    filteredTasks.forEach((task) => {
+      let groupKey = "Unknown"
+      if (task.createdAt) {
+        const date = new Date(task.createdAt)
+        groupKey = date.toLocaleString("en-US", { month: "short", year: "numeric" })
+      }
+
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, {
+          name: groupKey,
           COMPLETED: 0,
           IN_PROGRESS: 0,
           HOLD: 0,
         })
       }
-      const current = deptMap.get(deptName)!
+      const current = groupMap.get(groupKey)!
       if (
         task.status === "COMPLETED" ||
         task.status === "IN_PROGRESS" ||
@@ -66,8 +93,11 @@ export default function AdminDashboard() {
       }
     })
 
-    return Array.from(deptMap.values())
-  }, [tasks])
+    // Sort chronologically (alphabetical sorting of 'Jan 2024' isn't perfect but good enough for now)
+    const result = Array.from(groupMap.values())
+    result.sort((a, b) => a.name.localeCompare(b.name))
+    return result
+  }, [tasks, departmentFilter])
 
   const totalTasks = tasks?.length || 0
   const inProgress =
@@ -206,12 +236,34 @@ export default function AdminDashboard() {
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4 border-zinc-200/60 shadow-sm dark:border-zinc-800/60">
               <CardHeader className="border-b border-zinc-100 bg-white pb-5 dark:border-zinc-800/50 dark:bg-zinc-900">
-                <CardTitle className="text-lg font-bold">
-                  Task Completion Overview
-                </CardTitle>
-                <CardDescription className="text-zinc-500">
-                  Task resolution performance tracked across all departments.
-                </CardDescription>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-lg font-bold">
+                      Task Completion Overview
+                    </CardTitle>
+                    <CardDescription className="text-zinc-500">
+                      Task resolution performance tracked across all departments.
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Select
+                      value={departmentFilter}
+                      onValueChange={setDepartmentFilter}
+                    >
+                      <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-zinc-900">
+                        <SelectValue placeholder="All Departments" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">All Departments</SelectItem>
+                        {uniqueDepartments.map((dept) => (
+                          <SelectItem key={dept} value={dept}>
+                            {dept}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="bg-white p-6 dark:bg-zinc-900">
                 <div className="mt-4 h-[300px] w-full">
