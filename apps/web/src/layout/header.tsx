@@ -29,7 +29,11 @@ import type { NotificationHistoryItem } from "@workspace/types"
 // Nav config
 // ---------------------------------------------------------------------------
 
+<<<<<<< HEAD
 const getNavLinks = (_role?: string) => [
+=======
+const getNavLinks = () => [
+>>>>>>> f0d4dbd64f75183102cfa3c4d7a703e342db785d
   {
     label: "Dashboard",
     href: "/dashboard",
@@ -293,7 +297,7 @@ export function Header() {
           aria-label="Main navigation"
           className="hidden items-center gap-1 md:flex"
         >
-          {getNavLinks(user?.role).map((link) => (
+          {getNavLinks().map((link) => (
             <NavLink key={link.href} {...link} />
           ))}
         </nav>
@@ -408,7 +412,7 @@ export function Header() {
               aria-label="Mobile navigation"
               className="flex flex-col gap-1 p-3"
             >
-              {getNavLinks(user?.role).map((link) => (
+              {getNavLinks().map((link) => (
                 <NavLink
                   key={link.href}
                   {...link}
