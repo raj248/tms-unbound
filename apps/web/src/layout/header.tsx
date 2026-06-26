@@ -29,7 +29,7 @@ import type { NotificationHistoryItem } from "@workspace/types"
 // Nav config
 // ---------------------------------------------------------------------------
 
-const getNavLinks = (role?: string) => [
+const getNavLinks = (_role?: string) => [
   {
     label: "Dashboard",
     href: "/dashboard",

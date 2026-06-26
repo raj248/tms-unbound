@@ -49,7 +49,7 @@ export default function Login() {
         sessionStorage.setItem("refreshToken", refreshToken)
         toast.success("Welcome back!", { description: "Login successful." })
 
-        const sessionRes = await refresh()
+        await refresh()
         navigate("/dashboard")
       }
     } catch (err: unknown) {
@@ -86,7 +86,7 @@ export default function Login() {
             <img
               src="/unbound_logo.png"
               alt="Unbound Script Logo"
-              className="h-20 w-auto object-contain"
+              className="h-40 w-auto object-contain"
             />
             <span className="text-4xl font-extrabold tracking-tight text-zinc-900">
               Unbound Script

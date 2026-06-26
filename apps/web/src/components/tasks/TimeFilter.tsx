@@ -122,11 +122,12 @@ export function TimeFilter({ onChange }: TimeFilterProps) {
     activeLabel = customStart || customEnd ? "Custom Range" : "All Time"
   } else {
     if (year !== "ALL") {
-    activeLabel = year
-    if (month !== "ALL") {
-      activeLabel = `${MONTHS.find(m => m.value === month)?.label} ${year}`
-      if (week !== "ALL") {
-        activeLabel = `W${week} of ${MONTHS.find(m => m.value === month)?.label} ${year}`
+      activeLabel = year
+      if (month !== "ALL") {
+        activeLabel = `${MONTHS.find(m => m.value === month)?.label} ${year}`
+        if (week !== "ALL") {
+          activeLabel = `W${week} of ${MONTHS.find(m => m.value === month)?.label} ${year}`
+        }
       }
     }
   }

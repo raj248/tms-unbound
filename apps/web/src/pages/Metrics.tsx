@@ -31,7 +31,6 @@ import {
 } from "@workspace/ui/components/table"
 import { IconPrinter } from "@workspace/ui/lib/Icons"
 import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
 import { generateMetricsPDF } from "@/lib/pdf"
 
 const MONTHS = [
