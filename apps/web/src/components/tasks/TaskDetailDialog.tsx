@@ -146,7 +146,7 @@ function AdminMetricEditor({ task, isAdmin }: { task: TaskWithDetails, isAdmin: 
           </span>
         )}
 
-        {isAdmin && (
+        {(isAdmin || task.status === "IN_PROGRESS") && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
