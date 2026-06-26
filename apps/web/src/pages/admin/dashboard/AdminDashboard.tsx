@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
-import { Button } from "@workspace/ui/components/button"
 import {
   IconUser,
   IconDashboard,
