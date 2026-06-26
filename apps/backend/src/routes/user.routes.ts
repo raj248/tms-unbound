@@ -158,4 +158,82 @@ router.delete("/:id", async (req: AuthenticatedRequest, res) => {
   }
 })
 
+// ==========================================
+// 4. PASSWORD MANAGEMENT (Self-Change or Admin Override)
+// ==========================================
+router.patch("/:id/password", async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params
+    const { currentPassword, newPassword } = req.body
+
+    if (!newPassword || newPassword.trim().length < 6) {
+      throw new AppError(
+        "New password must be at least 6 characters long.",
+        400
+      )
+    }
+
+    // 1. Fetch the profile being targeted
+    const targetUser = await prisma.user.findUnique({
+      where: { id: id as string },
+    })
+    if (!targetUser) {
+      throw new AppError("Target user account profile not found.", 404)
+    }
+
+    const isSelf = req.user?.userId === id
+    const isAdmin = req.user?.role === "ADMIN"
+
+    // 2. Multitier Authorization Gate
+    if (!isSelf && !isAdmin) {
+      throw new AppError(
+        "Access Denied: You do not have permission to modify this password.",
+        403
+      )
+    }
+
+    // 3. Security Check: Require current password verification *only* for non-admin self-changes
+    if (!isAdmin && isSelf) {
+      if (!currentPassword) {
+        throw new AppError(
+          "Current password is required to authorize this security change.",
+          400
+        )
+      }
+
+      const passwordMatches = await bcrypt.compare(
+        currentPassword,
+        targetUser.password
+      )
+      if (!passwordMatches) {
+        throw new AppError(
+          "The current password you provided is incorrect.",
+          401
+        )
+      }
+    }
+
+    // 4. Encrypt the fresh credentials and update
+    const saltRounds = 10
+    const newHashedPassword = await bcrypt.hash(newPassword.trim(), saltRounds)
+
+    await prisma.user.update({
+      where: { id: id as string },
+      data: { password: newHashedPassword },
+    })
+
+    return res.json({
+      success: true,
+      data: {
+        message:
+          isAdmin && !isSelf
+            ? `Password for account "${targetUser.username}" successfully reset by administrator.`
+            : "Your security password has been updated successfully.",
+      },
+    })
+  } catch (error: any) {
+    if (error instanceof AppError) throw error
+    throw new AppError(error.message, 500)
+  }
+})
 export default router

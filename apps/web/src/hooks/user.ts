@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { User, CreateUserRequest } from "@workspace/types"
+import type {
+  User,
+  CreateUserRequest,
+  ChangePasswordPayload,
+  ApiResponse,
+} from "@workspace/types"
 import api from "@/lib/api"
 
 // --- 1. READ (Get All Users) ---
@@ -46,6 +51,37 @@ export const useDeleteUser = () => {
       // Flush cache lists instantly to visually wipe the profile card from view layouts
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["departments"] })
+    },
+  })
+}
+
+interface ChangePasswordArgs {
+  userId: string
+  payload: ChangePasswordPayload
+}
+
+/**
+ * --- MUTATION (Change or Reset User Password) ---
+ */
+export const useChangePassword = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    ApiResponse<{ message: string }>,
+    Error,
+    ChangePasswordArgs
+  >({
+    mutationFn: async ({ userId, payload }) => {
+      const { data } = await api.patch(`/users/${userId}/password`, payload)
+      return data
+    },
+    onSuccess: (data) => {
+      // Refresh the system users list array cache to maintain structural consistency
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+
+      console.log(
+        `[Security Engine] Password operation success: ${data.data.message}`
+      )
     },
   })
 }

@@ -179,4 +179,11 @@ export interface UpdateTaskRequest {
   deadline?: string | Date | null
 }
 
+// @workspace/types/index.ts
+
+export interface ChangePasswordPayload {
+  currentPassword?: string // Optional: Omitting it allows ADMIN override flows
+  newPassword: string
+}
+
 export * from "./mockData"
