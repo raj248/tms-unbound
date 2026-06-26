@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
-import { Button } from "@workspace/ui/components/button"
 import {
   IconUser,
   IconDashboard,
@@ -18,14 +17,7 @@ import { useTasks } from "@/hooks/task"
 import { useAuth } from "@/context/auth-context"
 import { useUsers } from "@/hooks/user"
 import { useTaskModal } from "@/context/task-modal-context"
-import { useMemo, useState } from "react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"
+import { useMemo } from "react"
 import {
   LineChart,
   Line,
