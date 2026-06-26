@@ -51,7 +51,7 @@ export default function MetricsPage() {
   // Metrics Filters
   const [selectedDept, setSelectedDept] = useState<string>("ALL")
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear())
-  const [viewType, setViewType] = useState<"MONTH" | "QUARTER" | "WEEK">("MONTH")
+  const [viewType, setViewType] = useState<"YEAR" | "MONTH" | "QUARTER" | "WEEK">("MONTH")
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth())
   const [selectedQuarter, setSelectedQuarter] = useState<number>(Math.floor(currentDate.getMonth() / 3))
   const [selectedWeek, setSelectedWeek] = useState<number>(1)
@@ -83,7 +83,9 @@ export default function MetricsPage() {
       if (taskDate.getFullYear() !== selectedYear) return false
 
       // 2. Month / Quarter / Week filter
-      if (viewType === "MONTH") {
+      if (viewType === "YEAR") {
+        // already filtered by year
+      } else if (viewType === "MONTH") {
         if (taskDate.getMonth() !== selectedMonth) return false
       } else if (viewType === "QUARTER") {
         const q = Math.floor(taskDate.getMonth() / 3)
@@ -153,7 +155,9 @@ export default function MetricsPage() {
       : departments.find(d => d.id === effectiveDept)?.name || "Unknown"
       
     let timeframeStr = `${selectedYear}`
-    if (viewType === "MONTH") {
+    if (viewType === "YEAR") {
+      timeframeStr = `Year ${selectedYear}`
+    } else if (viewType === "MONTH") {
       timeframeStr = `${MONTHS[selectedMonth]} ${selectedYear}`
     } else if (viewType === "QUARTER") {
       timeframeStr = `${QUARTERS[selectedQuarter]} ${selectedYear}`
@@ -231,46 +235,50 @@ export default function MetricsPage() {
             </Select>
           </div>
 
-          <div className="space-y-1 w-full sm:w-[240px]">
+          <div className="space-y-1 w-full sm:w-[320px]">
             <label className="text-xs font-medium">View By</label>
-            <Tabs value={viewType} onValueChange={(v) => setViewType(v as "MONTH" | "QUARTER" | "WEEK")} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-9">
-                <TabsTrigger value="WEEK" className="text-xs">Week</TabsTrigger>
-                <TabsTrigger value="MONTH" className="text-xs">Month</TabsTrigger>
+            <Tabs value={viewType} onValueChange={(v) => setViewType(v as any)} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-9">
+                <TabsTrigger value="YEAR" className="text-xs">Year</TabsTrigger>
                 <TabsTrigger value="QUARTER" className="text-xs">Quarter</TabsTrigger>
+                <TabsTrigger value="MONTH" className="text-xs">Month</TabsTrigger>
+                <TabsTrigger value="WEEK" className="text-xs">Week</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
           <div className="flex flex-wrap w-full sm:w-auto gap-4 lg:gap-6">
-            <div className="space-y-1 w-full sm:w-[140px]">
-              <label className="text-xs font-medium">
-                {viewType === "MONTH" || viewType === "WEEK" ? "Month" : "Quarter"}
-              </label>
-              {viewType === "MONTH" || viewType === "WEEK" ? (
-                <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTHS.map((m, i) => (
-                      <SelectItem key={i} value={i.toString()}>{m}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Select value={selectedQuarter.toString()} onValueChange={(v) => setSelectedQuarter(Number(v))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Quarter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {QUARTERS.map((q, i) => (
-                      <SelectItem key={i} value={i.toString()}>{q}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+
+            {(viewType === "MONTH" || viewType === "WEEK" || viewType === "QUARTER") && (
+              <div className="space-y-1 w-full sm:w-[140px]">
+                <label className="text-xs font-medium">
+                  {viewType === "QUARTER" ? "Quarter" : "Month"}
+                </label>
+                {viewType === "QUARTER" ? (
+                  <Select value={selectedQuarter.toString()} onValueChange={(v) => setSelectedQuarter(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QUARTERS.map((q, i) => (
+                        <SelectItem key={i} value={i.toString()}>{q}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTHS.map((m, i) => (
+                        <SelectItem key={i} value={i.toString()}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
 
             {viewType === "WEEK" && (
               <div className="space-y-1 w-full sm:w-[180px]">

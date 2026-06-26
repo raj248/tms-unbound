@@ -22,6 +22,8 @@ import { IconPlus, IconCheck, IconAlertCircle } from "@tabler/icons-react"
 import type { CreateTaskRequest } from "@workspace/types"
 import { useCreateTask } from "@/hooks/task"
 import { useDepartments } from "@/hooks/department"
+import { useAuth } from "@/context/auth-context"
+import { useUsers } from "@/hooks/user"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,8 +61,16 @@ export function CreateTaskDialog({
 
   const [name, setName] = useState(initialData?.name || "")
   const [description, setDescription] = useState(initialData?.description || "")
+  const { user } = useAuth()
+  const isAdmin = user?.role === "ADMIN"
+  const { data: users = [] } = useUsers()
+  const currentUserObj = users.find((u) => u.id === user?.id)
+  const myDepartmentId = currentUserObj?.departments?.[0]?.id
+  
+  const effectiveFixedDept = isAdmin ? fixedDepartmentId : (myDepartmentId || fixedDepartmentId)
+
   const [departmentId, setDepartmentId] = useState(
-    fixedDepartmentId || initialData?.departmentId || ""
+    effectiveFixedDept || initialData?.departmentId || ""
   )
   const [deadline, setDeadline] = useState(
     initialData?.deadline ? initialData.deadline.split("T")[0] : ""
@@ -68,6 +78,7 @@ export function CreateTaskDialog({
   const [deadlinePreset, setDeadlinePreset] = useState<
     "week" | "month" | "custom"
   >("custom")
+  const [metricValue, setMetricValue] = useState<string>("")
 
   useEffect(() => {
     if (deadlinePreset === "week") {
@@ -89,8 +100,10 @@ export function CreateTaskDialog({
   function resetForm() {
     setName(initialData?.name || "")
     setDescription(initialData?.description || "")
-    if (!fixedDepartmentId) setDepartmentId(initialData?.departmentId || "")
+    if (!effectiveFixedDept) setDepartmentId(initialData?.departmentId || "")
+    else setDepartmentId(effectiveFixedDept)
     setDeadline(initialData?.deadline || "")
+    setMetricValue("")
     setErrors({})
     setSuccessMsg("")
   }
@@ -121,6 +134,7 @@ export function CreateTaskDialog({
       description: description.trim() || undefined,
       departmentId,
       deadline: deadline || undefined,
+      metricValue: metricValue ? Number(metricValue) : undefined,
     }
 
     // TODO: replace with real API call
@@ -133,8 +147,10 @@ export function CreateTaskDialog({
         setSuccessMsg("Task created successfully!")
         setName(initialData?.name || "")
         setDescription(initialData?.description || "")
-        if (!fixedDepartmentId) setDepartmentId(initialData?.departmentId || "")
+        if (!effectiveFixedDept) setDepartmentId(initialData?.departmentId || "")
+        else setDepartmentId(effectiveFixedDept)
         setDeadline(initialData?.deadline || "")
+        setMetricValue("")
         setOpen(false)
       },
       onError: (error: any) => {
@@ -170,31 +186,49 @@ export function CreateTaskDialog({
         </DialogHeader>
 
         <div className="max-h-[65vh] space-y-5 overflow-y-auto px-6 py-5">
-          {/* Name */}
-          <div className="space-y-1.5">
-            <Label
-              htmlFor="task-name"
-              className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-            >
-              Task Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="task-name"
-              placeholder="e.g. Update API Gateway"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                clearError("name")
-              }}
-              className={
-                errors.name
-                  ? "border-destructive focus-visible:ring-destructive"
-                  : ""
-              }
-            />
-            {errors.name && (
-              <p className="text-[11px] text-destructive">{errors.name}</p>
-            )}
+          {/* Name & Metric Row */}
+          <div className="flex flex-col sm:flex-row w-full items-start justify-between gap-4">
+            <div className="space-y-1.5 w-full sm:w-2/3">
+              <Label
+                htmlFor="task-name"
+                className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+              >
+                Task Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="task-name"
+                placeholder="e.g. Update API Gateway"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  clearError("name")
+                }}
+                className={
+                  errors.name
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : ""
+                }
+              />
+              {errors.name && (
+                <p className="text-[11px] text-destructive">{errors.name}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5 w-full sm:w-1/3 pl-0 sm:pl-4">
+              <Label
+                htmlFor="task-metric"
+                className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+              >
+                Numeric Value (Optional)
+              </Label>
+              <Input
+                id="task-metric"
+                type="number"
+                placeholder="e.g. 100"
+                value={metricValue}
+                onChange={(e) => setMetricValue(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -204,7 +238,7 @@ export function CreateTaskDialog({
               </Label>
               <Select
                 value={departmentId}
-                disabled={!!fixedDepartmentId}
+                disabled={!!effectiveFixedDept}
                 onValueChange={(val) => {
                   setDepartmentId(val)
                   clearError("departmentId")
@@ -218,7 +252,7 @@ export function CreateTaskDialog({
                 <SelectContent>
                   {departments
                     ?.filter(
-                      (d) => !fixedDepartmentId || d.id === fixedDepartmentId
+                      (d) => !effectiveFixedDept || d.id === effectiveFixedDept
                     )
                     .map((d) => (
                       <SelectItem key={d.id} value={d.id}>

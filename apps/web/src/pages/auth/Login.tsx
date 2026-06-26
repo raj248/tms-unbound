@@ -20,7 +20,6 @@ export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { refresh } = useAuth()
@@ -86,7 +85,7 @@ export default function Login() {
             <img
               src="/unbound_logo.png"
               alt="Unbound Script Logo"
-              className="h-20 w-auto object-contain"
+              className="h-40 w-auto object-contain"
             />
             <span className="text-4xl font-extrabold tracking-tight text-zinc-900">
               Unbound Script
@@ -237,31 +236,6 @@ export default function Login() {
                   </button>
                 </div>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-5 w-5 rounded-md border-zinc-300 text-indigo-600 transition-all focus:ring-indigo-500"
-                />
-                <Label
-                  htmlFor="remember"
-                  className="cursor-pointer text-base font-medium text-zinc-700 select-none"
-                >
-                  Remember me
-                </Label>
-              </div>
-              <a
-                href="#"
-                className="text-base font-bold text-indigo-600 underline-offset-4 transition-all hover:text-indigo-700 hover:underline"
-                tabIndex={-1}
-              >
-                Forgot password?
-              </a>
             </div>
 
             <Button

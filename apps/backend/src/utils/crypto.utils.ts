@@ -39,7 +39,7 @@ export const generateAccessToken = ({
 }: TokenPayload): string => {
   // Destructuring prevents old 'iat' and 'exp' fields from hijacking options.expiresIn
   const cleanPayload = { userId, name, username, role }
-  return jwt.sign(cleanPayload, JWT_ACCESS_SECRET, { expiresIn: "15m" })
+  return jwt.sign(cleanPayload, JWT_ACCESS_SECRET, { expiresIn: "24h" })
 }
 
 export const verifyAccessToken = (token: string): TokenPayload => {
