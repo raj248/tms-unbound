@@ -261,10 +261,16 @@ router.put("/:id", async (req: AuthenticatedRequest, res) => {
 
         // If the target state has a lower weight, reject the state downgrade
         if (targetWeight < currentWeight) {
-          throw new AppError(
-            `Access Denied: Only administrators can revert a task from ${currentTask.status} back to ${body.status}.`,
-            403
-          )
+          const isReopen =
+            (currentTask.status === "COMPLETED" || currentTask.status === "HOLD") &&
+            body.status === "IN_PROGRESS"
+          
+          if (!isReopen) {
+            throw new AppError(
+              `Access Denied: Only administrators can revert a task from ${currentTask.status} back to ${body.status}.`,
+              403
+            )
+          }
         }
       }
     }

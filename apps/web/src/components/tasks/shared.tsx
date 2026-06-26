@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog"
+import { useAuth } from "@/context/auth-context"
 
 export const STATUS_CONFIG: Record<
   TaskStatus,
@@ -82,11 +83,14 @@ export function StatusSelect({
   disabled?: boolean
   onCommit: (next: TaskStatus, newDeadline?: Date) => void
 }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === "ADMIN"
+
   const [reopenOpen, setReopenOpen] = useState(false)
   const [newDeadline, setNewDeadline] = useState("")
 
   const handleChange = (v: TaskStatus) => {
-    if (value === "COMPLETED" && v === "IN_PROGRESS") {
+    if ((value === "COMPLETED" || value === "HOLD") && v === "IN_PROGRESS") {
       setReopenOpen(true)
     } else {
       onCommit(v)
@@ -100,11 +104,11 @@ export function StatusSelect({
   }
 
   return (
-    <>
+    <div className="flex items-center gap-2">
       <Select
         value={value}
         onValueChange={handleChange}
-        disabled={disabled}
+        disabled={disabled || !isAdmin}
       >
         <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:hidden">
           <SelectValue>
@@ -119,6 +123,18 @@ export function StatusSelect({
           ))}
         </SelectContent>
       </Select>
+
+      {!isAdmin && (value === "COMPLETED" || value === "HOLD") && (
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="h-7 text-[11px]" 
+          onClick={() => setReopenOpen(true)} 
+          disabled={disabled}
+        >
+          Reopen
+        </Button>
+      )}
 
       <Dialog open={reopenOpen} onOpenChange={setReopenOpen}>
         <DialogContent className="sm:max-w-md">
@@ -143,7 +159,7 @@ export function StatusSelect({
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }
 
