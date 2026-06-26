@@ -22,7 +22,7 @@ router.use(requireAuth)
 // ==========================================
 router.post("/", async (req: AuthenticatedRequest, res) => {
   try {
-    const { name, description, departmentId, deadline } =
+    const { name, description, departmentId, deadline, metricValue } =
       req.body as CreateTaskRequest
 
     // 1. Raw body validation
@@ -70,6 +70,7 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
         assigneeId: senderId,
         assigneeName: senderName,
         deadline: deadline ? new Date(deadline) : null,
+        metricValue: metricValue !== undefined ? Number(metricValue) : null,
       },
       include: { department: true },
     })
