@@ -90,7 +90,13 @@ function formatTime(d: string | Date) {
 // Inline metric editor
 // ---------------------------------------------------------------------------
 
-function AdminMetricEditor({ task, isAdmin }: { task: TaskWithDetails, isAdmin: boolean }) {
+function AdminMetricEditor({
+  task,
+  isAdmin,
+}: {
+  task: TaskWithDetails
+  isAdmin: boolean
+}) {
   const { mutate: updateTask, isPending } = useUpdateTask()
 
   const [editing, setEditing] = useState(false)
@@ -138,7 +144,10 @@ function AdminMetricEditor({ task, isAdmin }: { task: TaskWithDetails, isAdmin: 
 
         {task.metricValue != null ? (
           <span className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
-            Assigned Value: <strong className="font-semibold">{task.metricValue.toLocaleString("en-US")}</strong>
+            Assigned Value:{" "}
+            <strong className="font-semibold">
+              {task.metricValue.toLocaleString("en-US")}
+            </strong>
           </span>
         ) : (
           <span className="text-[11px] text-muted-foreground">
@@ -175,7 +184,9 @@ function AdminMetricEditor({ task, isAdmin }: { task: TaskWithDetails, isAdmin: 
   return (
     <div className="flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 shadow-sm">
       <IconChartBar className="h-3.5 w-3.5 shrink-0 text-primary" />
-      <span className="text-[11px] text-muted-foreground font-medium">Value:</span>
+      <span className="text-[11px] font-medium text-muted-foreground">
+        Value:
+      </span>
 
       <Input
         placeholder="Enter number"
@@ -347,16 +358,18 @@ export function TaskDetailDialog({
     const trimmedText = text.trim()
     const trimmedNum = numericValue.trim()
     if (!trimmedText || !task) return
-    
-    const finalText = trimmedNum ? `${trimmedText} : ${trimmedNum}` : trimmedText
-    
+
+    const finalText = trimmedNum
+      ? `${trimmedText} : ${trimmedNum}`
+      : trimmedText
+
     createRemark(
       { taskId: task.id, text: finalText },
-      { 
+      {
         onSuccess: () => {
           setText("")
           setNumericValue("")
-        } 
+        },
       }
     )
   }
@@ -401,7 +414,7 @@ export function TaskDetailDialog({
                 {task?.name}
               </DialogTitle>
               {task?.description && (
-                <p className="line-clamp-2 text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {task.description}
                 </p>
               )}
@@ -434,7 +447,9 @@ export function TaskDetailDialog({
             </span>
 
             {/* Metric — editable by Admin only */}
-            {task && <AdminMetricEditor task={task} isAdmin={user?.role === "ADMIN"} />}
+            {task && (
+              <AdminMetricEditor task={task} isAdmin={user?.role === "ADMIN"} />
+            )}
           </div>
         </DialogHeader>
 
@@ -498,7 +513,7 @@ export function TaskDetailDialog({
                     handleSend()
                   }
                 }}
-                className="h-9 w-20 shrink-0 rounded-full bg-muted/60 text-sm focus-visible:ring-1 text-center"
+                className="h-9 w-20 shrink-0 rounded-full bg-muted/60 text-center text-sm focus-visible:ring-1"
                 disabled={sending}
               />
               <Button

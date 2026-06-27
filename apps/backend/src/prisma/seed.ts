@@ -1,249 +1,455 @@
-import { PrismaClient, Role, TaskStatus } from "@prisma/client"
-import * as bcrypt from "bcryptjs"
+// prisma/seed.ts
+// Run with: npx ts-node prisma/seed.ts
+// Or add to package.json: "prisma": { "seed": "ts-node prisma/seed.ts" }
+// Then run: npx prisma db seed
+
+import bcrypt from "bcryptjs"
+
 import { prisma } from "../config/db"
+import { TaskStatus } from "@prisma/client"
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-// Configuration options for seed generation
-const DEPARTMENTS = [
-  "Engineering",
-  "Design",
-  "Product Management",
-  "Quality Assurance",
-  "Operations",
-  "Human Resources",
-  "Marketing",
-  "Sales",
-]
+/**
+ * Parse "May 2026 | Week 2" into a createdAt date.
+ * Week 1 → 1st, Week 2 → 8th, Week 3 → 15th, Week 4 → 22nd of that month.
+ */
+function parseInsightDate(insight: string): Date {
+  const match = insight.match(/(\w+)\s+(\d{4})\s*\|\s*Week\s*(\d)/)
+  if (!match) return new Date()
 
-const DEMO_USERS = [
-  { username: "alice_dev", name: "Alice Johnston", role: Role.USER },
-  { username: "bob_designer", name: "Bob Miller", role: Role.USER },
-  { username: "charlie_pm", name: "Charlie Smith", role: Role.USER },
-  { username: "dana_qa", name: "Dana Vance", role: Role.USER },
-  { username: "admin_bell", name: "Bell Administrator", role: Role.ADMIN },
-  { username: "eve_ops", name: "Eve Operations", role: Role.USER },
-  { username: "frank_hr", name: "Frank Human Resources", role: Role.USER },
-]
+  const [, monthStr, yearStr, weekStr] = match
+  const month = new Date(`${monthStr} 1, ${yearStr}`).getMonth() // 0-indexed
+  const year = parseInt(yearStr)
+  const weekDay = (parseInt(weekStr) - 1) * 7 + 1 // Week 1→1, 2→8, 3→15, 4→22
 
-const TASK_NAMES = [
-  "Update Landing Page",
-  "Fix Login Bug",
-  "Draft Q3 Report",
-  "Audit Security Logs",
-  "Interview Candidates",
-  "Review Monthly Metrics",
-  "Deploy New Release",
-  "Setup CI/CD",
-  "Design New Logo",
-  "User Testing",
-  "Create Social Media Campaign",
-  "Update Policy Manual",
-]
-
-const TASK_STATUSES = [
-  TaskStatus.IN_PROGRESS,
-  TaskStatus.HOLD,
-  TaskStatus.COMPLETED,
-]
-
-function getRandomDate(start: Date, end: Date) {
-  return new Date(
-    start.getTime() + Math.random() * (end.getTime() - start.getTime())
-  )
+  return new Date(year, month, weekDay)
 }
 
-export async function seedDatabase() {
-  console.log("🌱 Starting database seeding sequence...")
+/**
+ * Extract a metric value from the first line of a description if it looks numeric.
+ * e.g. "27,811" in S.No column, or "6,657.60" → 6657.60
+ */
+function parseMetric(raw: string | null): number | null {
+  if (!raw) return null
+  const cleaned = raw.replace(/,/g, "")
+  const num = parseFloat(cleaned)
+  return isNaN(num) ? null : num
+}
 
-  try {
-    // 1. Clean out existing records to avoid unique constraint duplicates on reruns
-    console.log("🧹 Flushing existing historical tables...")
-    await prisma.notificationStatus.deleteMany()
-    await prisma.notification.deleteMany()
-    await prisma.remark.deleteMany()
-    await prisma.task.deleteMany()
-    await prisma.user.deleteMany()
-    await prisma.department.deleteMany()
+// ---------------------------------------------------------------------------
+// Seed data
+// ---------------------------------------------------------------------------
 
-    // 2. Seed Departments
-    console.log(`🏢 Seeding ${DEPARTMENTS.length} departments...`)
-    const seededDepartments = await Promise.all(
-      DEPARTMENTS.map((name) =>
-        prisma.department.create({
-          data: { name },
-        })
-      )
-    )
-    console.log("✅ Departments seeded successfully.")
+const DEPARTMENTS = [
+  "Accounts",
+  "Ecommerce",
+  "Editorial",
+  "Online and Dispatch",
+  "Sales Offline",
+  "Social Media",
+]
 
-    // 3. Seed Users and Assign exactly 1 Random Department to each
-    console.log(
-      `👤 Seeding ${DEMO_USERS.length} users with assigned departments...`
-    )
-    const defaultPasswordHash = await bcrypt.hash("password123", 10)
+// Users that appear as assignees in the CSV + a default admin
+const USERS = [
+  {
+    username: "admin",
+    name: "Admin",
+    password: "admin123",
+    role: "ADMIN" as const,
+  },
+  {
+    username: "puran",
+    name: "Puran ji",
+    password: "puran123",
+    role: "USER" as const,
+  },
+  {
+    username: "alind",
+    name: "Alind",
+    password: "alind123",
+    role: "USER" as const,
+  },
+]
 
-    const seededUsers = await Promise.all(
-      DEMO_USERS.map((user) => {
-        const randomDept =
-          seededDepartments[
-            Math.floor(Math.random() * seededDepartments.length)
-          ]
+// Raw CSV rows — (sno used as metricValue when present, insight drives createdAt)
+interface RawTask {
+  metricRaw: string | null // from S.No column when it has a value like "27,811"
+  name: string
+  description: string | null
+  category: string
+  status: TaskStatus
+  assignee: string | null
+  remarks: string | null
+  insight: string
+}
 
-        return prisma.user.create({
-          data: {
-            username: user.username,
-            name: user.name,
-            password: defaultPasswordHash,
-            role: user.role,
-            departments: {
-              connect: { id: randomDept.id },
-            },
-          },
-          include: {
-            departments: true,
-          },
-        })
-      })
-    )
-    console.log("✅ Users seeded and mapped to departments successfully.")
+const RAW_TASKS: RawTask[] = [
+  {
+    metricRaw: null,
+    name: "Reconcile Accounts",
+    description: "HDFC - 31th April\nRAW - 31sth March",
+    category: "Accounts",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Claim Return",
+    description: "Total No. : 5\nAmount Reimbursed: 509.99",
+    category: "Ecommerce",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Upload Kindle and Google books",
+    description: null,
+    category: "Ecommerce",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "English Books",
+    description: "Review and organize book editorial",
+    category: "Editorial",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Weekly Sales (RCT)",
+    description: "Analyze marketplace sales",
+    category: "Online and Dispatch",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Call potential clients",
+    description: "Sales outreach",
+    category: "Sales Offline",
+    status: "IN_PROGRESS",
+    assignee: "Puran ji",
+    remarks: null,
+    insight: "May 2026 | Week 2",
+  },
+  {
+    metricRaw: null,
+    name: "Sales offline",
+    description: null,
+    category: "Sales Offline",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 3",
+  },
+  {
+    metricRaw: null,
+    name: "Sales offline",
+    description: null,
+    category: "Sales Offline",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 4",
+  },
+  {
+    metricRaw: null,
+    name: "Reconcile Accounts",
+    description: "Monthly accounting audit",
+    category: "Accounts",
+    status: "IN_PROGRESS",
+    assignee: "Alind",
+    remarks: "aas",
+    insight: "May 2026 | Week 2",
+  },
+  {
+    metricRaw: null,
+    name: "Draft Newsletter",
+    description: "Monthly update for dispatch",
+    category: "Online and Dispatch",
+    status: "IN_PROGRESS",
+    assignee: "Alind",
+    remarks: "great work",
+    insight: "May 2026 | Week 3",
+  },
+  {
+    metricRaw: null,
+    name: "PI / PC",
+    description: null,
+    category: "Accounts",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: "Check Week 4",
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Expense & Revenue Report",
+    description: "Check Week 4",
+    category: "Accounts",
+    status: "COMPLETED",
+    assignee: null,
+    remarks: "Check Week 4",
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: "27,811",
+    name: "Seller Weekly Sales",
+    description:
+      "Amazon\nFlipkart\nMeesho\n27,811 Total, Individual data not given",
+    category: "Ecommerce",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "New Release Information Add and Email Sent",
+    description: "Check Week 4",
+    category: "Ecommerce",
+    status: "COMPLETED",
+    assignee: null,
+    remarks: "Check Week 4",
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: "6,657.60",
+    name: "Website Sales",
+    description: "No. of Orders 9, Amount: 6,657.60",
+    category: "Ecommerce",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "New Sellers / Platform",
+    description: null,
+    category: "Ecommerce",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Tender Participation & Result",
+    description: null,
+    category: "Online and Dispatch",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Stock Sheet",
+    description: null,
+    category: "Online and Dispatch",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Mapping Titles",
+    description: null,
+    category: "Online and Dispatch",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Pending & Dispatched Orders",
+    description: null,
+    category: "Online and Dispatch",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Payments / Puran Ji",
+    description: null,
+    category: "Sales Offline",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Orders / Puran Ji",
+    description: null,
+    category: "Sales Offline",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+  {
+    metricRaw: null,
+    name: "Suspense A/c",
+    description: null,
+    category: "Accounts",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 2",
+  },
+  {
+    metricRaw: null,
+    name: "Followers / Subscribers Increase",
+    description:
+      "As of 11.05.2026\nInstagram- 26255\nFacebook- 9844\nTwitter (X) - 2496\nYoutube- 1729\nAs of 16.05.2026\nInstagram - 26255\nFacebook- 9858\nTwitter (X) - 2498\nYoutube - 1732",
+    category: "Social Media",
+    status: "IN_PROGRESS",
+    assignee: null,
+    remarks: null,
+    insight: "May 2026 | Week 1",
+  },
+]
 
-    // 4. Seed Tasks, Remarks, and corresponding Notifications
-    console.log(
-      `📝 Seeding 150 tasks along with activity notification histories...`
-    )
-    const currentYear = new Date().getFullYear()
-    const startDate = new Date(currentYear, 0, 1)
-    const endDate = new Date(currentYear, 11, 31)
+// ---------------------------------------------------------------------------
+// Main seed function
+// ---------------------------------------------------------------------------
 
-    for (let i = 0; i < 150; i++) {
-      const randomDept =
-        seededDepartments[Math.floor(Math.random() * seededDepartments.length)]
-      const randomUser =
-        Math.random() > 0.2
-          ? seededUsers[Math.floor(Math.random() * seededUsers.length)]
-          : null
-      const randomStatus =
-        TASK_STATUSES[Math.floor(Math.random() * TASK_STATUSES.length)]
-      const randomName =
-        TASK_NAMES[Math.floor(Math.random() * TASK_NAMES.length)] + ` #${i + 1}`
-      const createdDate = getRandomDate(startDate, endDate)
+async function main() {
+  console.log("🌱 Starting seed…")
 
-      // A. Create Task
-      const task = await prisma.task.create({
-        data: {
-          name: randomName,
-          description: `This is auto-generated description for ${randomName}. Needs to be processed.`,
-          status: randomStatus,
-          departmentId: randomDept.id,
-          assigneeId: randomUser ? randomUser.id : null,
-          assigneeName: randomUser ? randomUser.name : null,
-          createdAt: createdDate,
-          updatedAt: createdDate,
-          deadline:
-            Math.random() > 0.5 ? getRandomDate(createdDate, endDate) : null,
-        },
-      })
+  //  remove all tasks, remarks, notifications, notificationstatuses
+  await prisma.task.deleteMany({})
+  await prisma.remark.deleteMany({})
+  await prisma.notificationStatus.deleteMany({})
+  await prisma.notification.deleteMany({})
 
-      // B. Create matching Notification log for the newly created Task
-      const taskNotification = await prisma.notification.create({
-        data: {
-          title: "🆕 New Task Assigned to Your Department",
-          body: `"${task.name}" has been created. Status: ${task.status}.`,
-          senderId: null, // System generated
-          senderName: "System Engine",
-          targetDeptId: randomDept.id,
-          isAdminOnly: false,
-          createdAt: createdDate,
-        },
-      })
+  // 1. Upsert departments
+  console.log("  → Seeding departments…")
+  const deptMap: Record<string, string> = {} // name → id
 
-      // Deliver this task notification to everyone in that department + all Admins
-      const taskRecipients = seededUsers.filter(
-        (u) =>
-          u.role === "ADMIN" ||
-          u.departments.some((d) => d.id === randomDept.id)
-      )
+  for (const name of DEPARTMENTS) {
+    const dept = await prisma.department.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    })
+    deptMap[name] = dept.id
+    console.log(`     ✔ Department: ${name}`)
+  }
 
-      await prisma.notificationStatus.createMany({
-        data: taskRecipients.map((recipient) => ({
-          notificationId: taskNotification.id,
-          userId: recipient.id,
-          // Randomly mark older notifications as read so your pagination history has realistic UI variety
-          isRead:
-            createdDate.getTime() < Date.now() - 7 * 86400000
-              ? Math.random() > 0.2
-              : false,
-          readAt:
-            createdDate.getTime() < Date.now() - 7 * 86400000
-              ? new Date(createdDate.getTime() + 3600000)
-              : null,
-        })),
-      })
+  // 2. Upsert users and connect to a default department
+  console.log("  → Seeding users…")
+  const userMap: Record<string, { id: string; name: string | null }> = {} // name (lowercase) → {id, name}
 
-      // C. Add a Remark randomly (50% chance)
-      if (Math.random() > 0.5) {
-        const remarkAuthor =
-          seededUsers[Math.floor(Math.random() * seededUsers.length)]
-        const remarkDate = new Date(createdDate.getTime() + 86400000) // 1 day later
+  for (const u of USERS) {
+    const hashed = await bcrypt.hash(u.password, 10)
 
-        await prisma.remark.create({
-          data: {
-            text: "Looking into this. Will update shortly.",
-            taskId: task.id,
-            authorName: remarkAuthor.name || remarkAuthor.username,
-            createdAt: remarkDate,
-          },
-        })
+    // Connect admin to first dept, others to matching dept by rough name or first dept
+    const defaultDeptId =
+      u.username === "alind"
+        ? deptMap["Accounts"]
+        : u.username === "puran"
+          ? deptMap["Sales Offline"]
+          : deptMap["Accounts"]
 
-        // Create matching Notification log for the Remark
-        const remarkNotification = await prisma.notification.create({
-          data: {
-            title: `New Comment on "${task.name}"`,
-            body: `${remarkAuthor.name || remarkAuthor.username}: "Looking into this. Will update shortly."`,
-            senderId: remarkAuthor.id,
-            senderName: remarkAuthor.name || remarkAuthor.username,
-            targetDeptId: randomDept.id,
-            isAdminOnly: false,
-            createdAt: remarkDate,
-          },
-        })
-
-        // Deliver the remark notification to the same audience
-        await prisma.notificationStatus.createMany({
-          data: taskRecipients.map((recipient) => ({
-            notificationId: remarkNotification.id,
-            userId: recipient.id,
-            isRead:
-              remarkDate.getTime() < Date.now() - 7 * 86400000
-                ? Math.random() > 0.2
-                : false,
-            readAt:
-              remarkDate.getTime() < Date.now() - 7 * 86400000
-                ? new Date(remarkDate.getTime() + 1800000)
-                : null,
-          })),
-        })
-      }
-    }
-
-    console.log("✅ Tasks, remarks, and notifications seeded successfully.")
-
-    // Log a sample mapping to verification console
-    console.log("\n📋 Sample Seed Mapping Summary:")
-    seededUsers.slice(0, 3).forEach((u) => {
-      console.log(
-        `   - User: ${u.username} [${u.role}] ➡️ Dept: ${u.departments[0]?.name || "None"}`
-      )
+    const user = await prisma.user.upsert({
+      where: { username: u.username },
+      update: {},
+      create: {
+        username: u.username,
+        name: u.name,
+        password: hashed,
+        role: u.role,
+        departments: { connect: { id: defaultDeptId } },
+      },
     })
 
-    console.log("\n🚀 Database seeding completed beautifully!")
-  } catch (error) {
-    console.error("❌ Seeding failed with error:", error)
-    throw error
-  } finally {
-    await prisma.$disconnect()
+    if (u.name) userMap[u.name.toLowerCase()] = { id: user.id, name: user.name }
+    console.log(`     ✔ User: ${u.name} (@${u.username})`)
   }
+
+  // 3. Seed tasks + remarks
+  console.log("  → Seeding tasks…")
+
+  for (const row of RAW_TASKS) {
+    const deptId = deptMap[row.category]
+    if (!deptId) {
+      console.warn(
+        `     ⚠ Unknown department "${row.category}" — skipping task "${row.name}"`
+      )
+      continue
+    }
+
+    // Resolve assignee
+    const assigneeKey = row.assignee?.toLowerCase()
+    const assigneeRecord = assigneeKey ? userMap[assigneeKey] : null
+    const metricValue = parseMetric(row.metricRaw)
+
+    // Metric label: derive from task name for the two numeric tasks
+    let metricLabel: string | null = null
+    if (metricValue !== null) {
+      if (row.name.includes("Seller Weekly Sales")) metricLabel = "Total Sales"
+      else if (row.name.includes("Website Sales")) metricLabel = "Revenue (₹)"
+    }
+
+    const createdAt = parseInsightDate(row.insight)
+
+    const task = await prisma.task.create({
+      data: {
+        name: row.name,
+        description: row.description,
+        status: row.status,
+        metricValue,
+        metricLabel,
+        departmentId: deptId,
+        assigneeId: assigneeRecord?.id ?? null,
+        assigneeName: assigneeRecord?.name ?? row.assignee ?? null,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    })
+
+    // Seed remark if present
+    if (row.remarks?.trim()) {
+      await prisma.remark.create({
+        data: {
+          taskId: task.id,
+          text: row.remarks.trim(),
+          authorName: "Admin",
+          createdAt,
+        },
+      })
+    }
+
+    console.log(`     ✔ Task: ${row.name} [${row.category}] — ${row.status}`)
+  }
+
+  console.log("\n✅ Seed complete.")
 }
 
-if (require.main === module) {
-  seedDatabase()
-}
+main()
+  .catch((e) => {
+    console.error("❌ Seed failed:", e)
+    process.exit(1)
+  })
+  .finally(() => prisma.$disconnect())

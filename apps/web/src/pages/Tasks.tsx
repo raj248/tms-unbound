@@ -87,7 +87,7 @@ function TaskTableRow({
         </p>
         <div className="mt-0.5 flex flex-col gap-0.5">
           {task.description && (
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="max-w-md truncate text-xs text-muted-foreground">
               {task.description}
             </p>
           )}
@@ -125,10 +125,10 @@ function TaskTableRow({
           value={task.status}
           disabled={isUpdating}
           onCommit={(status, newDeadline) => {
-            updateTask({ 
-              id: task.id, 
-              status, 
-              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {})
+            updateTask({
+              id: task.id,
+              status,
+              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {}),
             })
           }}
         />
@@ -201,11 +201,11 @@ function TaskTableRow({
       </TableCell>
 
       <TableCell className="flex items-center justify-between px-6 py-1 md:table-cell md:px-0 md:py-3 md:text-right">
-        <span className="text-xs text-muted-foreground md:hidden">
-          Value:
-        </span>
+        <span className="text-xs text-muted-foreground md:hidden">Value:</span>
         <span className="text-xs font-semibold">
-          {task.metricValue != null ? task.metricValue.toLocaleString("en-US") : "—"}
+          {task.metricValue != null
+            ? task.metricValue.toLocaleString("en-US")
+            : "—"}
         </span>
       </TableCell>
 
@@ -306,10 +306,10 @@ function KanbanCard({
           value={task.status}
           disabled={isUpdating}
           onCommit={(status, newDeadline) => {
-            updateTask({ 
-              id: task.id, 
-              status, 
-              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {})
+            updateTask({
+              id: task.id,
+              status,
+              ...(newDeadline ? { deadline: newDeadline.toISOString() } : {}),
             })
           }}
         />
