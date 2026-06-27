@@ -401,7 +401,7 @@ export default function Tasks() {
 
   useEffect(() => {
     if (!isAdmin) {
-      setMyDepartment(result?.data[0].department.name ?? "")
+      setMyDepartment(result?.data?.[0]?.department?.name ?? "")
     }
   }, [result])
 
