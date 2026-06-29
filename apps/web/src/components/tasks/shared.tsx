@@ -86,28 +86,11 @@ export function StatusSelect({
   const { user } = useAuth()
   const isAdmin = user?.role === "ADMIN"
 
-  const [reopenOpen, setReopenOpen] = useState(false)
-  const [newDeadline, setNewDeadline] = useState("")
-
-  const handleChange = (v: TaskStatus) => {
-    if ((value === "COMPLETED" || value === "HOLD") && v === "IN_PROGRESS") {
-      setReopenOpen(true)
-    } else {
-      onCommit(v)
-    }
-  }
-
-  const handleConfirmReopen = () => {
-    onCommit("IN_PROGRESS", newDeadline ? new Date(newDeadline) : undefined)
-    setReopenOpen(false)
-    setNewDeadline("")
-  }
-
   return (
     <div className="flex items-center gap-2">
       <Select
         value={value}
-        onValueChange={handleChange}
+        onValueChange={(v) => onCommit(v as TaskStatus)}
         disabled={disabled || !isAdmin}
       >
         <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:hidden">
@@ -124,41 +107,7 @@ export function StatusSelect({
         </SelectContent>
       </Select>
 
-      {!isAdmin && (value === "COMPLETED" || value === "HOLD") && (
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="h-7 text-[11px]" 
-          onClick={() => setReopenOpen(true)} 
-          disabled={disabled}
-        >
-          Reopen
-        </Button>
-      )}
 
-      <Dialog open={reopenOpen} onOpenChange={setReopenOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reopen Task</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">
-              Please set a new deadline for this reopened task.
-            </p>
-            <Input
-              type="date"
-              value={newDeadline}
-              onChange={(e) => setNewDeadline(e.target.value)}
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setReopenOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleConfirmReopen}>Reopen Task</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
@@ -207,5 +156,61 @@ export function DeleteButton({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+export function ReopenButton({
+  onConfirm,
+  disabled,
+  className,
+}: {
+  onConfirm: (newDeadline?: Date) => void
+  disabled?: boolean
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [newDeadline, setNewDeadline] = useState("")
+
+  const handleConfirm = () => {
+    onConfirm(newDeadline ? new Date(newDeadline) : undefined)
+    setOpen(false)
+    setNewDeadline("")
+  }
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={className || "h-7 gap-1 text-[11px] font-medium"}
+        onClick={() => setOpen(true)}
+        disabled={disabled}
+      >
+        Reopen
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reopen Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Please set a new deadline for this reopened task.
+            </p>
+            <Input
+              type="date"
+              value={newDeadline}
+              onChange={(e) => setNewDeadline(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirm}>Reopen Task</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

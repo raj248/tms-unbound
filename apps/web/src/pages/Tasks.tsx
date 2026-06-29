@@ -49,6 +49,7 @@ import {
   formatDeadline,
   StatusSelect,
   DeleteButton,
+  ReopenButton,
 } from "@/components/tasks/shared"
 import { useAuth } from "@/context/auth-context"
 // ---------------------------------------------------------------------------
@@ -73,6 +74,8 @@ function TaskTableRow({
   task: TaskWithDetails
   onSelectTask: () => void
 }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === "ADMIN"
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
   const dl = formatDeadline(task.deadline)
@@ -233,11 +236,43 @@ function TaskTableRow({
               </Button>
             }
           />
-          <DeleteButton
-            taskName={task.name}
-            isPending={isDeleting}
-            onConfirm={() => deleteTask(task.id)}
-          />
+          {isAdmin ? (
+            <DeleteButton
+              taskName={task.name}
+              isPending={isDeleting}
+              onConfirm={() => deleteTask(task.id)}
+            />
+          ) : task.status === "IN_PROGRESS" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 text-[11px] font-medium text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+              onClick={(e) => {
+                e.stopPropagation()
+                updateTask({ id: task.id, status: "COMPLETED" })
+              }}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <IconCheck className="h-3.5 w-3.5" />
+              )}
+              Complete
+            </Button>
+          ) : task.status === "COMPLETED" ? (
+            <ReopenButton
+              className="h-7 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              disabled={isUpdating}
+              onConfirm={(newDeadline) => {
+                updateTask({
+                  id: task.id,
+                  status: "IN_PROGRESS",
+                  ...(newDeadline ? { deadline: newDeadline.toISOString() } : {}),
+                })
+              }}
+            />
+          ) : null}
         </div>
       </TableCell>
     </TableRow>
@@ -255,6 +290,8 @@ function KanbanCard({
   task: TaskWithDetails
   onSelectTask: (task: TaskWithDetails) => void
 }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === "ADMIN"
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask()
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
   const dl = formatDeadline(task.deadline)
@@ -288,11 +325,43 @@ function KanbanCard({
                 </Button>
               }
             />
-            <DeleteButton
-              taskName={task.name}
-              isPending={isDeleting}
-              onConfirm={() => deleteTask(task.id)}
-            />
+            {isAdmin ? (
+              <DeleteButton
+                taskName={task.name}
+                isPending={isDeleting}
+                onConfirm={() => deleteTask(task.id)}
+              />
+            ) : task.status === "IN_PROGRESS" ? (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  updateTask({ id: task.id, status: "COMPLETED" })
+                }}
+                disabled={isUpdating}
+                title="Mark as Complete"
+              >
+                {isUpdating ? (
+                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <IconCheck className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            ) : task.status === "COMPLETED" ? (
+              <ReopenButton
+                className="h-7 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                disabled={isUpdating}
+                onConfirm={(newDeadline) => {
+                  updateTask({
+                    id: task.id,
+                    status: "IN_PROGRESS",
+                    ...(newDeadline ? { deadline: newDeadline.toISOString() } : {}),
+                  })
+                }}
+              />
+            ) : null}
           </div>
         </div>
 
@@ -569,10 +638,10 @@ export default function Tasks() {
                     (acc, task) => {
                       const dateStr = task.createdAt
                         ? new Date(task.createdAt).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          })
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })
                         : "Unknown Date"
                       if (!acc[dateStr]) acc[dateStr] = []
                       acc[dateStr].push(task)
@@ -613,10 +682,10 @@ export default function Tasks() {
               (acc, task) => {
                 const dateStr = task.createdAt
                   ? new Date(task.createdAt).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })
                   : "Unknown Date"
                 if (!acc[dateStr]) acc[dateStr] = []
                 acc[dateStr].push(task)
