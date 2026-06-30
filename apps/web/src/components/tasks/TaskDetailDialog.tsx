@@ -337,7 +337,6 @@ export function TaskDetailDialog({
 }) {
   const { user } = useAuth()
   const [text, setText] = useState("")
-  const [numericValue, setNumericValue] = useState("")
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const { data: remarks = [], isLoading: loadingRemarks } = useRemarks(
@@ -356,19 +355,13 @@ export function TaskDetailDialog({
 
   function handleSend() {
     const trimmedText = text.trim()
-    const trimmedNum = numericValue.trim()
     if (!trimmedText || !task) return
 
-    const finalText = trimmedNum
-      ? `${trimmedText} : ${trimmedNum}`
-      : trimmedText
-
     createRemark(
-      { taskId: task.id, text: finalText },
+      { taskId: task.id, text: trimmedText },
       {
         onSuccess: () => {
           setText("")
-          setNumericValue("")
         },
       }
     )
@@ -500,20 +493,6 @@ export function TaskDetailDialog({
                   }
                 }}
                 className="h-9 flex-1 rounded-full bg-muted/60 text-sm focus-visible:ring-1"
-                disabled={sending}
-              />
-              <Input
-                placeholder="0"
-                type="number"
-                value={numericValue}
-                onChange={(e) => setNumericValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSend()
-                  }
-                }}
-                className="h-9 w-20 shrink-0 rounded-full bg-muted/60 text-center text-sm focus-visible:ring-1"
                 disabled={sending}
               />
               <Button
