@@ -65,7 +65,7 @@ model Task {
   metricLabel  String?    // Describes what the number means (e.g., "Books Sold")
     
   departmentId String
-  department   Department @relation(fields: [departmentId], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 
   assigneeId   String?
   assignee     User?     @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)

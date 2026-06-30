@@ -583,10 +583,12 @@ function AddDepartmentDialog() {
 function DeleteConfirm({
   label,
   onConfirm,
+  isDepartment,
   isPending,
 }: {
   label: string
   onConfirm: () => void
+  isDepartment?: boolean
   isPending: boolean
 }) {
   return (
@@ -612,6 +614,11 @@ function DeleteConfirm({
             This will permanently remove{" "}
             <span className="font-medium text-foreground">"{label}"</span>. This
             cannot be undone.
+            {isDepartment && (
+              <p className="mt-2 text-xs text-destructive">
+                All tasks assigned to this department will be deleted.
+              </p>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -887,6 +894,7 @@ export default function Settings() {
                           <DeleteConfirm
                             label={dept.name}
                             isPending={deletingDept}
+                            isDepartment={true}
                             onConfirm={() => deleteDepartment(dept.id)}
                           />
                         </div>

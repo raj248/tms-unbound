@@ -137,12 +137,12 @@ router.delete("/:id", async (req: AuthenticatedRequest, res) => {
     }
 
     // Safety check: Prevent orphan foreign key states if tasks are assigned to this user
-    if (targetUser._count.assignedTasks > 0) {
-      throw new AppError(
-        `Cannot drop user. This profile has ${targetUser._count.assignedTasks} active tasks assigned. Re-assign them first.`,
-        400
-      )
-    }
+    // if (targetUser._count.assignedTasks > 0) {
+    //   throw new AppError(
+    //     `Cannot drop user. This profile has ${targetUser._count.assignedTasks} active tasks assigned. Re-assign them first.`,
+    //     400
+    //   )
+    // }
 
     await prisma.user.delete({ where: { id: id as string } })
 

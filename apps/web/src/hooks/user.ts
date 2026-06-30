@@ -6,6 +6,7 @@ import type {
   ApiResponse,
 } from "@workspace/types"
 import api from "@/lib/api"
+import { toast } from "@workspace/ui/components/sonner"
 
 // --- 1. READ (Get All Users) ---
 export const useUsers = () => {
@@ -51,6 +52,11 @@ export const useDeleteUser = () => {
       // Flush cache lists instantly to visually wipe the profile card from view layouts
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["departments"] })
+      // show toast
+      toast.success("User deleted successfully.")
+    },
+    onError: (error: any) => {
+      toast.error(error.response.data.message)
     },
   })
 }

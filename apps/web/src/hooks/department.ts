@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CreateDepartmentRequest, Department } from "@workspace/types" // Adjust to your actual type exports
 import api from "@/lib/api"
+import { toast } from "@workspace/ui/components/sonner"
 
 // --- 1. READ (Get All Departments) ---
 export const useDepartments = () => {
@@ -40,9 +41,12 @@ export const useDeleteDepartment = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["departments"] })
-
-      // Optional: Invalidate tasks as well if deleting a department impacts task filtering
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      // show toast
+      toast.success("Department deleted successfully.")
+    },
+    onError: (error: any) => {
+      toast.error(error.response.data.message)
     },
   })
 }
