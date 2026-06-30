@@ -108,7 +108,11 @@ router.delete("/:id", async (req: AuthenticatedRequest, res) => {
     // Verify entity existence before attempting data purge
     const department = await prisma.department.findUnique({
       where: { id: id as string },
-      include: { _count: { select: { tasks: true } } },
+      include: {
+        _count: {
+          select: { tasks: { where: { status: { not: "COMPLETED" } } } },
+        },
+      },
     })
 
     if (!department) {
