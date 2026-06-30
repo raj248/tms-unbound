@@ -49,7 +49,7 @@ import {
   formatDeadline,
   StatusSelect,
   DeleteButton,
-  ReopenButton,
+  // ReopenButton,
 } from "@/components/tasks/shared"
 import { useAuth } from "@/context/auth-context"
 // ---------------------------------------------------------------------------
@@ -260,19 +260,21 @@ function TaskTableRow({
               )}
               Complete
             </Button>
-          ) : task.status === "COMPLETED" ? (
-            <ReopenButton
-              className="h-7 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-              disabled={isUpdating}
-              onConfirm={(newDeadline) => {
-                updateTask({
-                  id: task.id,
-                  status: "IN_PROGRESS",
-                  ...(newDeadline ? { deadline: newDeadline.toISOString() } : {}),
-                })
-              }}
-            />
-          ) : null}
+          ) : // : task.status === "COMPLETED" ? (
+          //   <ReopenButton
+          //     className="h-7 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+          //     disabled={isUpdating}
+          //     onConfirm={(newDeadline) => {
+          //       updateTask({
+          //         id: task.id,
+          //         status: "IN_PROGRESS",
+          //         ...(newDeadline ? { deadline: newDeadline.toISOString() } : {}),
+          //       })
+          //     }}
+          //   />
+          // )
+
+          null}
         </div>
       </TableCell>
     </TableRow>
@@ -349,19 +351,23 @@ function KanbanCard({
                   <IconCheck className="h-3.5 w-3.5" />
                 )}
               </Button>
-            ) : task.status === "COMPLETED" ? (
-              <ReopenButton
-                className="h-7 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-                disabled={isUpdating}
-                onConfirm={(newDeadline) => {
-                  updateTask({
-                    id: task.id,
-                    status: "IN_PROGRESS",
-                    ...(newDeadline ? { deadline: newDeadline.toISOString() } : {}),
-                  })
-                }}
-              />
-            ) : null}
+            ) : // : task.status === "COMPLETED" ? (
+            //   <ReopenButton
+            //     className="h-7 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+            //     disabled={isUpdating}
+            //     onConfirm={(newDeadline) => {
+            //       updateTask({
+            //         id: task.id,
+            //         status: "IN_PROGRESS",
+            //         ...(newDeadline
+            //           ? { deadline: newDeadline.toISOString() }
+            //           : {}),
+            //       })
+            //     }}
+            //   />
+            // )
+
+            null}
           </div>
         </div>
 
@@ -638,10 +644,10 @@ export default function Tasks() {
                     (acc, task) => {
                       const dateStr = task.createdAt
                         ? new Date(task.createdAt).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })
                         : "Unknown Date"
                       if (!acc[dateStr]) acc[dateStr] = []
                       acc[dateStr].push(task)
@@ -682,10 +688,10 @@ export default function Tasks() {
               (acc, task) => {
                 const dateStr = task.createdAt
                   ? new Date(task.createdAt).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
                   : "Unknown Date"
                 if (!acc[dateStr]) acc[dateStr] = []
                 acc[dateStr].push(task)

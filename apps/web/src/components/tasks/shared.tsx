@@ -91,7 +91,7 @@ export function StatusSelect({
       <Select
         value={value}
         onValueChange={(v) => onCommit(v as TaskStatus)}
-        disabled={disabled || !isAdmin}
+        disabled={disabled || (!isAdmin && value === "COMPLETED")}
       >
         <SelectTrigger className="h-7 w-36 border-0 bg-transparent p-0 text-[11px] shadow-none focus:ring-0 [&>svg]:hidden">
           <SelectValue>
@@ -106,8 +106,6 @@ export function StatusSelect({
           ))}
         </SelectContent>
       </Select>
-
-
     </div>
   )
 }

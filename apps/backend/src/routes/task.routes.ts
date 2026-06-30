@@ -253,6 +253,7 @@ router.put("/:id", async (req: AuthenticatedRequest, res) => {
     })
     if (!currentTask) throw new AppError("Target task not found", 404)
 
+    console.log(body.status, currentTask.status)
     // 2. Multitier Status Progression Security Guard
     if (body.status && body.status !== currentTask.status) {
       if (req.user?.role !== "ADMIN") {
@@ -261,16 +262,17 @@ router.put("/:id", async (req: AuthenticatedRequest, res) => {
 
         // If the target state has a lower weight, reject the state downgrade
         if (targetWeight < currentWeight) {
-          const isReopen =
-            (currentTask.status === "COMPLETED" || currentTask.status === "HOLD") &&
-            body.status === "IN_PROGRESS"
-          
-          if (!isReopen) {
-            throw new AppError(
-              `Access Denied: Only administrators can revert a task from ${currentTask.status} back to ${body.status}.`,
-              403
-            )
-          }
+          // const isReopen =
+          //   (currentTask.status === "COMPLETED" ||
+          //     currentTask.status === "HOLD") &&
+          //   body.status === "IN_PROGRESS"
+
+          // if (!isReopen) {
+          throw new AppError(
+            `Access Denied: Only administrators can revert a task from ${currentTask.status} back to ${body.status}.`,
+            403
+          )
+          // }
         }
       }
     }
