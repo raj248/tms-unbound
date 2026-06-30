@@ -615,8 +615,8 @@ function DeleteConfirm({
             <span className="font-medium text-foreground">"{label}"</span>. This
             cannot be undone.
             {isDepartment && (
-              <p className="mt-2 text-xs text-destructive">
-                All tasks assigned to this department will be deleted.
+              <p className="mt-2 text-xs text-muted-foreground">
+                All tasks assigned to this department must be deleted first.
               </p>
             )}
           </AlertDialogDescription>
