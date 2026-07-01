@@ -91,7 +91,7 @@ function NotifItem({ item }: { item: NotificationHistoryItem }) {
         >
           {item.notification.title}
         </p>
-        <p className="line-clamp-2 text-xs text-muted-foreground">
+        <p className="line-clamp-2 text-xs text-accent-foreground">
           {item.notification.body}
         </p>
         <p className="text-[10px] text-muted-foreground/70">
