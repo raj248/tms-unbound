@@ -442,7 +442,7 @@ export default function Tasks() {
   const [myDepartment, setMyDepartment] = useState<string>("")
 
   const [viewMode, setViewMode] = useState<ViewMode>("table")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const [filter, setFilter] = useState<"ALL" | TaskStatus>("ALL")
   const [departmentId, setDepartmentId] = useState<string>("ALL")
   const [search, setSearch] = useState("")

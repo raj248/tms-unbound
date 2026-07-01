@@ -36,6 +36,7 @@ interface FormErrors {
   assigneeId?: string
   status?: string
   deadline?: string
+  createdAt?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +76,7 @@ export function CreateTaskDialog({
   const [deadline, setDeadline] = useState(
     initialData?.deadline ? initialData.deadline.split("T")[0] : ""
   )
+  const [createdAt, setCreatedAt] = useState("")
   const [deadlinePreset, setDeadlinePreset] = useState<
     "week" | "month" | "custom"
   >("custom")
@@ -103,6 +105,7 @@ export function CreateTaskDialog({
     if (!effectiveFixedDept) setDepartmentId(initialData?.departmentId || "")
     else setDepartmentId(effectiveFixedDept)
     setDeadline(initialData?.deadline || "")
+    setCreatedAt("")
     setMetricValue("")
     setErrors({})
     setSuccessMsg("")
@@ -122,6 +125,7 @@ export function CreateTaskDialog({
     const next: FormErrors = {}
     if (!name.trim()) next.name = "Task name is required."
     if (!departmentId) next.departmentId = "Department is required."
+    if (!deadline) next.deadline = "Deadline is required."
 
     if (Object.keys(next).length > 0) {
       setErrors(next)
@@ -133,7 +137,8 @@ export function CreateTaskDialog({
       name: name.trim(),
       description: description.trim() || undefined,
       departmentId,
-      deadline: deadline || undefined,
+      deadline,
+      createdAt: createdAt || undefined,
       metricValue: metricValue ? Number(metricValue) : undefined,
     }
 
@@ -150,6 +155,7 @@ export function CreateTaskDialog({
         if (!effectiveFixedDept) setDepartmentId(initialData?.departmentId || "")
         else setDepartmentId(effectiveFixedDept)
         setDeadline(initialData?.deadline || "")
+        setCreatedAt("")
         setMetricValue("")
         setOpen(false)
       },
@@ -231,7 +237,7 @@ export function CreateTaskDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Department <span className="text-destructive">*</span>
@@ -269,6 +275,34 @@ export function CreateTaskDialog({
             </div>
 
             <div className="space-y-1.5">
+              <Label
+                htmlFor="task-created-at"
+                className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+              >
+                Creation Date (Optional)
+              </Label>
+              <Input
+                id="task-created-at"
+                type="date"
+                value={createdAt}
+                onChange={(e) => {
+                  setCreatedAt(e.target.value)
+                  clearError("createdAt")
+                }}
+                className={
+                  errors.createdAt
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : ""
+                }
+              />
+              {errors.createdAt && (
+                <p className="text-[11px] text-destructive">
+                  {errors.createdAt}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
               <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Deadline Preset
               </Label>
@@ -295,7 +329,7 @@ export function CreateTaskDialog({
                 htmlFor="task-deadline"
                 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
               >
-                Deadline Date
+                Deadline Date <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="task-deadline"

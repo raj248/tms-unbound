@@ -145,9 +145,10 @@ export interface CreateTaskRequest {
   name: string
   description?: string
   departmentId: string
-  deadline?: string | Date
+  deadline: string | Date
   metricValue?: number | null
   metricLabel?: string | null
+  createdAt?: string | Date
 }
 
 export interface CreateDepartmentRequest {

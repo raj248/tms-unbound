@@ -22,13 +22,15 @@ router.use(requireAuth)
 // ==========================================
 router.post("/", async (req: AuthenticatedRequest, res) => {
   try {
-    const { name, description, departmentId, deadline, metricValue } =
+    const { name, description, departmentId, deadline, metricValue, createdAt } =
       req.body as CreateTaskRequest
 
     // 1. Raw body validation
     if (!name || !name.trim()) throw new AppError("Task name is required.", 400)
     if (!departmentId)
       throw new AppError("Target department selection is required.", 400)
+    if (!deadline)
+      throw new AppError("Task deadline is required.", 400)
 
     // 2. Multitier Role-Based Access Security Guard
     if (req.user?.role !== "ADMIN") {
@@ -69,7 +71,8 @@ router.post("/", async (req: AuthenticatedRequest, res) => {
         departmentId,
         assigneeId: senderId,
         assigneeName: senderName,
-        deadline: deadline ? new Date(deadline) : null,
+        deadline: new Date(deadline),
+        createdAt: createdAt ? new Date(createdAt) : undefined,
         metricValue: metricValue !== undefined ? Number(metricValue) : null,
       },
       include: { department: true },
